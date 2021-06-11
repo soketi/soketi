@@ -7,6 +7,10 @@ export interface Options {
             apps: AppInterface[];
         };
     };
+    channelLimits: {
+        maxNameLength: number;
+    };
+    closingGracePeriod: number;
     horizontalScaling: {
         driver: string;
     };

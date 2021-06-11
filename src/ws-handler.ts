@@ -57,7 +57,7 @@ export class WsHandler {
     /**
      * The app connections storage class to manage connections.
      */
-     public namespaces: Map<string, Namespace> = new Map();
+    public namespaces: Map<string, Namespace> = new Map();
 
     /**
      * Initialize the Websocket connections handler.
@@ -88,8 +88,8 @@ export class WsHandler {
         ws.subscribedChannels = new Set();
         ws.presence = {};
 
-        this.appManager.findByKey(ws.appKey).then((app: App|null) => {
-            if (! app) {
+        this.checkForValidApp(ws).then(validApp => {
+            if (! validApp) {
                 return ws.send(JSON.stringify({
                     event: 'pusher:error',
                     code: 4001,
@@ -97,22 +97,25 @@ export class WsHandler {
                 }));
             }
 
-            ws.app = app;
+            ws.app = validApp;
 
-            // TODO: Implement app connection limit checking.
-            // this.checkAppConnectionLimit(app).then((canConnect: boolean) => {
-            //     if (! canConnect) {
-            //         return this.sendError(ws, 4004, 'The app reached the connection limit.');
-            //     }
-            // });
+            this.checkAppConnectionLimit(ws).then(canConnect => {
+                if (! canConnect) {
+                    return ws.send(JSON.stringify({
+                        event: 'pusher:error',
+                        code: 4100,
+                        message: 'The current concurrent connections quota has been reached.',
+                    }));
+                }
 
-            ws.send(JSON.stringify({
-                event: 'pusher:connection_established',
-                data: JSON.stringify({
-                    socket_id: ws.id,
-                    activity_timeout: 30,
-                }),
-            }));
+                ws.send(JSON.stringify({
+                    event: 'pusher:connection_established',
+                    data: JSON.stringify({
+                        socket_id: ws.id,
+                        activity_timeout: 30,
+                    }),
+                }));
+            })
         });
     }
 
@@ -152,7 +155,7 @@ export class WsHandler {
     /**
      * Handle the event to close all existing sockets.
      */
-    closeAllSockets(): Promise<void> {
+    async closeAllSockets(): Promise<void> {
         return new Promise(resolve => {
             this.namespaces.forEach(namespace => {
                 namespace.sockets.forEach(socket => {
@@ -185,12 +188,20 @@ export class WsHandler {
      * Instruct the server to subscribe the connection to the channel.
      */
     subscribeToChannel(ws: WebSocket, message: any): any {
-        // TODO: Check if the channel name exceeds a limit.
         // TODO: Mark stats WS Message
         // TODO: Mark metrics WS Message
 
         let channel = message.data.channel;
         let channelManager = this.getChannelManagerFor(channel);
+        let maxChannelNameLength = this.server.options.channelLimits.maxNameLength;
+
+        if (channel.length > maxChannelNameLength) {
+            return ws.send(JSON.stringify({
+                event: 'pusher:error',
+                code: 4009,
+                message: `The channel name is longer than the allowed ${maxChannelNameLength} characters.`
+            }));
+        }
 
         channelManager.join(ws, channel, message).then((response) => {
             if (! ws.subscribedChannels.has(channel)) {
@@ -367,10 +378,22 @@ export class WsHandler {
         return isClientEvent;
     }
 
+    protected checkForValidApp(ws: WebSocket): Promise<App|null> {
+        return this.appManager.findByKey(ws.appKey);
+    }
+
+    protected checkAppConnectionLimit(ws: WebSocket): Promise<boolean> {
+        return new Promise(resolve => {
+            let maxConnections = parseInt(ws.app.maxConnections as string) || -1;
+
+            resolve(this.getNamespace(ws.app.id).sockets.size + 1 > maxConnections);
+        });
+    }
+
     /**
      * Generate a Pusher-like Socket ID.
      */
-     protected generateSocketId(): string {
+    protected generateSocketId(): string {
         let min = 0;
         let max = 10000000000;
 

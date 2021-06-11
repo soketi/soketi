@@ -61,12 +61,11 @@ export class Cli {
     /**
      * Start the server.
      */
-    start(yargs: any): Promise<any> {
+    async start(yargs: any): Promise<any> {
         this.overwriteOptionsFromEnv();
 
         const handleFailure = async () => {
-            await server.stop();
-            process.exit();
+            server.stop();
         }
 
         process.on('SIGINT', handleFailure);
@@ -74,12 +73,5 @@ export class Cli {
         process.on('SIGTERM', handleFailure);
 
         return server.start(this.options);
-    }
-
-    /**
-     * Stop the server.
-     */
-    stop(): Promise<void> {
-        return server.stop();
     }
 }

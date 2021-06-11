@@ -32,6 +32,10 @@ export class Server {
                 ],
             },
         },
+        channelLimits: {
+            maxNameLength: 200,
+        },
+        closingGracePeriod: 3,
         horizontalScaling: {
             driver: 'process',
         },
@@ -103,34 +107,29 @@ export class Server {
         });
     }
 
-    stop(): Promise<void> {
-        return new Promise(resolve => {
-            Log.warning('⛔ Stopping the server...\n');
+    async stop(): Promise<void> {
+        if (this.serverProcess) {
+            this.closing = true;
 
-            if (this.serverProcess) {
-                this.closing = true;
+            Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...\n');
 
-                Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...\n');
-                Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
-                // Log.warning(`⚡ The server will stay up ${this.options.closingGracePeriod} more seconds before closing the process.\n`);
+            Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
+            Log.warning(`⚡ The server will stay up ${this.options.closingGracePeriod} more seconds before closing the process.\n`);
 
-                // TODO: Implement grace period.
-                Log.warning('⚡ Grace period finished. Closing the server.');
+            this.wsHandler.closeAllSockets().then(async () => {
+                await setTimeout(() => {
+                    Log.warning('⚡ Grace period finished. Closing the server.');
 
-                this.wsHandler.closeAllSockets().then(() => {
                     uWS.us_listen_socket_close(this.serverProcess);
-                });
-            }
-
-            resolve();
-        });
+                }, this.options.closingGracePeriod * 1000);
+            });
+        }
     }
 
     protected configureWebsockets(server: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
             server = server.ws('/app/:id', {
-                // TODO: Set idle and payloads.
-                idleTimeout: 120,
+                idleTimeout: 120, // According to protocol
                 maxBackpressure: 1024 * 1024,
                 maxPayloadLength: 50 * 1024,
                 message: (ws: WebSocket, message: any, isBinary: boolean) => this.wsHandler.onMessage(ws, message, isBinary),
