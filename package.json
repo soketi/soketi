@@ -1,0 +1,71 @@
+{
+  "name": "@soketi/pusher-uws",
+  "version": "0.0.0-dev",
+  "description": "Pusher uWS is a Pusher Protocol-compatible Websockets server, written on top of uWS.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soketi/pusher-uws.git"
+  },
+  "main": "dist/index.js",
+  "keywords": [
+    "laravel",
+    "socket.io",
+    "broadcasting",
+    "events",
+    "redis",
+    "socket",
+    "pusher"
+  ],
+  "author": "Alex Renoki",
+  "license": "MIT",
+  "jshintConfig": {
+    "esversion": 9
+  },
+  "dependencies": {
+    "arraybuffer-to-string": "^1.0.2",
+    "axios": "^0.21.1",
+    "colors": "^1.4.0",
+    "dayjs": "^1.10.4",
+    "dot-wild": "^3.0.1",
+    "dotenv": "^8.2.0",
+    "ioredis": "^4.19.0",
+    "knex": "^0.95.2",
+    "mysql": "^2.18.1",
+    "pg": "^8.6.0",
+    "prom-client": "^13.1.0",
+    "prometheus-query": "^3.0.0",
+    "pusher": "^5.0.0",
+    "rate-limiter-flexible": "^2.2.2",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v19.2.0",
+    "uuid": "^8.3.2",
+    "yargs": "^16.2.0"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-decorators": "^7.8.3",
+    "@babel/plugin-proposal-export-namespace-from": "^7.8.3",
+    "@babel/plugin-proposal-function-sent": "^7.8.3",
+    "@babel/plugin-proposal-numeric-separator": "^7.8.3",
+    "@babel/plugin-proposal-throw-expressions": "^7.8.3",
+    "@babel/plugin-transform-object-assign": "^7.8.3",
+    "@babel/preset-env": "^7.9.6",
+    "@types/express": "^4.17.12",
+    "@types/jest": "^26.0.19",
+    "@types/node": "^14.14.16",
+    "@types/socket.io-client": "^3.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.11.1",
+    "@typescript-eslint/parser": "^4.11.1",
+    "eslint": "^7.17.0",
+    "jest": "^26.6.3",
+    "jest-circus": "^26.6.3",
+    "ts-jest": "^26.4.4",
+    "tslib": "^2.0.3",
+    "typescript": "^4.3.2"
+  },
+  "scripts": {
+    "build": "./node_modules/.bin/tsc",
+    "lint": "eslint --ext .js,.ts ./src ./tests",
+    "prepublish": "npm run build",
+    "test": "jest",
+    "test:watch": "npm test -- --watch"
+  }
+}
