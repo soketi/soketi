@@ -9,31 +9,12 @@ import { PresenceChannelManager } from './channels/presence-channel-manager';
 import { PrivateChannelManager } from './channels/private-channel-manager';
 import { PublicChannelManager } from './channels/public-channel-manager';
 import { Server } from './server';
+import { Utils } from './utils';
 import { WebSocket } from 'uWebSockets.js';
 
 const ab2str = require('arraybuffer-to-string');
 
 export class WsHandler {
-    /**
-     * Allowed client events patterns.
-     *
-     * @type {string[]}
-     */
-    protected _clientEventPatterns: string[] = [
-        'client-*',
-    ];
-
-    /**
-     * Channels and patters for private channels.
-     *
-     * @type {string[]}
-     */
-    protected _privateChannelPatterns: string[] = [
-        'private-*',
-        'private-encrypted-*',
-        'presence-*',
-    ];
-
     /**
      * The manager for the public channels.
      */
@@ -108,6 +89,9 @@ export class WsHandler {
                     }));
                 }
 
+                // TODO: Mark metrics WS message.
+                // TODO: Mark stats WS message.
+
                 ws.send(JSON.stringify({
                     event: 'pusher:connection_established',
                     data: JSON.stringify({
@@ -135,9 +119,10 @@ export class WsHandler {
                 }));
             } else if (message.event === 'pusher:subscribe') {
                 this.subscribeToChannel(ws, message);
-            } else if (this.isClientEvent(message.event)) {
+            } else if (Utils.isClientEvent(message.event)) {
                 this.handleClientEvent(ws, message);
             } else {
+                // TODO: Add encrypted private channels support.
                 console.log(message);
             }
         }
@@ -203,6 +188,8 @@ export class WsHandler {
             }));
         }
 
+        // TODO: Make sure that the presence channels' info is not big enough before joining.
+
         channelManager.join(ws, channel, message).then((response) => {
             if (! ws.subscribedChannels.has(channel)) {
                 ws.subscribedChannels.add(channel);
@@ -212,6 +199,9 @@ export class WsHandler {
 
             // For non-presence channels, end with subscription succeeded.
             if (! (channelManager instanceof PresenceChannelManager)) {
+                // TODO: Mark metrics WS message.
+                // TODO: Mark stats WS message.
+
                 return ws.send(JSON.stringify({
                     event: 'pusher_internal:subscription_succeeded',
                     channel,
@@ -239,6 +229,9 @@ export class WsHandler {
                     }),
                 }));
 
+                // TODO: Mark metrics WS message.
+                // TODO: Mark stats WS message.
+
                 this.getNamespace(ws.app.id).send(channel, JSON.stringify({
                     event: 'pusher_internal:member_added',
                     channel,
@@ -261,6 +254,9 @@ export class WsHandler {
         });
     }
 
+    /**
+     * Instruct the server to unsubscribe the connection from the channel.
+     */
     unsubscribeFromChannel(ws: WebSocket, channel: string): any {
         let channelManager = this.getChannelManagerFor(channel);
 
@@ -288,14 +284,27 @@ export class WsHandler {
         });
     }
 
+    /**
+     * Unsubscribe the connection from all channels.
+     */
     unsubscribeFromAllChannels(ws: WebSocket): any {
         ws.subscribedChannels.forEach(channel => {
             this.unsubscribeFromChannel(ws, channel);
         });
     }
 
+    /**
+     * Handle the events coming from the client.
+     */
     handleClientEvent(ws: WebSocket, message: any): any {
         let { event, data, channel } = message;
+
+        // TODO: Check if the client messaging is enabled for the app.
+        // TODO: Check if the event name is not long
+        // TODO: Check if the payload size is not big enough
+        // TODO: Rate limit the frontend event points
+        // TODO: Mark stats WS message
+        // TODO: Mark metrics WS message
 
         this.getNamespace(ws.app.id).getChannel(channel).hasConnection(ws.id).then(canBroadcast => {
             if (! canBroadcast) {
@@ -311,17 +320,20 @@ export class WsHandler {
      * respecting the Pusher protocol.
      */
     getChannelManagerFor(channel: string): PublicChannelManager|PrivateChannelManager|EncryptedPrivateChannelManager|PresenceChannelManager {
-        if (this.isPresenceChannel(channel)) {
+        if (Utils.isPresenceChannel(channel)) {
             return this.presenceChannelManager;
-        } else if (this.isEncryptedPrivateChannel(channel)) {
+        } else if (Utils.isEncryptedPrivateChannel(channel)) {
             return this.encryptedPrivateChannelManager;
-        } else if (this.isPrivateChannel(channel)) {
+        } else if (Utils.isPrivateChannel(channel)) {
             return this.privateChannelManager;
         } else {
             return this.publicChannelManager;
         }
     }
 
+    /**
+     * Get the app namespace.
+     */
     getNamespace(appId: string): Namespace {
         if (! this.namespaces.get(appId)) {
             this.namespaces.set(appId, new Namespace(appId));
@@ -331,57 +343,15 @@ export class WsHandler {
     }
 
     /**
-     * Check if the given channel name is private.
+     * Use the app manager to retrieve a valid app.
      */
-    isPrivateChannel(channel: string): boolean {
-        let isPrivate = false;
-
-        this._privateChannelPatterns.forEach(pattern => {
-            let regex = new RegExp(pattern.replace('*', '.*'));
-
-            if (regex.test(channel)) {
-                isPrivate = true;
-            }
-        });
-
-        return isPrivate;
-    }
-
-    /**
-     * Check if the given channel name is a presence channel.
-     */
-    isPresenceChannel(channel: string): boolean {
-        return channel.lastIndexOf('presence-', 0) === 0;
-    }
-
-    /**
-     * Check if the given channel name is a encrypted private channel.
-     */
-    isEncryptedPrivateChannel(channel: string): boolean {
-        return channel.lastIndexOf('private-encrypted-', 0) === 0;
-    }
-
-    /**
-     * Check if client is a client event.
-     */
-    isClientEvent(event: string): boolean {
-        let isClientEvent = false;
-
-        this._clientEventPatterns.forEach(pattern => {
-            let regex = new RegExp(pattern.replace('*', '.*'));
-
-            if (regex.test(event)) {
-                isClientEvent = true;
-            }
-        });
-
-        return isClientEvent;
-    }
-
     protected checkForValidApp(ws: WebSocket): Promise<App|null> {
         return this.appManager.findByKey(ws.appKey);
     }
 
+    /**
+     * Make sure the connection limit is not reached with this connection.
+     */
     protected checkAppConnectionLimit(ws: WebSocket): Promise<boolean> {
         return new Promise(resolve => {
             let maxConnections = parseInt(ws.app.maxConnections as string) || -1;

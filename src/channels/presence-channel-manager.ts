@@ -1,4 +1,5 @@
 import { JoinResponse, LeaveResponse } from './public-channel-manager';
+import { PresenceMember } from './channel';
 import { PrivateChannelManager } from './private-channel-manager';
 import { WebSocket } from 'uWebSockets.js';
 
@@ -7,16 +8,20 @@ export class PresenceChannelManager extends PrivateChannelManager {
      * Join the connection to the channel.
      */
     join(ws: WebSocket, channel: string, message?: any): Promise<JoinResponse> {
+        // TODO: Make sure that the maximum channel users was not reached.
+
         return super.join(ws, channel, message).then(response => {
             // Make sure to forward the response in case an error occurs.
             if (! response.success) {
                 return response;
             }
 
+            let member: PresenceMember = JSON.parse(message.data.channel_data);
+
             return {
                 ...response,
                 ...{
-                    member: JSON.parse(message.data.channel_data),
+                    member,
                 },
             };
         });

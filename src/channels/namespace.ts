@@ -23,6 +23,9 @@ export class Namespace {
         //
     }
 
+    /**
+     * Send a message to the given channel in the namespace.
+     */
     send(channel: string, data: string, exceptingId?: string): void {
         this.getChannelSockets(channel).then(sockets => {
             sockets.forEach((ws) => {
@@ -30,17 +33,28 @@ export class Namespace {
                     return;
                 }
 
+                // TODO: Mark metrics WS message.
+                // TODO: Mark stats WS message.
+
                 ws.send(data);
             });
         });
     }
 
+    /**
+     * Get a channel instance by name.
+     */
     getChannel(channel: string): Channel {
-        this.ensureDefaults(channel);
+        if (! this.channels[channel]) {
+            this.channels[channel] = new Channel(channel);
+        }
 
         return this.channels[channel];
     }
 
+    /**
+     * Get all the channel sockets associated with this namespace.
+     */
     getChannelSockets(channel: string): Promise<Set<WebSocket>> {
         return this.getChannel(channel).getConnections().then(connections => {
             let sockets = new Set<WebSocket>();
@@ -53,6 +67,9 @@ export class Namespace {
         });
     }
 
+    /**
+     * Get a given presence channel's members.
+     */
     getChannelMembers(channel: string): Promise<Map<string, PresenceMember>> {
         return this.getChannelSockets(channel).then(sockets => {
             let members: Map<string, PresenceMember> = new Map();
@@ -65,11 +82,5 @@ export class Namespace {
 
             return members;
         });
-    }
-
-    protected ensureDefaults(channel): void {
-        if (! this.channels[channel]) {
-            this.channels[channel] = new Channel(channel);
-        }
     }
 }
