@@ -1,5 +1,5 @@
 import { Channel, PresenceMember } from './channel';
-import { WebSocket } from '../websocket';
+import { WebSocket } from 'uWebSockets.js';
 
 export interface Channels {
     [channel: string]: Channel;
@@ -12,59 +12,27 @@ export class Namespace {
     public channels: Channels = {};
 
     /**
+     * The list of sockets connected to the namespace.
+     */
+    public sockets: Map<string, WebSocket> = new Map();
+
+    /**
      * Initialize the namespace for an app.
      */
     constructor(protected appId: string) {
         //
     }
 
-    /**
-     * Subscribe the given connection to the channel.
-     */
-    subscribe(ws: WebSocket, channel: string): Promise<boolean> {
-        return new Promise(resolve => {
-            let wasAlreadySubscribed = true;
+    send(channel: string, data: string, exceptingId?: string): void {
+        this.getChannelSockets(channel).then(sockets => {
+            sockets.forEach((ws) => {
+                if (exceptingId && exceptingId === ws.id) {
+                    return;
+                }
 
-            let ch = this.getChannel(channel);
-
-            if (! ch.hasConnection(ws.id)) {
-                wasAlreadySubscribed = false;
-                ch.addConnection(ws);
-            }
-
-            resolve(wasAlreadySubscribed);
+                ws.send(data);
+            });
         });
-    }
-
-    /**
-     * Unsubscribe the given connection from the channel.
-     */
-    unsubscribe(ws: WebSocket, channel: string): Promise<boolean> {
-        return new Promise(resolve => {
-            this.getChannel(channel).removeConnection(ws);
-
-            resolve(true);
-        });
-    }
-
-    addMember(member: PresenceMember, channel: string, ws: WebSocket): Promise<boolean> {
-        let { user_id, user_info } = member;
-
-        return this.getChannel(channel)
-            .addMember(user_id as string, user_info)
-            .then(() => true);
-    }
-
-    removeMember(id: string, channel: string, ws: WebSocket): Promise<boolean> {
-        return this.getChannel(channel).removeMember(id).then(() => true);
-    }
-
-    send(channel: string, event: string, data: any, exceptingId?: string): void {
-        return this.getChannel(channel).send(event, data, exceptingId);
-    }
-
-    getChannelMembers(channel: string): Map<string, PresenceMember> {
-        return this.getChannel(channel).getMembers();
     }
 
     getChannel(channel: string): Channel {
@@ -73,9 +41,35 @@ export class Namespace {
         return this.channels[channel];
     }
 
+    getChannelSockets(channel: string): Promise<Set<WebSocket>> {
+        return this.getChannel(channel).getConnections().then(connections => {
+            let sockets = new Set<WebSocket>();
+
+            connections.forEach((wsId: string) => {
+                sockets.add(this.sockets.get(wsId));
+            });
+
+            return sockets;
+        });
+    }
+
+    getChannelMembers(channel: string): Promise<Map<string, PresenceMember>> {
+        return this.getChannelSockets(channel).then(sockets => {
+            let members: Map<string, PresenceMember> = new Map();
+
+            sockets.forEach(ws => {
+                let { user_id, user_info } = ws.presence[channel];
+
+                members.set(user_id as string, user_info);
+            });
+
+            return members;
+        });
+    }
+
     protected ensureDefaults(channel): void {
         if (! this.channels[channel]) {
-            this.channels[channel] = new Channel;
+            this.channels[channel] = new Channel(channel);
         }
     }
 }

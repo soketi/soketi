@@ -3,9 +3,9 @@ import { HttpRequest } from './http-request';
 import { HttpResponse, TemplatedApp } from 'uWebSockets.js';
 import { Log } from './log';
 import { Options } from './options';
-import { WebSocketInterface } from './websocket';
 import { WsHandler } from './ws-handler';
 import { HorizontalScaling } from './horizontal-scaling/horizontal-scaling';
+import { WebSocket } from 'uWebSockets.js';
 
 const uWS = require('uWebSockets.js');
 
@@ -62,10 +62,11 @@ export class Server {
         this.wsHandler = new WsHandler(
             new AppManager(this.options),
             new HorizontalScaling(this.options),
+            this,
         );
     }
 
-    start(options: any = {}) {
+    start(options: any = {}, callback?: CallableFunction) {
         this.options = Object.assign(this.options, options);
 
         Log.title('\n📡 uWS Server initialization started.\n');
@@ -93,6 +94,10 @@ export class Server {
                     Log.success(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
                     Log.success(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
                     Log.info('👂 The server is now listening for events and managing the channels.\n');
+
+                    if (callback) {
+                        callback(this);
+                    }
                 });
             });
         });
@@ -112,7 +117,9 @@ export class Server {
                 // TODO: Implement grace period.
                 Log.warning('⚡ Grace period finished. Closing the server.');
 
-                uWS.us_listen_socket_close(this.serverProcess);
+                this.wsHandler.closeAllSockets().then(() => {
+                    uWS.us_listen_socket_close(this.serverProcess);
+                });
             }
 
             resolve();
@@ -123,12 +130,12 @@ export class Server {
         return new Promise(resolve => {
             server = server.ws('/app/:id', {
                 // TODO: Set idle and payloads.
-                idleTimeout: 32,
-                maxBackpressure: 1024,
+                idleTimeout: 120,
+                maxBackpressure: 1024 * 1024,
                 maxPayloadLength: 50 * 1024,
-                message: (ws: WebSocketInterface, message: any, isBinary: boolean) => this.wsHandler.onMessage(ws, message, isBinary),
-                open: (ws: WebSocketInterface) => this.wsHandler.onOpen(ws),
-                close: (ws: WebSocketInterface, code: number, message: any) => this.wsHandler.onClose(ws, code, message),
+                message: (ws: WebSocket, message: any, isBinary: boolean) => this.wsHandler.onMessage(ws, message, isBinary),
+                open: (ws: WebSocket) => this.wsHandler.onOpen(ws),
+                close: (ws: WebSocket, code: number, message: any) => this.wsHandler.onClose(ws, code, message),
                 upgrade: (res: HttpResponse, req: HttpRequest, context) => this.wsHandler.handleUpgrade(res, req, context),
             });
 

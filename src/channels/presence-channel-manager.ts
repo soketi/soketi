@@ -1,7 +1,6 @@
 import { JoinResponse, LeaveResponse } from './public-channel-manager';
-import { PresenceMember } from './channel';
 import { PrivateChannelManager } from './private-channel-manager';
-import { WebSocket } from '../websocket';
+import { WebSocket } from 'uWebSockets.js';
 
 export class PresenceChannelManager extends PrivateChannelManager {
     /**
@@ -14,20 +13,10 @@ export class PresenceChannelManager extends PrivateChannelManager {
                 return response;
             }
 
-            let member: PresenceMember = JSON.parse(message.data.channel_data);
-            let { user_id, user_info } = member;
-
-            // At this point, this.namespaces[ws.app.id] exists.
-            this.getNamespace(ws.app.id).addMember({
-                socket_id: ws.id,
-                user_id,
-                user_info,
-            }, channel, ws);
-
             return {
                 ...response,
                 ...{
-                    member,
+                    member: JSON.parse(message.data.channel_data),
                 },
             };
         });
@@ -38,28 +27,12 @@ export class PresenceChannelManager extends PrivateChannelManager {
      */
     leave(ws: WebSocket, channel: string): Promise<LeaveResponse> {
         return super.leave(ws, channel).then(response => {
-            let member: PresenceMember = ws.presence[channel];
-
-            if (response.left) {
-                this.getNamespace(ws.app.id).removeMember(
-                    member.user_id as string,
-                    channel,
-                    ws,
-                );
-            }
-
             return {
                 ...response,
                 ...{
-                    member,
+                    member: ws.presence[channel],
                 },
             };
-        });
-    }
-
-    getChannelMembers(appId: string, channel: string): Promise<Map<string, PresenceMember>> {
-        return new Promise(resolve => {
-            resolve(this.namespaces?.[appId]?.getChannelMembers(channel));
         });
     }
 

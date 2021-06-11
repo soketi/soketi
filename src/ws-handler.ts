@@ -4,10 +4,12 @@ import { EncryptedPrivateChannelManager } from './channels/encrypted-private-cha
 import { HorizontalScalingInterface } from './horizontal-scaling/horizontal-scaling-interface';
 import { HttpRequest } from './http-request';
 import { HttpResponse } from 'uWebSockets.js';
+import { Namespace } from './channels/namespace';
 import { PresenceChannelManager } from './channels/presence-channel-manager';
 import { PrivateChannelManager } from './channels/private-channel-manager';
 import { PublicChannelManager } from './channels/public-channel-manager';
-import { WebSocket, WebSocketInterface } from './websocket';
+import { Server } from './server';
+import { WebSocket } from 'uWebSockets.js';
 
 const ab2str = require('arraybuffer-to-string');
 
@@ -53,35 +55,46 @@ export class WsHandler {
     protected presenceChannelManager: PresenceChannelManager;
 
     /**
+     * The app connections storage class to manage connections.
+     */
+     public namespaces: Map<string, Namespace> = new Map();
+
+    /**
      * Initialize the Websocket connections handler.
      */
     constructor(
         protected appManager: AppManagerInterface,
         protected horizontalScaling: HorizontalScalingInterface,
+        protected server: Server,
     ) {
-        this.publicChannelManager = new PublicChannelManager;
-        this.privateChannelManager = new PrivateChannelManager;
-        this.encryptedPrivateChannelManager = new EncryptedPrivateChannelManager;
-        this.presenceChannelManager = new PresenceChannelManager;
+        this.publicChannelManager = new PublicChannelManager(this);
+        this.privateChannelManager = new PrivateChannelManager(this);
+        this.encryptedPrivateChannelManager = new EncryptedPrivateChannelManager(this);
+        this.presenceChannelManager = new PresenceChannelManager(this);
     }
 
     /**
      * Handle a new open connection.
      */
-    onOpen(originalWs: WebSocketInterface): any {
+    onOpen(ws: WebSocket): any {
         // TODO: Stats - Mark new connections
         // TODO: Metrics - Mark new connections
-        // TODO: Check for this.closing and disconnect otherwise
 
-        let ws = new WebSocket(originalWs);
+        if (this.server.closing) {
+            return ws.close();
+        }
 
         ws.id = this.generateSocketId();
-        ws.subscribedChannels = [];
+        ws.subscribedChannels = new Set();
         ws.presence = {};
 
         this.appManager.findByKey(ws.appKey).then((app: App|null) => {
             if (! app) {
-                return ws.sendError(4001, `App key ${ws.appKey} does not exist.`);
+                return ws.send(JSON.stringify({
+                    event: 'pusher:error',
+                    code: 4001,
+                    message: `App key ${ws.appKey} does not exist.`,
+                }));
             }
 
             ws.app = app;
@@ -93,30 +106,34 @@ export class WsHandler {
             //     }
             // });
 
-            ws.send('pusher:connection_established', {
+            ws.send(JSON.stringify({
+                event: 'pusher:connection_established',
                 data: JSON.stringify({
                     socket_id: ws.id,
                     activity_timeout: 30,
                 }),
-            });
+            }));
         });
     }
 
     /**
      * Handle a received message from the client.
      */
-    onMessage(originalWs: WebSocketInterface, message: any, isBinary: boolean): any {
-        let ws = new WebSocket(originalWs);
-
+    onMessage(ws: WebSocket, message: any, isBinary: boolean): any {
         if (message instanceof ArrayBuffer) {
             message = JSON.parse(ab2str(message));
         }
 
         if (message) {
             if (message.event === 'pusher:ping') {
-                ws.sendPong();
+                ws.send(JSON.stringify({
+                    event: 'pusher:pong',
+                    data: {},
+                }));
             } else if (message.event === 'pusher:subscribe') {
                 this.subscribeToChannel(ws, message);
+            } else if (this.isClientEvent(message.event)) {
+                this.handleClientEvent(ws, message);
             } else {
                 console.log(message);
             }
@@ -126,14 +143,25 @@ export class WsHandler {
     /**
      * Handle the event of the client closing the connection.
      */
-    onClose(originalWs: WebSocketInterface, code: number, message: any): any {
-        let ws = new WebSocket(originalWs);
+    onClose(ws: WebSocket, code: number, message: any): any {
+        // TODO: Mark stats disconnection
 
-        // if (message instanceof ArrayBuffer) {
-        //     message = JSON.parse(ab2str(message));
-        // }
+        this.unsubscribeFromAllChannels(ws);
+    }
 
-        this.unsubscribeFromAllChannels(ws, message);
+    /**
+     * Handle the event to close all existing sockets.
+     */
+    closeAllSockets(): Promise<void> {
+        return new Promise(resolve => {
+            this.namespaces.forEach(namespace => {
+                namespace.sockets.forEach(socket => {
+                    socket.close();
+                });
+            });
+
+            resolve();
+        });
     }
 
     /**
@@ -165,16 +193,31 @@ export class WsHandler {
         let channelManager = this.getChannelManagerFor(channel);
 
         channelManager.join(ws, channel, message).then((response) => {
-            if (! (channelManager instanceof PresenceChannelManager)) {
-                return ws.send('pusher_internal:subscription_succeeded', { channel });
+            if (! ws.subscribedChannels.has(channel)) {
+                ws.subscribedChannels.add(channel);
             }
+
+            this.getNamespace(ws.app.id).sockets.set(ws.id, ws);
+
+            // For non-presence channels, end with subscription succeeded.
+            if (! (channelManager instanceof PresenceChannelManager)) {
+                return ws.send(JSON.stringify({
+                    event: 'pusher_internal:subscription_succeeded',
+                    channel,
+                }));
+            }
+
+            // Otherwise, prepare a response for the presence channel.
 
             let { user_id, user_info } = response.member;
 
             ws.presence[channel] = { user_id, user_info };
 
-            channelManager.getChannelMembers(ws.app.id, channel).then(members => {
-                ws.send('pusher_internal:subscription_succeeded', {
+            this.getNamespace(ws.app.id).sockets.set(ws.id, ws);
+
+            this.getNamespace(ws.app.id).getChannelMembers(channel).then(members => {
+                ws.send(JSON.stringify({
+                    event: 'pusher_internal:subscription_succeeded',
                     channel,
                     data: JSON.stringify({
                         presence: {
@@ -183,27 +226,26 @@ export class WsHandler {
                             count: members.size,
                         },
                     }),
-                });
+                }));
 
-                channelManager.send(ws.app.id, channel, 'pusher_internal:member_added', {
+                this.getNamespace(ws.app.id).send(channel, JSON.stringify({
+                    event: 'pusher_internal:member_added',
                     channel,
                     data: JSON.stringify({
                         user_id,
                         user_info,
                     }),
-                }, ws.id);
+                }), ws.id);
             });
 
             if (! response.success) {
                 let { errorCode, errorMessage } = response;
 
-                return ws.sendError(errorCode, errorMessage);
-            }
-
-            let { wasAlreadySubscribed } = response;
-
-            if (! wasAlreadySubscribed) {
-                ws.subscribedChannels.push(channel);
+                return ws.send(JSON.stringify({
+                    event: 'pusher:error',
+                    code: errorCode,
+                    message: errorMessage,
+                }));
             }
         });
     }
@@ -213,44 +255,44 @@ export class WsHandler {
 
         channelManager.leave(ws, channel).then(response => {
             if (response.left) {
-                let index = ws.subscribedChannels.indexOf(channel);
-
-                if (index >= 0) {
-                    ws.subscribedChannels.splice(index, 1);
-                }
-
+                // Send presence channel-speific events and delete specific data.
                 if (channelManager instanceof PresenceChannelManager) {
-                    channelManager.send(ws.app.id, channel, 'pusher_internal:member_removed', {
+                    this.getNamespace(ws.app.id).send(channel, JSON.stringify({
+                        event: 'pusher_internal:member_removed',
                         channel,
                         data: JSON.stringify({
                             user_id: ws.presence[channel].user_id,
                         }),
-                    });
+                    }), ws.id);
 
                     delete ws.presence[channel];
                 }
             }
 
+            ws.subscribedChannels.delete(channel);
+
+            this.getNamespace(ws.app.id).sockets.delete(ws.id);
+
             return response;
         });
     }
 
-    unsubscribeFromAllChannels(ws: WebSocket, channel: string): any {
+    unsubscribeFromAllChannels(ws: WebSocket): any {
         ws.subscribedChannels.forEach(channel => {
             this.unsubscribeFromChannel(ws, channel);
         });
     }
 
-    /**
-     * Generate a Pusher-like Socket ID.
-     */
-    protected generateSocketId(): string {
-        let min = 0;
-        let max = 10000000000;
+    handleClientEvent(ws: WebSocket, message: any): any {
+        let { event, data, channel } = message;
 
-        let randomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
+        this.getNamespace(ws.app.id).getChannel(channel).hasConnection(ws.id).then(canBroadcast => {
+            if (! canBroadcast) {
+                return;
+            }
 
-        return randomNumber(min, max) + '.' + randomNumber(min, max);
+            this.getNamespace(ws.app.id).send(channel, JSON.stringify({ event, channel, data }), ws.id);
+        });
     }
 
     /**
@@ -267,6 +309,14 @@ export class WsHandler {
         } else {
             return this.publicChannelManager;
         }
+    }
+
+    getNamespace(appId: string): Namespace {
+        if (! this.namespaces.get(appId)) {
+            this.namespaces.set(appId, new Namespace(appId));
+        }
+
+        return this.namespaces.get(appId);
     }
 
     /**
@@ -298,5 +348,34 @@ export class WsHandler {
      */
     isEncryptedPrivateChannel(channel: string): boolean {
         return channel.lastIndexOf('private-encrypted-', 0) === 0;
+    }
+
+    /**
+     * Check if client is a client event.
+     */
+    isClientEvent(event: string): boolean {
+        let isClientEvent = false;
+
+        this._clientEventPatterns.forEach(pattern => {
+            let regex = new RegExp(pattern.replace('*', '.*'));
+
+            if (regex.test(event)) {
+                isClientEvent = true;
+            }
+        });
+
+        return isClientEvent;
+    }
+
+    /**
+     * Generate a Pusher-like Socket ID.
+     */
+     protected generateSocketId(): string {
+        let min = 0;
+        let max = 10000000000;
+
+        let randomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
+
+        return randomNumber(min, max) + '.' + randomNumber(min, max);
     }
 }

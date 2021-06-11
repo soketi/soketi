@@ -1,4 +1,4 @@
-import { WebSocket } from '../websocket';
+import { WebSocket } from 'uWebSockets.js';
 
 export interface PresenceMember {
     user_id: number|string;
@@ -7,51 +7,33 @@ export interface PresenceMember {
 }
 
 export class Channel {
-    connections: Map<string, WebSocket> = new Map();
+    public connections: Set<string> = new Set();
 
-    members: Map<string, PresenceMember> = new Map();
-
-    getConnections(): Map<string, WebSocket> {
-        return this.connections;
+    constructor(protected name: string) {
+        //
     }
 
-    addConnection(ws: WebSocket): void {
-        this.connections.set(ws.id, ws);
+    getConnections(): Promise<Set<string>> {
+        return new Promise(resolve => resolve(this.connections));
     }
 
-    removeConnection(ws: WebSocket): void {
-        this.connections.delete(ws.id);
+    hasConnection(wsId): Promise<boolean> {
+        return new Promise(resolve => resolve(this.connections.has(wsId)));
     }
 
-    hasConnection(wsId): boolean {
-        return this.connections.has(wsId);
-    }
-
-    getMembers(): Map<string, PresenceMember> {
-        return this.members;
-    }
-
-    addMember(id: string, info: any): Promise<void> {
+    subscribe(ws: WebSocket): Promise<boolean> {
         return new Promise(resolve => {
-            this.members.set(id, info);
-            resolve();
-        });
-    }
-
-    removeMember(id: string): Promise<void> {
-        return new Promise(resolve => {
-            this.members.delete(id);
-            resolve();
-        });
-    }
-
-    send(event: string, data: any, exceptingId?: string) {
-        this.getConnections().forEach((ws, wsId) => {
-            if (exceptingId === wsId) {
-                return;
+            if (! this.connections.has(ws.id)) {
+                this.connections.add(ws.id);
             }
 
-            ws.send(event, data);
+            resolve(true);
+        });
+    }
+
+    unsubscribe(wsId: string): Promise<boolean> {
+        return new Promise(resolve => {
+            resolve(this.connections.delete(wsId));
         });
     }
 }
