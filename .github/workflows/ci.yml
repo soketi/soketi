@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        node:
+          - 14.x
+          - 16.x
+        adapter:
+          - local
+          - redis
+        apps_manager:
+          - array
+
+    name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.apps_manager }})
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2.1.5
+        name: Installing Node.js v${{ matrix.node }}
+        with:
+          node-version: ${{ matrix.node }}
+
+      - uses: zhulik/redis-action@1.1.0
+        name: Installing Redis 6.x
+        with:
+          redis version: 6
+          number of databases: 100
+
+      - name: Installing dependencies
+        run: |
+          npm install
+
+      - name: Lint the code
+        run: |
+          npm run lint
+
+      - name: Compile TypeScript
+        run: |
+          npm run build
+
+      - name: Execute tests
+        run: |
+          npm run test
+        env:
+          TEST_ADAPTER: ${{ matrix.adapter }}
+          TEST_APPS_MANAGER: ${{ matrix.apps_manager }}
+
+      - uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: false

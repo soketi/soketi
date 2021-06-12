@@ -8,6 +8,7 @@ import { Options } from './options';
 import { WsHandler } from './ws-handler';
 import { WebSocket } from 'uWebSockets.js';
 
+const _ = require('lodash');
 const uWS = require('uWebSockets.js');
 
 export class Server {
@@ -16,7 +17,7 @@ export class Server {
      */
     public options: Options = {
         adapter: {
-            driver: 'process',
+            driver: 'local',
             redis: {
                 prefix: '',
             },

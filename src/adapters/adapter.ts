@@ -18,7 +18,7 @@ export class Adapter implements AdapterInterface {
      * Initialize adapter scaling.
      */
     constructor(protected options: Options, server: Server) {
-        if (options.adapter.driver === 'process') {
+        if (options.adapter.driver === 'local') {
             this.driver = new LocalAdapter(options, server);
         } else if (options.adapter.driver === 'redis') {
             this.driver = new RedisAdapter(options, server);
