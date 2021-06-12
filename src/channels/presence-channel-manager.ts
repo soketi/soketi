@@ -1,5 +1,5 @@
 import { JoinResponse, LeaveResponse } from './public-channel-manager';
-import { PresenceMember } from './channel';
+import { PresenceMember } from '../presence-member';
 import { PrivateChannelManager } from './private-channel-manager';
 import { WebSocket } from 'uWebSockets.js';
 

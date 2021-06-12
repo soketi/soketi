@@ -1,13 +1,12 @@
+import { AdapterInterface } from './adapters/adapter-interface';
 import { App } from './app';
-import { AppManagerInterface } from './app-managers/app-manager-interface';
-import { EncryptedPrivateChannelManager } from './channels/encrypted-private-channel-manager';
-import { HorizontalScalingInterface } from './horizontal-scaling/horizontal-scaling-interface';
+import { AppManagerInterface } from './app-managers';
+import { EncryptedPrivateChannelManager } from './channels';
 import { HttpRequest } from './http-request';
 import { HttpResponse } from 'uWebSockets.js';
-import { Namespace } from './channels/namespace';
-import { PresenceChannelManager } from './channels/presence-channel-manager';
-import { PrivateChannelManager } from './channels/private-channel-manager';
-import { PublicChannelManager } from './channels/public-channel-manager';
+import { PresenceChannelManager } from './channels';
+import { PrivateChannelManager } from './channels';
+import { PublicChannelManager } from './channels';
 import { Server } from './server';
 import { Utils } from './utils';
 import { WebSocket } from 'uWebSockets.js';
@@ -36,22 +35,17 @@ export class WsHandler {
     protected presenceChannelManager: PresenceChannelManager;
 
     /**
-     * The app connections storage class to manage connections.
-     */
-    public namespaces: Map<string, Namespace> = new Map();
-
-    /**
      * Initialize the Websocket connections handler.
      */
     constructor(
         protected appManager: AppManagerInterface,
-        protected horizontalScaling: HorizontalScalingInterface,
+        protected adapter: AdapterInterface,
         protected server: Server,
     ) {
-        this.publicChannelManager = new PublicChannelManager(this);
-        this.privateChannelManager = new PrivateChannelManager(this);
-        this.encryptedPrivateChannelManager = new EncryptedPrivateChannelManager(this);
-        this.presenceChannelManager = new PresenceChannelManager(this);
+        this.publicChannelManager = new PublicChannelManager(adapter);
+        this.privateChannelManager = new PrivateChannelManager(adapter);
+        this.encryptedPrivateChannelManager = new EncryptedPrivateChannelManager(adapter);
+        this.presenceChannelManager = new PresenceChannelManager(adapter);
     }
 
     /**
@@ -140,11 +134,23 @@ export class WsHandler {
     /**
      * Handle the event to close all existing sockets.
      */
-    async closeAllSockets(): Promise<void> {
+    async closeAllLocalSockets(): Promise<void> {
         return new Promise(resolve => {
-            this.namespaces.forEach(namespace => {
-                namespace.sockets.forEach(socket => {
-                    socket.close();
+            this.adapter.getNamespaces().forEach(namespace => {
+                namespace.getSockets().then(sockets => {
+                    sockets.forEach(socket => {
+                        try {
+                            socket.send(JSON.stringify({
+                                event: 'pusher:error',
+                                code: 4200,
+                                message: 'The server got closed. Reconnect in a few seconds.',
+                            }));
+
+                            socket.close();
+                        } catch (e) {
+                            //
+                        }
+                    });
                 });
             });
 
@@ -195,7 +201,7 @@ export class WsHandler {
                 ws.subscribedChannels.add(channel);
             }
 
-            this.getNamespace(ws.app.id).sockets.set(ws.id, ws);
+            this.adapter.getNamespace(ws.app.id).addSocket(ws);
 
             // For non-presence channels, end with subscription succeeded.
             if (! (channelManager instanceof PresenceChannelManager)) {
@@ -214,9 +220,9 @@ export class WsHandler {
 
             ws.presence[channel] = { user_id, user_info };
 
-            this.getNamespace(ws.app.id).sockets.set(ws.id, ws);
+            this.adapter.getNamespace(ws.app.id).addSocket(ws);
 
-            this.getNamespace(ws.app.id).getChannelMembers(channel).then(members => {
+            this.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
                 ws.send(JSON.stringify({
                     event: 'pusher_internal:subscription_succeeded',
                     channel,
@@ -232,7 +238,7 @@ export class WsHandler {
                 // TODO: Mark metrics WS message.
                 // TODO: Mark stats WS message.
 
-                this.getNamespace(ws.app.id).send(channel, JSON.stringify({
+                this.adapter.send(ws.app.id, channel, JSON.stringify({
                     event: 'pusher_internal:member_added',
                     channel,
                     data: JSON.stringify({
@@ -264,7 +270,7 @@ export class WsHandler {
             if (response.left) {
                 // Send presence channel-speific events and delete specific data.
                 if (channelManager instanceof PresenceChannelManager) {
-                    this.getNamespace(ws.app.id).send(channel, JSON.stringify({
+                    this.adapter.send(ws.app.id, channel, JSON.stringify({
                         event: 'pusher_internal:member_removed',
                         channel,
                         data: JSON.stringify({
@@ -278,7 +284,7 @@ export class WsHandler {
 
             ws.subscribedChannels.delete(channel);
 
-            this.getNamespace(ws.app.id).sockets.delete(ws.id);
+            this.adapter.getNamespace(ws.app.id).addSocket(ws);
 
             return response;
         });
@@ -288,6 +294,10 @@ export class WsHandler {
      * Unsubscribe the connection from all channels.
      */
     unsubscribeFromAllChannels(ws: WebSocket): any {
+        if (! ws.subscribedChannels) {
+            return;
+        }
+
         ws.subscribedChannels.forEach(channel => {
             this.unsubscribeFromChannel(ws, channel);
         });
@@ -302,16 +312,16 @@ export class WsHandler {
         // TODO: Check if the client messaging is enabled for the app.
         // TODO: Check if the event name is not long
         // TODO: Check if the payload size is not big enough
-        // TODO: Rate limit the frontend event points
+        // TODO: Rate limit the frontend event points (code 4301)
         // TODO: Mark stats WS message
         // TODO: Mark metrics WS message
 
-        this.getNamespace(ws.app.id).getChannel(channel).hasConnection(ws.id).then(canBroadcast => {
+        this.adapter.getNamespace(ws.app.id).isInChannel(ws.id, channel).then(canBroadcast => {
             if (! canBroadcast) {
                 return;
             }
 
-            this.getNamespace(ws.app.id).send(channel, JSON.stringify({ event, channel, data }), ws.id);
+            this.adapter.send(ws.app.id, channel, JSON.stringify({ event, channel, data }), ws.id);
         });
     }
 
@@ -332,17 +342,6 @@ export class WsHandler {
     }
 
     /**
-     * Get the app namespace.
-     */
-    getNamespace(appId: string): Namespace {
-        if (! this.namespaces.get(appId)) {
-            this.namespaces.set(appId, new Namespace(appId));
-        }
-
-        return this.namespaces.get(appId);
-    }
-
-    /**
      * Use the app manager to retrieve a valid app.
      */
     protected checkForValidApp(ws: WebSocket): Promise<App|null> {
@@ -353,10 +352,10 @@ export class WsHandler {
      * Make sure the connection limit is not reached with this connection.
      */
     protected checkAppConnectionLimit(ws: WebSocket): Promise<boolean> {
-        return new Promise(resolve => {
+        return this.adapter.getSockets(ws.app.id).then(sockets => {
             let maxConnections = parseInt(ws.app.maxConnections as string) || -1;
 
-            resolve(this.getNamespace(ws.app.id).sockets.size + 1 > maxConnections);
+            return sockets.size + 1 > maxConnections;
         });
     }
 

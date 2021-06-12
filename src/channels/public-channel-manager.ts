@@ -1,5 +1,5 @@
-import { PresenceMember } from './channel';
-import { WsHandler } from '../ws-handler';
+import { AdapterInterface } from '../adapters';
+import { PresenceMember } from '../presence-member';
 import { WebSocket } from 'uWebSockets.js';
 
 export interface JoinResponse {
@@ -16,7 +16,7 @@ export interface LeaveResponse {
 }
 
 export class PublicChannelManager {
-    constructor(protected server: WsHandler) {
+    constructor(protected adapter: AdapterInterface) {
         //
     }
 
@@ -24,7 +24,7 @@ export class PublicChannelManager {
      * Join the connection to the channel.
      */
     join(ws: WebSocket, channel: string, message?: any): Promise<JoinResponse> {
-        return this.server.getNamespace(ws.app.id).getChannel(channel).subscribe(ws).then(() => {
+        return this.adapter.getNamespace(ws.app.id).addToChannel(ws, channel).then(() => {
             return {
                 ws,
                 success: true,
@@ -36,7 +36,7 @@ export class PublicChannelManager {
      * Mark the connection as closed and unsubscribe it.
      */
     leave(ws: WebSocket, channel: string): Promise<LeaveResponse> {
-        return this.server.getNamespace(ws.app.id).getChannel(channel).unsubscribe(ws.id).then(left => {
+        return this.adapter.getNamespace(ws.app.id).removeFromChannel(ws.id, channel).then(left => {
             return { left };
         });
     }

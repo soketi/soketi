@@ -1,3 +1,3 @@
-import { Server } from "./server";
+import { Server } from './server';
 
 module.exports = new Server;

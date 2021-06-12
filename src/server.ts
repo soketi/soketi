@@ -1,10 +1,11 @@
-import { AppManager } from './app-managers/app-manager';
+import { Adapter, AdapterInterface } from './adapters';
+import { AppManager, AppManagerInterface } from './app-managers';
+import { HttpHandler } from './http-handler';
 import { HttpRequest } from './http-request';
 import { HttpResponse, TemplatedApp } from 'uWebSockets.js';
 import { Log } from './log';
 import { Options } from './options';
 import { WsHandler } from './ws-handler';
-import { HorizontalScaling } from './horizontal-scaling/horizontal-scaling';
 import { WebSocket } from 'uWebSockets.js';
 
 const uWS = require('uWebSockets.js');
@@ -14,6 +15,12 @@ export class Server {
      * The list of options for the server.
      */
     public options: Options = {
+        adapter: {
+            driver: 'process',
+            redis: {
+                prefix: '',
+            },
+        },
         appManager: {
             driver: 'array',
             array: {
@@ -36,8 +43,13 @@ export class Server {
             maxNameLength: 200,
         },
         closingGracePeriod: 3,
-        horizontalScaling: {
-            driver: 'process',
+        database: {
+            redis: {
+                host: '127.0.0.1',
+                port: 6379,
+                password: null,
+                keyPrefix: '',
+            },
         },
         port: 6001,
         ssl: {
@@ -60,18 +72,44 @@ export class Server {
     /**
      * The WS handler for the incoming connections.
      */
-    protected wsHandler: WsHandler;
+    public wsHandler: WsHandler;
+
+    /**
+     * The HTTP handler for the REST API.
+     */
+    protected httpHandler: HttpHandler;
+
+    /**
+     * The app manager used for retrieving apps.
+     */
+    protected appManager: AppManagerInterface;
+
+    /**
+     * The adapter used to interact with the socket storage.
+     */
+    protected adapter: AdapterInterface;
 
     constructor() {
-        this.wsHandler = new WsHandler(
-            new AppManager(this.options),
-            new HorizontalScaling(this.options),
-            this,
-        );
+        //
     }
 
     start(options: any = {}, callback?: CallableFunction) {
         this.options = Object.assign(this.options, options);
+
+        this.appManager = new AppManager(this.options);
+        this.adapter = new Adapter(this.options, this);
+
+        this.wsHandler = new WsHandler(
+            this.appManager,
+            this.adapter,
+            this,
+        );
+
+        this.httpHandler = new HttpHandler(
+            this.appManager,
+            this.adapter,
+            this,
+        );
 
         Log.title('\n📡 uWS Server initialization started.\n');
         Log.info('⚡ Initializing the HTTP API & Websockets Server...\n');
@@ -116,7 +154,7 @@ export class Server {
             Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
             Log.warning(`⚡ The server will stay up ${this.options.closingGracePeriod} more seconds before closing the process.\n`);
 
-            this.wsHandler.closeAllSockets().then(async () => {
+            this.wsHandler.closeAllLocalSockets().then(async () => {
                 await setTimeout(() => {
                     Log.warning('⚡ Grace period finished. Closing the server.');
 
@@ -144,8 +182,12 @@ export class Server {
 
     protected configureHttp(server: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
-            server = server.any('/*', (res, req) => {
-                res.writeStatus('200 OK').writeHeader('IsExample', 'Yes').end('Hello there!');
+            server.get('/', (res, req) => this.httpHandler.healthCheck(req, res));
+            server.get('/usage', (res, req) => this.httpHandler.usage(req, res));
+            server.post('/apps/:appId/events', (res, req) => {
+                let appId = req.getParameter(0);
+
+                return this.httpHandler.events(res, appId);
             });
 
             resolve(server);

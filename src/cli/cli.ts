@@ -15,6 +15,7 @@ export class Cli {
      * @type {any}
      */
     public envVariables: { [key: string]: string; } = {
+        ADAPTER_DRIVER: 'adapter.driver',
         PORT: 'port',
         SSL_CERT: 'ssl.certPath',
         SSL_KEY: 'ssl.keyPath',
