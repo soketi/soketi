@@ -26,9 +26,9 @@ export class Server {
             array: {
                 apps: [
                     {
-                        id: 'echo-app',
-                        key: 'echo-app-key',
-                        secret: 'echo-app-secret',
+                        id: 'app-id',
+                        key: 'app-key',
+                        secret: 'app-secret',
                         maxConnections: -1,
                         enableStats: false,
                         enableClientMessages: true,
@@ -43,6 +43,22 @@ export class Server {
             maxNameLength: 200,
         },
         closingGracePeriod: 3,
+        cors: {
+            credentials: true,
+            origin: ['*'],
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+            allowedHeaders: [
+                'Origin',
+                'Content-Type',
+                'X-Auth-Token',
+                'X-Requested-With',
+                'Accept',
+                'Authorization',
+                'X-CSRF-TOKEN',
+                'XSRF-TOKEN',
+                'X-Socket-Id',
+            ],
+        },
         database: {
             redis: {
                 host: '127.0.0.1',
@@ -87,13 +103,19 @@ export class Server {
     /**
      * The adapter used to interact with the socket storage.
      */
-    protected adapter: AdapterInterface;
+    public adapter: AdapterInterface;
 
-    constructor() {
-        //
+    /**
+     * Start the server statically.
+     */
+    static async start(options: any = {}, callback?: CallableFunction) {
+        return (new Server).start(options, callback);
     }
 
-    start(options: any = {}, callback?: CallableFunction) {
+    /**
+     * Start the server.
+     */
+    async start(options: any = {}, callback?: CallableFunction) {
         this.options = Object.assign(this.options, options);
 
         this.appManager = new AppManager(this.options);
@@ -128,7 +150,7 @@ export class Server {
             Log.info('⚡ Initializing the HTTP webserver...\n');
 
             this.configureHttp(server).then(server => {
-                server.listen(this.options.port, serverProcess => {
+                server.listen('0.0.0.0', this.options.port, serverProcess => {
                     this.serverProcess = serverProcess;
 
                     Log.success('🎉 Server is up and running!\n');
@@ -145,7 +167,10 @@ export class Server {
         });
     }
 
-    async stop(): Promise<void> {
+    /**
+     * Stop the server.
+     */
+    stop(): Promise<void> {
         if (this.serverProcess) {
             this.closing = true;
 
@@ -154,16 +179,20 @@ export class Server {
             Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
             Log.warning(`⚡ The server will stay up ${this.options.closingGracePeriod} more seconds before closing the process.\n`);
 
-            this.wsHandler.closeAllLocalSockets().then(async () => {
-                await setTimeout(() => {
-                    Log.warning('⚡ Grace period finished. Closing the server.');
+            return this.wsHandler.closeAllLocalSockets().then(() => {
+                Log.warning('⚡ Grace period finished. Closing the server.');
 
-                    uWS.us_listen_socket_close(this.serverProcess);
-                }, this.options.closingGracePeriod * 1000);
+                uWS.us_listen_socket_close(this.serverProcess);
+
             });
         }
+
+        return new Promise(resolve => resolve());
     }
 
+    /**
+     * Configure the WebSocket logic.
+     */
     protected configureWebsockets(server: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
             server = server.ws('/app/:id', {
@@ -180,6 +209,9 @@ export class Server {
         });
     }
 
+    /**
+     * Configure the HTTP REST API server.
+     */
     protected configureHttp(server: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
             server.get('/', (res, req) => this.httpHandler.healthCheck(req, res));

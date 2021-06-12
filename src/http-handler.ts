@@ -18,7 +18,9 @@ export class HttpHandler {
     }
 
     healthCheck(req: HttpRequest, res: HttpResponse) {
-        return res.writeStatus('200 OK').end('OK');
+        this.corsMiddleware(res)
+            .writeStatus('200 OK')
+            .end('OK');
     }
 
     usage(req: HttpRequest, res: HttpResponse) {
@@ -126,5 +128,13 @@ export class HttpHandler {
         });
 
         res.onAborted(err);
+    }
+
+    protected corsMiddleware(res: HttpResponse): HttpResponse {
+        res.writeHeader('Access-Control-Allow-Origin', this.server.options.cors.origin.join(', '));
+        res.writeHeader('Access-Control-Allow-Methods', this.server.options.cors.methods.join(', '));
+        res.writeHeader('Access-Control-Allow-Headers', this.server.options.cors.allowedHeaders.join(', '));
+
+        return res;
     }
 }

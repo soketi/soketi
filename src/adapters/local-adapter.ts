@@ -6,6 +6,9 @@ import { WebSocket } from 'uWebSockets.js';
 import { PresenceMember } from '../presence-member';
 
 export class LocalAdapter implements AdapterInterface {
+    // TODO: Force disconnect a specific socket
+    // TODO: Force disconnect all sockets from an app.
+
     /**
      * The app connections storage class to manage connections.
      */

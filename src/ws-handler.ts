@@ -197,6 +197,19 @@ export class WsHandler {
         // TODO: Make sure that the presence channels' info is not big enough before joining.
 
         channelManager.join(ws, channel, message).then((response) => {
+            if (! response.success) {
+                let { errorMessage } = response;
+
+                return ws.send(JSON.stringify({
+                    event: 'pusher:subscription_error',
+                    data: JSON.stringify({
+                        type: 'AuthError',
+                        error: errorMessage,
+                        status: 401,
+                    }),
+                }));
+            }
+
             if (! ws.subscribedChannels.has(channel)) {
                 ws.subscribedChannels.add(channel);
             }
@@ -247,16 +260,6 @@ export class WsHandler {
                     }),
                 }), ws.id);
             });
-
-            if (! response.success) {
-                let { errorCode, errorMessage } = response;
-
-                return ws.send(JSON.stringify({
-                    event: 'pusher:error',
-                    code: errorCode,
-                    message: errorMessage,
-                }));
-            }
         });
     }
 

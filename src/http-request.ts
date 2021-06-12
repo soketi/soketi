@@ -3,7 +3,7 @@ import { HttpRequest as BaseHttpRequest } from 'uWebSockets.js';
 
 export interface HttpRequest extends BaseHttpRequest {
     /**
-     * The attached Echo App.
+     * The attached app.
      */
     app?: App;
 

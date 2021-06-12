@@ -76,6 +76,7 @@ export class App implements AppInterface {
         this.maxReadRequestsPerMinute = parseInt(app.maxReadRequestsPerMinute || app.max_read_req_per_min || -1);
 
         // TODO: Implement webhooks
+        // TODO: Implement app deactivation
     }
 
     /**

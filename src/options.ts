@@ -24,6 +24,12 @@ export interface Options {
         maxNameLength: number;
     };
     closingGracePeriod: number;
+    cors: {
+        credentials: boolean;
+        origin: string[];
+        methods: string[];
+        allowedHeaders: string[];
+    };
     database: {
         redis: Redis;
     }

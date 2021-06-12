@@ -17,7 +17,7 @@ enum RequestType {
 interface Request {
     type: RequestType;
     resolve: Function;
-    timeout: NodeJS.Timeout;
+    timeout: any;
     numSub?: number;
     msgCount?: number;
     sockets?: Map<string, any>;
