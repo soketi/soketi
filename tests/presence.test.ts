@@ -1,8 +1,6 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
-jest.retryTimes(3);
-
 describe('presence channel test', () => {
     afterEach(done => {
         if (Utils.currentServer) {

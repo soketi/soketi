@@ -1,3 +1,4 @@
+import * as dot from 'dot-wild';
 import { Adapter, AdapterInterface } from './adapters';
 import { AppManager, AppManagerInterface } from './app-managers';
 import { HttpHandler } from './http-handler';
@@ -43,7 +44,6 @@ export class Server {
         channelLimits: {
             maxNameLength: 200,
         },
-        closingGracePeriod: 3,
         cors: {
             credentials: true,
             origin: ['*'],
@@ -117,7 +117,9 @@ export class Server {
      * Start the server.
      */
     async start(options: any = {}, callback?: CallableFunction) {
-        this.options = Object.assign(this.options, options);
+        for (let path in options) {
+            this.options = dot.set(this.options, path, options[path]);
+        }
 
         this.appManager = new AppManager(this.options);
         this.adapter = new Adapter(this.options, this);
@@ -178,13 +180,11 @@ export class Server {
             Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...\n');
 
             Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
-            Log.warning(`⚡ The server will stay up ${this.options.closingGracePeriod} more seconds before closing the process.\n`);
 
             return this.wsHandler.closeAllLocalSockets().then(() => {
-                Log.warning('⚡ Grace period finished. Closing the server.');
+                Log.warning('⚡ All sockets were closed. Now closing the server.');
 
                 uWS.us_listen_socket_close(this.serverProcess);
-
             });
         }
 

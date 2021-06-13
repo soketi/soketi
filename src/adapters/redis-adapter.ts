@@ -93,25 +93,6 @@ export class RedisAdapter extends LocalAdapter {
     }
 
     /**
-     * Send a message to a namespace and channel.
-     */
-    send(appId: string, channel: string, data: string, exceptingId?: string): any {
-        let msg = msgpack.encode({
-            uid: this.uid,
-            appId,
-            message: {
-                channel,
-                data,
-                exceptingId,
-            }
-        });
-
-        this.pubClient.publish(this.channel, msg);
-
-        super.send(appId, channel, data, exceptingId);
-    }
-
-    /**
      * Get all sockets from the namespace.
      */
     async getSockets(appId: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
@@ -249,6 +230,33 @@ export class RedisAdapter extends LocalAdapter {
     }
 
     /**
+     * Send a message to a namespace and channel.
+     */
+    send(appId: string, channel: string, data: string, exceptingId?: string): any {
+        let msg = msgpack.encode({
+            uid: this.uid,
+            appId,
+            message: {
+                channel,
+                data,
+                exceptingId,
+            }
+        });
+
+        this.pubClient.publish(this.channel, msg);
+
+        super.send(appId, channel, data, exceptingId);
+    }
+
+    /**
+     * Make sure to close all connections the adapter created.
+     */
+    closeAllConnections(): void {
+        this.pubClient.disconnect();
+        this.subClient.disconnect();
+    }
+
+    /**
      * Listen for message coming from other nodes to broadcast
      * a specific message to the local sockets.
      */
@@ -272,6 +280,9 @@ export class RedisAdapter extends LocalAdapter {
         super.send(appId, channel, data, exceptingId);
     }
 
+    /**
+     * Listen for requests coming from other nodes.
+     */
     protected async onRequest(redisChannel: string, msg: any) {
         redisChannel = redisChannel.toString();
 
@@ -337,6 +348,9 @@ export class RedisAdapter extends LocalAdapter {
         }
     }
 
+    /**
+     * Respond to a specific node when requested data.
+     */
     protected onResponse(redisChannel: string, msg: any) {
         let response: Response;
 

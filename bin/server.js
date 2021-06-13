@@ -1,5 +1,5 @@
 #! /usr/bin/env node
 
-const uWsCli = require('./../dist/cli');
+require('./../dist/cli');
 
 process.title = 'uws-server';

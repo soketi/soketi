@@ -6,7 +6,12 @@ const PusherJS = require('pusher-js');
 export class Utils {
     public static currentServer: Server = null;
 
-    static newServer(options = {}, callback): any{
+    static newServer(options = {}, callback): any {
+        options = {
+            'adapter.driver': process.env.TEST_ADAPTER || 'local',
+            'appManager.driver': process.env.TEST_APPS_MANAGER || 'array',
+        };
+
         return Server.start(options, (server: Server) => {
             Utils.currentServer = server;
 

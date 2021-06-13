@@ -1,7 +1,6 @@
 import * as dot from 'dot-wild';
 import { Options } from './../options';
-
-const server = require('./../../dist');
+import { Server } from './../server';
 
 export class Cli {
     /**
@@ -10,12 +9,23 @@ export class Cli {
     public options: Options;
 
     /**
+     * The server to run.
+     */
+    public server: Server;
+
+    /**
      * Allowed environment variables.
      *
      * @type {any}
      */
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
+        APP_MANAGER_DRIVER: 'appManager.driver',
+        CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength',
+        DB_REDIS_HOST: 'database.redis.host',
+        DB_REDIS_PORT: 'database.redis.port',
+        DB_REDIS_PASSWORD: 'database.redis.password',
+        DB_REDIS_KEY_PREFIX: 'database.redis.keyPrefix',
         PORT: 'port',
         SSL_CERT: 'ssl.certPath',
         SSL_KEY: 'ssl.keyPath',
@@ -26,7 +36,7 @@ export class Cli {
      * Create new CLI instance.
      */
     constructor() {
-        this.options = server.options;
+        this.server = new Server;
     }
 
     /**
@@ -62,17 +72,24 @@ export class Cli {
     /**
      * Start the server.
      */
+    static async start(yargs: any): Promise<any> {
+        return (new Cli).start(yargs);
+    }
+
+    /**
+     * Start the server.
+     */
     async start(yargs: any): Promise<any> {
         this.overwriteOptionsFromEnv();
 
         const handleFailure = async () => {
-            server.stop();
+            this.server.stop();
         }
 
         process.on('SIGINT', handleFailure);
         process.on('SIGHUP', handleFailure);
         process.on('SIGTERM', handleFailure);
 
-        return server.start(this.options);
+        return this.server.start(this.options);
     }
 }

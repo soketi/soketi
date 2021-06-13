@@ -1,10 +1,6 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
-jest.retryTimes(3);
-
-let currentServer: Server = null;
-
 describe('public channel test', () => {
     afterEach(done => {
         if (Utils.currentServer) {

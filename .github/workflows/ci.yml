@@ -34,6 +34,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Cache Primes
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package.json') }}
+
       - uses: actions/setup-node@v2.1.5
         name: Installing Node.js v${{ matrix.node }}
         with:
@@ -49,12 +55,9 @@ jobs:
         run: |
           npm install
 
-      - name: Lint the code
+      - name: Lint & Compilation
         run: |
           npm run lint
-
-      - name: Compile TypeScript
-        run: |
           npm run build
 
       - name: Execute tests

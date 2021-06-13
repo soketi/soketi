@@ -70,7 +70,7 @@
     "build-watch": "./node_modules/.bin/tsc -W",
     "lint": "eslint --ext .js,.ts ./src",
     "prepublish": "npm run build",
-    "test": "jest --detectOpenHandles",
+    "test": "jest --detectOpenHandles --forceExit",
     "test:watch": "npm test -- --watch"
   }
 }

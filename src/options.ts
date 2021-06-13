@@ -23,7 +23,6 @@ export interface Options {
     channelLimits: {
         maxNameLength: number;
     };
-    closingGracePeriod: number;
     cors: {
         credentials: boolean;
         origin: string[];
