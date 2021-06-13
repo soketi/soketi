@@ -32,9 +32,4 @@ export interface AdapterInterface {
      * Get a given presence channel's members.
      */
     getChannelMembers(appId: string, channel: string, onlyLocal?: boolean): Promise<Map<string, PresenceMember>>;
-
-    /**
-     * Make sure to close all connections the adapter created.
-     */
-    closeAllConnections(): void;
 }

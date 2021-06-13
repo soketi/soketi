@@ -68,11 +68,4 @@ export class Adapter implements AdapterInterface {
     send(appId: string, channel: string, data: string, exceptingId?: string): void {
         return this.driver.send(appId, channel, data, exceptingId);
     }
-
-    /**
-     * Make sure to close all connections the adapter created.
-     */
-    closeAllConnections(): void {
-        return this.driver.closeAllConnections();
-    }
 }

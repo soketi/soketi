@@ -83,11 +83,4 @@ export class LocalAdapter implements AdapterInterface {
             });
         });
     }
-
-    /**
-     * Make sure to close all connections the adapter created.
-     */
-    closeAllConnections(): void {
-        //
-    }
 }

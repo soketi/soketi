@@ -249,14 +249,6 @@ export class RedisAdapter extends LocalAdapter {
     }
 
     /**
-     * Make sure to close all connections the adapter created.
-     */
-    closeAllConnections(): void {
-        this.pubClient.disconnect();
-        this.subClient.disconnect();
-    }
-
-    /**
      * Listen for message coming from other nodes to broadcast
      * a specific message to the local sockets.
      */
