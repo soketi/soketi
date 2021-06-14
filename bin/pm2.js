@@ -2,6 +2,6 @@
 
 const { Cli } = require('./../dist/cli/cli');
 
-process.title = 'uws-server';
+process.title = 'pws-server';
 
 Cli.start();

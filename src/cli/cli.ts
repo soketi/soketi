@@ -4,11 +4,6 @@ import { Server } from './../server';
 
 export class Cli {
     /**
-     * Default configuration options.
-     */
-    public options: Options;
-
-    /**
      * The server to run.
      */
     public server: Server;
@@ -46,8 +41,8 @@ export class Cli {
         require('dotenv').config();
 
         for (let envVar in this.envVariables) {
-            let value = process.env[envVar] || process.env[`UWS_PUSHER_${envVar}`] || null;
-            let optionKey = this.envVariables[envVar.replace('UWS_PUSHER_', '')];
+            let value = process.env[envVar] || process.env[`PWS_${envVar}`] || null;
+            let optionKey = this.envVariables[envVar.replace('PWS_', '')];
 
             if (value !== null) {
                 let json = null;
@@ -64,7 +59,7 @@ export class Cli {
                     }
                 }
 
-                this.options = dot.set(this.options, optionKey, value);
+                this.server.options = dot.set(this.server.options, optionKey, value);
             }
         }
     }
@@ -90,6 +85,6 @@ export class Cli {
         process.on('SIGHUP', handleFailure);
         process.on('SIGTERM', handleFailure);
 
-        return this.server.start(this.options);
+        return this.server.start();
     }
 }

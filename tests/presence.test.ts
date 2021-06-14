@@ -66,7 +66,6 @@ describe('presence channel test', () => {
                 },
             };
 
-            let backend = Utils.newBackend();
             let johnClient = Utils.newClientForPresenceUser(john);
             let aliceClient = Utils.newClientForPresenceUser(alice);
             let channelName = `presence-${Utils.randomChannelName()}`;

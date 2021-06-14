@@ -88,6 +88,13 @@ export class Namespace {
     }
 
     /**
+     * Get the list of channels with the websocket IDs.
+     */
+    getChannels(): Promise<Map<string, Set<string>>> {
+        return new Promise(resolve => resolve(this.channels));
+    }
+
+    /**
      * Get all the channel sockets associated with this namespace.
      */
     getChannelSockets(channel: string): Promise<Map<string, WebSocket>> {

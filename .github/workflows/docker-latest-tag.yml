@@ -54,11 +54,11 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: localhost:5000/soketi/uws-pusher:latest-${{ matrix.node }}
+          tags: localhost:5000/soketi/pws:latest-${{ matrix.node }}
 
       - name: Test
         run: |
-          docker run -d -p 6001:6001 -e PROMETHEUS_ENABLED=1 localhost:5000/soketi/uws-pusher:latest-${{ matrix.node }}
+          docker run -d -p 6001:6001 -e PROMETHEUS_ENABLED=1 localhost:5000/soketi/pws:latest-${{ matrix.node }}
           sleep 5
           curl --silent -XGET --fail http://127.0.0.1:6001
           curl --silent -XGET --fail http://127.0.0.1:6001/metrics
@@ -68,6 +68,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: soketi/uws-pusher:latest-${{ matrix.node }}
+          tags: soketi/pws:latest-${{ matrix.node }}
           build-args: |
             VERSION=${{ matrix.node }}

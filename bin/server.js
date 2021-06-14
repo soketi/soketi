@@ -2,4 +2,4 @@
 
 require('./../dist/cli');
 
-process.title = 'uws-server';
+process.title = 'pws-server';

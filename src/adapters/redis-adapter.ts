@@ -10,8 +10,9 @@ const uid2 = require('uid2');
 
 enum RequestType {
     SOCKETS = 0,
-    CHANNEL_SOCKETS = 1,
-    CHANNEL_MEMBERS = 2,
+    CHANNELS = 1,
+    CHANNEL_SOCKETS = 2,
+    CHANNEL_MEMBERS = 3,
 }
 
 interface Request {
@@ -22,6 +23,7 @@ interface Request {
     msgCount?: number;
     sockets?: Map<string, any>;
     members?: Map<string, PresenceMember>;
+    channels?: Map<string, Set<string>>;
     [other: string]: any;
 }
 
@@ -29,6 +31,7 @@ interface Response {
     requestId: string;
     sockets?: Map<string, WebSocket>;
     members?: [string, PresenceMember][];
+    channels?: [string, Set<string>][];
 }
 
 interface BroadcastedMessage {
@@ -131,6 +134,51 @@ export class RedisAdapter extends LocalAdapter {
                 timeout,
                 msgCount: 1,
                 sockets: localSockets,
+            });
+
+            this.pubClient.publish(this.requestChannel, request);
+        });
+    }
+
+    /**
+     * Get all sockets from the namespace.
+     */
+    async getChannels(appId: string, onlyLocal = false): Promise<Map<string, Set<string>>> {
+        const localChannels = await super.getChannels(appId);
+
+        if (onlyLocal) {
+            return new Promise(resolve => resolve(localChannels));
+        }
+
+        const numSub = await this.getNumSub();
+
+        if (numSub <= 1) {
+            return localChannels;
+        }
+
+        const requestId = uid2(6);
+
+        const request = JSON.stringify({
+            requestId,
+            appId,
+            type: RequestType.CHANNELS,
+        });
+
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                if (this.requests.has(requestId)) {
+                    reject(new Error('timeout reached while waiting for getChannels response'));
+                    this.requests.delete(requestId);
+                }
+            }, this.requestsTimeout);
+
+            this.requests.set(requestId, {
+                type: RequestType.CHANNELS,
+                numSub,
+                resolve,
+                timeout,
+                msgCount: 1,
+                channels: localChannels,
             });
 
             this.pubClient.publish(this.requestChannel, request);
@@ -295,6 +343,7 @@ export class RedisAdapter extends LocalAdapter {
         let response: string;
         let localSockets: WebSocket[];
         let localMembers: Map<string, PresenceMember>;
+        let localChannels: Map<string, Set<string>>;
 
         let { requestId, appId } = request;
 
@@ -332,6 +381,22 @@ export class RedisAdapter extends LocalAdapter {
                 response = JSON.stringify({
                     requestId,
                     members: [...localMembers],
+                });
+
+                this.pubClient.publish(this.responseChannel, response);
+
+                break;
+
+            case RequestType.CHANNELS:
+                if (this.requests.has(requestId)) {
+                    return;
+                }
+
+                localChannels = await super.getChannels(appId);
+
+                response = JSON.stringify({
+                    requestId,
+                    channels: [...localChannels],
                 });
 
                 this.pubClient.publish(this.responseChannel, response);
@@ -397,6 +462,27 @@ export class RedisAdapter extends LocalAdapter {
 
                     if (request.resolve) {
                         request.resolve(request.members);
+                    }
+
+                    this.requests.delete(requestId);
+                }
+
+                break;
+
+            case RequestType.CHANNELS:
+                request.msgCount++;
+
+                if (! response.channels || ! Array.isArray(response.channels)) {
+                    return;
+                }
+
+                response.channels.forEach(([string, set]) => request.channels.set(string, set));
+
+                if (request.msgCount === request.numSub) {
+                    clearTimeout(request.timeout);
+
+                    if (request.resolve) {
+                        request.resolve(request.channels);
                     }
 
                     this.requests.delete(requestId);

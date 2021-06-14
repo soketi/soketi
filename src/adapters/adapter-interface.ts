@@ -24,6 +24,11 @@ export interface AdapterInterface {
     getSockets(appId: string, onlyLocal?: boolean): Promise<Map<string, WebSocket>>;
 
     /**
+     * Get the list of channels with the websocket IDs.
+     */
+    getChannels(appId: string, onlyLocal?: boolean): Promise<Map<string, Set<string>>>;
+
+    /**
      * Get all the channel sockets associated with a namespace.
      */
     getChannelSockets(appId: string, channel: string, onlyLocal?: boolean): Promise<Map<string, WebSocket>>;

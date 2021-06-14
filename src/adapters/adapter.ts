@@ -49,16 +49,23 @@ export class Adapter implements AdapterInterface {
     }
 
     /**
+     * Get the list of channels with the websocket IDs.
+     */
+    async getChannels(appId: string, onlyLocal = false): Promise<Map<string, Set<string>>> {
+        return this.driver.getChannels(appId, onlyLocal);
+    }
+
+    /**
      * Get all the channel sockets associated with a namespace.
      */
-    getChannelSockets(appId: string, channel: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
+    async getChannelSockets(appId: string, channel: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
         return this.driver.getChannelSockets(appId, channel, onlyLocal);
     }
 
     /**
      * Get a given presence channel's members.
      */
-    getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
+    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
         return this.driver.getChannelMembers(appId, channel, onlyLocal);
     }
 

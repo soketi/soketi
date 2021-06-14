@@ -1,10 +1,10 @@
 {
-  "name": "@soketi/pusher-uws",
+  "name": "@soketi/pws",
   "version": "0.0.0-dev",
-  "description": "Pusher uWS is a Pusher Protocol-compatible Websockets server, written on top of uWS.",
+  "description": "P(usher)WS is a Pusher Protocol-compatible Websockets server, written on top of uWS.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/soketi/pusher-uws.git"
+    "url": "https://github.com/soketi/pws.git"
   },
   "main": "dist/index.js",
   "keywords": [
@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "arraybuffer-to-string": "^1.0.2",
+    "async": "^3.2.0",
     "axios": "^0.21.1",
     "colors": "^1.4.0",
     "dayjs": "^1.10.4",
@@ -36,6 +37,7 @@
     "prom-client": "^13.1.0",
     "prometheus-query": "^3.0.0",
     "pusher": "^5.0.0",
+    "query-string": "^7.0.0",
     "rate-limiter-flexible": "^2.2.2",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v19.2.0",
     "uid2": "0.0.3",
@@ -72,5 +74,8 @@
     "prepublish": "npm run build",
     "test": "jest --detectOpenHandles --forceExit",
     "test:watch": "npm test -- --watch"
+  },
+  "bin": {
+    "pws": "bin/server.js"
   }
 }

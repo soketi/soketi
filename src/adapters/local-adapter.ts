@@ -42,21 +42,28 @@ export class LocalAdapter implements AdapterInterface {
     /**
      * Get all sockets from the namespace.
      */
-    getSockets(appId: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
+    async getSockets(appId: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
         return this.getNamespace(appId).getSockets();
+    }
+
+    /**
+     * Get all sockets from the namespace.
+     */
+    async getChannels(appId: string, onlyLocal = false): Promise<Map<string, Set<string>>> {
+        return this.getNamespace(appId).getChannels();
     }
 
     /**
      * Get all the channel sockets associated with a namespace.
      */
-    getChannelSockets(appId: string, channel: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
+    async getChannelSockets(appId: string, channel: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
         return this.getNamespace(appId).getChannelSockets(channel);
     }
 
     /**
      * Get a given presence channel's members.
      */
-    getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
+     async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
         return this.getNamespace(appId).getChannelMembers(channel);
     }
 

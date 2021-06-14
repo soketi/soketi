@@ -1,4 +1,4 @@
-import { HttpRequest } from './http-request';
+import { HttpResponse } from 'uWebSockets.js';
 
 const Pusher = require('pusher');
 const pusherUtil = require('pusher/lib/util');
@@ -82,13 +82,12 @@ export class App implements AppInterface {
     /**
      * Get the signing token from the request.
      */
-    signingTokenFromRequest(req: HttpRequest): string {
-        return '';
-        /* const params = {
+    signingTokenFromRequest(res: HttpResponse): string {
+        const params = {
             auth_key: this.key,
-            auth_timestamp: req.getQuery('auth_timestamp'),
-            auth_version: req.getQuery('auth_version'),
-            ...req.getQuery().split('&').map(pair => pair.split('=')),
+            auth_timestamp: res.query.auth_timestamp,
+            auth_version: res.query.auth_version,
+            // TODO: Add extra query from the query
         };
 
         delete params['auth_signature'];
@@ -97,15 +96,15 @@ export class App implements AppInterface {
         delete params['appKey'];
         delete params['channelName'];
 
-        if (req.rawBody && Object.keys(req.body).length > 0) {
-            params['body_md5'] = pusherUtil.getMD5(req.rawBody);
+        if (res.body && Object.keys(res.body).length > 0) {
+            params['body_md5'] = pusherUtil.getMD5(JSON.stringify(res.body));
         }
 
         return this.signingToken(
-            req.getMethod().toUpperCase(),
-            req.getUrl(),
+            res.method,
+            res.url,
             pusherUtil.toOrderedArray(params).join('&'),
-        ) */
+        );
     }
 
     /**

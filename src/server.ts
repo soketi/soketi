@@ -2,14 +2,13 @@ import * as dot from 'dot-wild';
 import { Adapter, AdapterInterface } from './adapters';
 import { AppManager, AppManagerInterface } from './app-managers';
 import { HttpHandler } from './http-handler';
-import { HttpRequest } from './http-request';
-import { HttpResponse, TemplatedApp } from 'uWebSockets.js';
+import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js';
 import { Log } from './log';
 import { Options } from './options';
 import { WsHandler } from './ws-handler';
 import { WebSocket } from 'uWebSockets.js';
 
-const _ = require('lodash');
+const queryString = require('query-string');
 const uWS = require('uWebSockets.js');
 
 export class Server {
@@ -136,7 +135,7 @@ export class Server {
             this,
         );
 
-        Log.title('\n📡 uWS Server initialization started.\n');
+        Log.title('\n📡 pWS Server initialization started.\n');
         Log.info('⚡ Initializing the HTTP API & Websockets Server...\n');
 
         let server: TemplatedApp = this.shouldConfigureSsl()
@@ -215,12 +214,43 @@ export class Server {
      */
     protected configureHttp(server: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
-            server.get('/', (res, req) => this.httpHandler.healthCheck(req, res));
-            server.get('/usage', (res, req) => this.httpHandler.usage(req, res));
-            server.post('/apps/:appId/events', (res, req) => {
-                let appId = req.getParameter(0);
+            server.get('/', (res, req) => this.httpHandler.healthCheck(res));
+            server.get('/usage', (res, req) => this.httpHandler.usage(res));
 
-                return this.httpHandler.events(res, appId);
+            server.get('/apps/:appId/channels', (res, req) => {
+                res.params = { appId: req.getParameter(0) };
+                res.query = queryString.parse(req.getQuery());
+                res.method = req.getMethod().toUpperCase();
+                res.url = req.getUrl();
+
+                return this.httpHandler.channels(res);
+            });
+
+            server.get('/apps/:appId/channels/:channelName', (res, req) => {
+                res.params = { appId: req.getParameter(0), channel: req.getParameter(1) };
+                res.query = queryString.parse(req.getQuery());
+                res.method = req.getMethod().toUpperCase();
+                res.url = req.getUrl();
+
+                return this.httpHandler.channel(res);
+            });
+
+            server.get('/apps/:appId/channels/:channelName/users', (res, req) => {
+                res.params = { appId: req.getParameter(0), channel: req.getParameter(1) };
+                res.query = queryString.parse(req.getQuery());
+                res.method = req.getMethod().toUpperCase();
+                res.url = req.getUrl();
+
+                return this.httpHandler.channelUsers(res);
+            });
+
+            server.post('/apps/:appId/events', (res, req) => {
+                res.params = { appId: req.getParameter(0) };
+                res.query = queryString.parse(req.getQuery());
+                res.method = req.getMethod().toUpperCase();
+                res.url = req.getUrl();
+
+                return this.httpHandler.events(res);
             });
 
             resolve(server);

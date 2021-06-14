@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const port = 3000;
 
-app.get('/uws/app', (req, res) => {
+app.get('/pws/app', (req, res) => {
     if (req.query.token !== process.env.APPS_MANAGER_TOKEN) {
         res.statusCode = 401;
         return res.json({ error: 'Unauthenticated' });
