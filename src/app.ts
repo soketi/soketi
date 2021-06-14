@@ -8,7 +8,6 @@ export interface AppInterface {
     key: string;
     secret: string;
     maxConnections: string|number;
-    enableStats: boolean;
     enableClientMessages: boolean;
     maxBackendEventsPerMinute: string|number;
     maxClientEventsPerMinute: string|number;
@@ -39,11 +38,6 @@ export class App implements AppInterface {
     /**
      * @type {boolean}
      */
-    public enableStats: boolean;
-
-    /**
-     * @type {boolean}
-     */
     public enableClientMessages: boolean;
 
     /**
@@ -69,7 +63,6 @@ export class App implements AppInterface {
         this.key = app.key;
         this.secret = app.secret;
         this.maxConnections = parseInt(app.maxConnections || app.max_connections || -1);
-        this.enableStats = app.enableStats || app.enable_stats || false;
         this.enableClientMessages = app.enableClientMessages || app.enable_client_messages || true;
         this.maxBackendEventsPerMinute = parseInt(app.maxBackendEventsPerMinute || app.max_backend_events_per_min || -1);
         this.maxClientEventsPerMinute = parseInt(app.maxClientEventsPerMinute || app.max_client_events_per_min || -1);

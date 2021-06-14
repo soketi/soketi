@@ -16,12 +16,29 @@ export class Cli {
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
         APP_MANAGER_DRIVER: 'appManager.driver',
-        CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength',
+        CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength', // TODO: Implement maxNameLength
+        DEBUG: 'debug',
+        DEFAULT_APP_ID: 'appManager.array.apps.0.id',
+        DEFAULT_APP_KEY: 'appManager.array.apps.0.key',
+        DEFAULT_APP_SECRET: 'appManager.array.apps.0.secret',
+        DEFAULT_APP_MAX_CONNS: 'appManager.array.apps.0.maxConnections',
+        DEFAULT_APP_ENABLE_CLIENT_MESSAGES: 'appManager.array.apps.0.enableClientMessages',
+        DEFAULT_APP_MAX_BACKEND_EVENTS_PER_MIN: 'appManager.array.apps.0.maxBackendEventsPerMinute',
+        DEFAULT_APP_MAX_CLIENT_EVENTS_PER_MIN: 'appManager.array.apps.0.maxClientEventsPerMinute',
+        DEFAULT_APP_MAX_READ_REQ_PER_MIN: 'appManager.array.apps.0.maxReadRequestsPerMinute',
         DB_REDIS_HOST: 'database.redis.host',
         DB_REDIS_PORT: 'database.redis.port',
         DB_REDIS_PASSWORD: 'database.redis.password',
         DB_REDIS_KEY_PREFIX: 'database.redis.keyPrefix',
+        EVENT_MAX_CHANNELS_AT_ONCE: 'eventLimits.maxChannelsAtOnce', // TODO: Implement maxChannelsAtOnce
+        EVENT_MAX_NAME_LENGTH: 'eventLimits.maxNameLength',
+        EVENT_MAX_SIZE_IN_KB: 'eventLimits.maxPayloadInKb',
+        NODE_ID: 'instance.node_id',
+        POD_ID: 'instance.pod_id',
         PORT: 'port',
+        PRESENCE_MAX_MEMBER_SIZE: 'presence.maxMemberSizeInKb', // TODO: Implement presence max member size
+        PRESENCE_MAX_MEMBERS: 'presence.maxMembersPerChannel',
+        RATE_LIMITER_DRIVER: 'rateLimiter.driver', // TODO: Implement rate limiter
         SSL_CERT: 'ssl.certPath',
         SSL_KEY: 'ssl.keyPath',
         SSL_PASS: 'ssl.passphrase',

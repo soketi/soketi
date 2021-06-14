@@ -5,6 +5,7 @@ import { HttpHandler } from './http-handler';
 import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js';
 import { Log } from './log';
 import { Options } from './options';
+import { v4 as uuidv4 } from 'uuid';
 import { WsHandler } from './ws-handler';
 import { WebSocket } from 'uWebSockets.js';
 
@@ -31,7 +32,6 @@ export class Server {
                         key: 'app-key',
                         secret: 'app-secret',
                         maxConnections: -1,
-                        enableStats: false,
                         enableClientMessages: true,
                         maxBackendEventsPerMinute: -1,
                         maxClientEventsPerMinute: -1,
@@ -67,7 +67,28 @@ export class Server {
                 keyPrefix: '',
             },
         },
+        debug: false,
+        eventLimits: {
+            maxChannelsAtOnce: 100,
+            maxNameLength: 200,
+            maxPayloadInKb: 100,
+        },
+        httpApi: {
+            requestLimitInMb: 100,
+        },
+        instance: {
+            node_id: null,
+            process_id: process.pid || uuidv4(),
+            pod_id: null,
+        },
         port: 6001,
+        presence: {
+            maxMembersPerChannel: 100,
+            maxMemberSizeInKb: 2,
+        },
+        rateLimiter: {
+            driver: 'local',
+        },
         ssl: {
             certPath: '',
             keyPath: '',

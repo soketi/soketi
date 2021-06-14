@@ -31,8 +31,29 @@ export interface Options {
     };
     database: {
         redis: Redis;
-    }
+    };
+    debug: boolean;
+    eventLimits: {
+        maxChannelsAtOnce: string|number;
+        maxNameLength: string|number;
+        maxPayloadInKb: string|number;
+    };
+    httpApi: {
+        requestLimitInMb: string|number;
+    };
+    instance: {
+        node_id: string|number|null;
+        process_id: string|number;
+        pod_id: string|number|null;
+    };
     port: number;
+    presence: {
+        maxMembersPerChannel: string|number;
+        maxMemberSizeInKb: string|number;
+    };
+    rateLimiter: {
+        driver: string;
+    };
     ssl: {
         certPath: string;
         keyPath: string;

@@ -109,7 +109,7 @@ pWS is optimized to work in multi-node or multi-process environments, like Kuber
 
 To be able to scale it horizontally and efficiently enable node-to-node or process-to-process communication, pWS leverages a Redis connection
 
-You can configure pWS to run with Redis as a primary adapter for the local-persistent data with [an environment variable](docs/ENV.md#replication):
+You can configure pWS to run with Redis as a primary adapter for the local-persistent data with [an environment variable](docs/ENV.md#adapters):
 
 ```bash
 $ ADAPTER_DRIVER=redis pws-server start

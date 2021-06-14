@@ -29,7 +29,6 @@ app.get('/pws/app', (req, res) => {
             key: 'app-key',
             secret: 'app-secret',
             maxConnections: 100,
-            enableStats: true,
             enableClientMessages: true,
             maxBackendEventsPerMinute: -1,
             maxClientEventsPerMinute: -1,
