@@ -83,9 +83,6 @@ export class LocalAdapter implements AdapterInterface {
                     return;
                 }
 
-                // TODO: Mark metrics WS message.
-                // TODO: Mark stats WS message.
-
                 ws.send(data);
             });
         });

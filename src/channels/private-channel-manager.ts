@@ -18,6 +18,7 @@ export class PrivateChannelManager extends PublicChannelManager {
                     success: false,
                     errorCode: 4009,
                     errorMessage: 'The connection is unauthorized.',
+                    authError: true,
                 };
             }
 

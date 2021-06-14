@@ -13,7 +13,7 @@ The server is built on top of [uWebSockets.js](https://github.com/uNetworking/uW
 
 This project nor the owner is NOT affiliated with Pusher and it's strictly an open-source project that makes use of the [Pusher Protocol](https://pusher.com/docs/channels/library_auth_reference/pusher-websockets-protocol).
 
-## What pWS does not implemented (yet) from the Pusher protocol?
+## What pWS does not implemented (yet) from the Pusher Protocol?
 
 The list may be incomplete. To address any problem that is **NOT known** (aka from the list below), please open an issue from the issue board.
 
@@ -23,6 +23,7 @@ The list may be incomplete. To address any problem that is **NOT known** (aka fr
 - POST Batch Events endpoint
 - POST Events and Batch Events does not return channel data in return
 - Encrypted Private Channels are not **yet** supported
+- Webhooks are not **yet** supported
 
 #### `/apps/[app_id]/channels/[channel_name]`
 

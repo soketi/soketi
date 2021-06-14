@@ -1,8 +1,9 @@
 import { AdapterInterface } from './adapters';
 import { AppManagerInterface } from './app-managers/app-manager-interface';
+import async from 'async';
 import { HttpResponse } from 'uWebSockets.js';
 import { Server } from './server';
-import async from 'async';
+import { Utils } from './utils';
 
 const v8 = require('v8');
 
@@ -55,8 +56,7 @@ export class HttpHandler {
     }
 
     // TODO: Create functions to apply before functions for the rate limiting.
-    // TODO: Mark metrics API message middleware
-    // TODO: Mark stats API message middleware
+    // TODO: Mark API message in Prometheus
 
     channels(res: HttpResponse) {
         this.attachMiddleware(res, [
@@ -91,7 +91,7 @@ export class HttpHandler {
         this.attachMiddleware(res, [
             this.corsMiddleware,
             this.appMiddleware,
-            // this.authMiddleware,
+            this.authMiddleware,
         ]).then(res => {
             let response: ChannelResponse;
 
@@ -107,6 +107,7 @@ export class HttpHandler {
                     response.user_count = 0;
 
                     if (response.subscription_count > 0) {
+                        // TODO: Idea: A small this.adapter.getChannelMembersCount() method might be great to avoid too much network transfer.
                         this.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
                             response.user_count = members.size;
                             res.writeStatus('200 OK').end(JSON.stringify(response));
@@ -160,9 +161,22 @@ export class HttpHandler {
 
             let channels: string[] = message.channels || [message.channel];
 
-            // TODO: Make sure the channels length is not too big.
-            // TODO: Make sure the message name is not too big.
-            // TODO: Makes ure the payload size is not too big.
+            // Make sure the channels length is not too big.
+            if (channels.length > this.server.options.eventLimits.maxChannelsAtOnce) {
+                return this.sendBadResponse(res, `Cannot broadcast to more than ${this.server.options.eventLimits.maxChannelsAtOnce} channels at once`);
+            }
+
+            // Make sure the event name length is not too big.
+            if (message.name.length > this.server.options.eventLimits.maxNameLength) {
+                return this.sendBadResponse(res, `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`);
+            }
+
+            let payloadSizeInKb = Utils.dataToKilobytes(message.data);
+
+            // Make sure the total payload of the message body is not too big.
+            if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
+                return this.sendBadResponse(res, `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`);
+            }
 
             channels.forEach(channel => {
                 this.adapter.send(res.params.appId, channel, JSON.stringify({
@@ -196,11 +210,21 @@ export class HttpHandler {
         }));
     }
 
+    protected entityTooLargeResponse(res: HttpResponse, message: string) {
+        return res.writeStatus('413 Entity Too Large').end(JSON.stringify({
+            error: message,
+        }));
+    }
+
     protected jsonBodyMiddleware(res: HttpResponse, next: CallableFunction): any {
         this.readJson(res, data => {
             res.body = data;
 
-            // TODO: Also check if the response body is not too long.
+            let requestSizeInMb = Utils.dataToMegabytes(data);
+
+            if (requestSizeInMb > this.server.options.httpApi.requestLimitInMb) {
+                return this.entityTooLargeResponse(res, 'The payload size is too big.');
+            }
 
             next(null, res);
         }, err => {

@@ -42,6 +42,13 @@ export class Utils {
     }
 
     /**
+     * Get the amount of megabytes from given parameters.
+     */
+     static dataToMegabytes(...data: any): number {
+        return this.dataToKilobytes(...data) / 1024;
+    }
+
+    /**
      * Check if the given channel name is private.
      */
     static isPrivateChannel(channel: string): boolean {
@@ -87,5 +94,14 @@ export class Utils {
         });
 
         return isClientEvent;
+    }
+
+    /**
+     * Check if the channel requires authentication.
+     */
+    static requireAuthentication(channel: string): boolean {
+        return this.isPresenceChannel(channel) ||
+            this.isPrivateChannel(channel) ||
+            this.isEncryptedPrivateChannel(channel);
     }
 }

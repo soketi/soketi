@@ -125,7 +125,11 @@ export class Namespace {
             return Array.from(sockets).reduce((members, [wsId, ws]) => {
                 let member: PresenceMember = ws.presence[channel];
 
-                return members.set(member.user_id as string, member.user_info);
+                if (member) {
+                    members.set(member.user_id as string, member.user_info)
+                }
+
+                return members;
             }, new Map<string, PresenceMember>());
         });
     }

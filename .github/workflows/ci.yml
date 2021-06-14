@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Cache Primes
+      - name: Cache Dependencies
         uses: actions/cache@v2
         with:
           path: node_modules

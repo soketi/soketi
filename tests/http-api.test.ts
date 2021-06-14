@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
@@ -9,6 +10,26 @@ describe('http api test', () => {
                 done();
             });
         }
+    });
+
+    test('health checks', done => {
+        Utils.newServer({}, (server: Server) => {
+            axios.get('http://127.0.0.1:6001').then(res => {
+                done();
+            }).catch(() => {
+                done('Healthchecks failed');
+            });
+        });
+    });
+
+    test('usage endpoint', done => {
+        Utils.newServer({}, (server: Server) => {
+            axios.get('http://127.0.0.1:6001/usage').then(res => {
+                done();
+            }).catch(() => {
+                done('Usage endpoint failed');
+            });
+        });
     });
 
     test('get api channels', done => {

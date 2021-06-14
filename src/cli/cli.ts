@@ -16,7 +16,7 @@ export class Cli {
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
         APP_MANAGER_DRIVER: 'appManager.driver',
-        CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength', // TODO: Implement maxNameLength
+        CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength',
         DEBUG: 'debug',
         DEFAULT_APP_ID: 'appManager.array.apps.0.id',
         DEFAULT_APP_KEY: 'appManager.array.apps.0.key',
@@ -30,15 +30,15 @@ export class Cli {
         DB_REDIS_PORT: 'database.redis.port',
         DB_REDIS_PASSWORD: 'database.redis.password',
         DB_REDIS_KEY_PREFIX: 'database.redis.keyPrefix',
-        EVENT_MAX_CHANNELS_AT_ONCE: 'eventLimits.maxChannelsAtOnce', // TODO: Implement maxChannelsAtOnce
+        EVENT_MAX_CHANNELS_AT_ONCE: 'eventLimits.maxChannelsAtOnce',
         EVENT_MAX_NAME_LENGTH: 'eventLimits.maxNameLength',
         EVENT_MAX_SIZE_IN_KB: 'eventLimits.maxPayloadInKb',
         NODE_ID: 'instance.node_id',
         POD_ID: 'instance.pod_id',
         PORT: 'port',
-        PRESENCE_MAX_MEMBER_SIZE: 'presence.maxMemberSizeInKb', // TODO: Implement presence max member size
+        PRESENCE_MAX_MEMBER_SIZE: 'presence.maxMemberSizeInKb',
         PRESENCE_MAX_MEMBERS: 'presence.maxMembersPerChannel',
-        RATE_LIMITER_DRIVER: 'rateLimiter.driver', // TODO: Implement rate limiter
+        RATE_LIMITER_DRIVER: 'rateLimiter.driver',
         SSL_CERT: 'ssl.certPath',
         SSL_KEY: 'ssl.keyPath',
         SSL_PASS: 'ssl.passphrase',

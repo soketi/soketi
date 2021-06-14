@@ -8,22 +8,32 @@ export class PresenceChannelManager extends PrivateChannelManager {
      * Join the connection to the channel.
      */
     join(ws: WebSocket, channel: string, message?: any): Promise<JoinResponse> {
-        // TODO: Make sure that the maximum channel users was not reached.
-
-        return super.join(ws, channel, message).then(response => {
-            // Make sure to forward the response in case an error occurs.
-            if (! response.success) {
-                return response;
+        // TODO: Idea: A small this.adapter.getChannelMembersCount() method might be great to avoid too much network transfer.
+        return this.adapter.getChannelMembers(ws.app.id, channel).then(members => {
+            if (members.size > this.server.options.presence.maxMembersPerChannel) {
+                return {
+                    success: false,
+                    ws,
+                    errorCode: 4100,
+                    errorMessage: 'The maximum members per presence channel limit was reached',
+                };
             }
 
-            let member: PresenceMember = JSON.parse(message.data.channel_data);
+            return super.join(ws, channel, message).then(response => {
+                // Make sure to forward the response in case an error occurs.
+                if (! response.success) {
+                    return response;
+                }
 
-            return {
-                ...response,
-                ...{
-                    member,
-                },
-            };
+                let member: PresenceMember = JSON.parse(message.data.channel_data);
+
+                return {
+                    ...response,
+                    ...{
+                        member,
+                    },
+                };
+            });
         });
     }
 

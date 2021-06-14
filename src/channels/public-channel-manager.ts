@@ -1,11 +1,13 @@
 import { AdapterInterface } from '../adapters';
 import { PresenceMember } from '../presence-member';
 import { WebSocket } from 'uWebSockets.js';
+import { Server } from '../server';
 
 export interface JoinResponse {
     ws: WebSocket;
     success: boolean;
-    member?: PresenceMember,
+    authError?: boolean;
+    member?: PresenceMember;
     errorMessage?: string;
     errorCode?: number;
 }
@@ -16,7 +18,7 @@ export interface LeaveResponse {
 }
 
 export class PublicChannelManager {
-    constructor(protected adapter: AdapterInterface) {
+    constructor(protected adapter: AdapterInterface, protected server: Server) {
         //
     }
 

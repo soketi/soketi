@@ -41,19 +41,16 @@ export class WsHandler {
         protected adapter: AdapterInterface,
         protected server: Server,
     ) {
-        this.publicChannelManager = new PublicChannelManager(adapter);
-        this.privateChannelManager = new PrivateChannelManager(adapter);
-        this.encryptedPrivateChannelManager = new EncryptedPrivateChannelManager(adapter);
-        this.presenceChannelManager = new PresenceChannelManager(adapter);
+        this.publicChannelManager = new PublicChannelManager(adapter, this.server);
+        this.privateChannelManager = new PrivateChannelManager(adapter, this.server);
+        this.encryptedPrivateChannelManager = new EncryptedPrivateChannelManager(adapter, this.server);
+        this.presenceChannelManager = new PresenceChannelManager(adapter, this.server);
     }
 
     /**
      * Handle a new open connection.
      */
     onOpen(ws: WebSocket): any {
-        // TODO: Stats - Mark new connections
-        // TODO: Metrics - Mark new connections
-
         if (this.server.closing) {
             return ws.close();
         }
@@ -81,9 +78,6 @@ export class WsHandler {
                         message: 'The current concurrent connections quota has been reached.',
                     }));
                 }
-
-                // TODO: Mark metrics WS message.
-                // TODO: Mark stats WS message.
 
                 ws.send(JSON.stringify({
                     event: 'pusher:connection_established',
@@ -116,6 +110,7 @@ export class WsHandler {
                 this.handleClientEvent(ws, message);
             } else {
                 // TODO: Add encrypted private channels support.
+                // TODO: Add unsubscribe support
                 console.log(message);
             }
         }
@@ -125,8 +120,6 @@ export class WsHandler {
      * Handle the event of the client closing the connection.
      */
     onClose(ws: WebSocket, code: number, message: any): any {
-        // TODO: Mark stats disconnection
-
         this.unsubscribeFromAllChannels(ws);
     }
 
@@ -178,33 +171,39 @@ export class WsHandler {
      * Instruct the server to subscribe the connection to the channel.
      */
     subscribeToChannel(ws: WebSocket, message: any): any {
-        // TODO: Mark stats WS Message
-        // TODO: Mark metrics WS Message
-
         let channel = message.data.channel;
         let channelManager = this.getChannelManagerFor(channel);
-        let maxChannelNameLength = this.server.options.channelLimits.maxNameLength;
 
-        if (channel.length > maxChannelNameLength) {
+        if (channel.length > this.server.options.channelLimits.maxNameLength) {
             return ws.send(JSON.stringify({
                 event: 'pusher:error',
                 code: 4009,
-                message: `The channel name is longer than the allowed ${maxChannelNameLength} characters.`
+                message: `The channel name is longer than the allowed ${this.server.options.channelLimits.maxNameLength} characters.`
             }));
         }
 
-        // TODO: Make sure that the presence channels' info is not big enough before joining.
-
         channelManager.join(ws, channel, message).then((response) => {
             if (! response.success) {
-                let { errorMessage } = response;
+                let { authError, errorMessage, errorCode } = response;
 
+                // For auth errors, send pusher:subscription_error
+                if (authError) {
+                    return ws.send(JSON.stringify({
+                        event: 'pusher:subscription_error',
+                        data: JSON.stringify({
+                            type: 'AuthError',
+                            error: errorMessage,
+                            status: 401,
+                        }),
+                    }));
+                }
+
+                // Otherwise, catch any non-auth related errors.
                 return ws.send(JSON.stringify({
-                    event: 'pusher:subscription_error',
+                    event: 'pusher:error',
                     data: JSON.stringify({
-                        type: 'AuthError',
                         error: errorMessage,
-                        status: 401,
+                        status: errorCode,
                     }),
                 }));
             }
@@ -213,13 +212,12 @@ export class WsHandler {
                 ws.subscribedChannels.add(channel);
             }
 
-            this.adapter.getNamespace(ws.app.id).addSocket(ws);
+            let namespace = this.adapter.getNamespace(ws.app.id);
+
+            namespace.addSocket(ws);
 
             // For non-presence channels, end with subscription succeeded.
             if (! (channelManager instanceof PresenceChannelManager)) {
-                // TODO: Mark metrics WS message.
-                // TODO: Mark stats WS message.
-
                 return ws.send(JSON.stringify({
                     event: 'pusher_internal:subscription_succeeded',
                     channel,
@@ -227,12 +225,23 @@ export class WsHandler {
             }
 
             // Otherwise, prepare a response for the presence channel.
-
             let { user_id, user_info } = response.member;
+
+            let memberSizeInKb = Utils.dataToKilobytes(user_info);
+
+            if (memberSizeInKb > this.server.options.presence.maxMemberSizeInKb) {
+                return ws.send(JSON.stringify({
+                    event: 'pusher:error',
+                    data: JSON.stringify({
+                        error: `The maximum size for a channel member is ${this.server.options.presence.maxMemberSizeInKb} KB.`,
+                        status: 4301,
+                    }),
+                }));
+            }
 
             ws.presence[channel] = { user_id, user_info };
 
-            this.adapter.getNamespace(ws.app.id).addSocket(ws);
+            namespace.addSocket(ws);
 
             this.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
                 ws.send(JSON.stringify({
@@ -246,9 +255,6 @@ export class WsHandler {
                         },
                     }),
                 }));
-
-                // TODO: Mark metrics WS message.
-                // TODO: Mark stats WS message.
 
                 this.adapter.send(ws.app.id, channel, JSON.stringify({
                     event: 'pusher_internal:member_added',
@@ -271,7 +277,8 @@ export class WsHandler {
         channelManager.leave(ws, channel).then(response => {
             if (response.left) {
                 // Send presence channel-speific events and delete specific data.
-                if (channelManager instanceof PresenceChannelManager) {
+                // This can happen only if the user is connected to the presence channel.
+                if (channelManager instanceof PresenceChannelManager && ws.presence[channel]) {
                     this.adapter.send(ws.app.id, channel, JSON.stringify({
                         event: 'pusher_internal:member_removed',
                         channel,
@@ -311,12 +318,35 @@ export class WsHandler {
     handleClientEvent(ws: WebSocket, message: any): any {
         let { event, data, channel } = message;
 
-        // TODO: Check if the client messaging is enabled for the app.
-        // TODO: Check if the event name is not long
-        // TODO: Check if the payload size is not big enough
+        if (! ws.app.enableClientMessages) {
+            return ws.send(JSON.stringify({
+                event: 'pusher:error',
+                code: 4301,
+                message: `The app does not have client messaging enabled.`,
+            }));
+        }
+
+        // Make sure the event name length is not too big.
+        if (event.length > this.server.options.eventLimits.maxNameLength) {
+            return ws.send(JSON.stringify({
+                event: 'pusher:error',
+                code: 4301,
+                message: `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`,
+            }));
+        }
+
+        let payloadSizeInKb = Utils.dataToKilobytes(message.data);
+
+        // Make sure the total payload of the message body is not too big.
+        if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
+            return ws.send(JSON.stringify({
+                event: 'pusher:error',
+                code: 4301,
+                message: `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`,
+            }));
+        }
+
         // TODO: Rate limit the frontend event points (code 4301)
-        // TODO: Mark stats WS message
-        // TODO: Mark metrics WS message
 
         this.adapter.getNamespace(ws.app.id).isInChannel(ws.id, channel).then(canBroadcast => {
             if (! canBroadcast) {
