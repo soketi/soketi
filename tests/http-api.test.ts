@@ -17,7 +17,7 @@ describe('http api test', () => {
             axios.get('http://127.0.0.1:6001').then(res => {
                 done();
             }).catch(() => {
-                done('Healthchecks failed');
+                throw new Error('Healthchecks failed');
             });
         });
     });
@@ -27,7 +27,7 @@ describe('http api test', () => {
             axios.get('http://127.0.0.1:6001/usage').then(res => {
                 done();
             }).catch(() => {
-                done('Usage endpoint failed');
+                throw new Error('Usage endpoint failed');
             });
         });
     });
@@ -327,36 +327,34 @@ describe('http api test', () => {
             let goodBackend = Utils.newBackend();
             let badBackend = Utils.newBackend('app-id', 'app-key', 'invalidSecret');
 
-            client.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    let channel = client.subscribe(channelName);
+            client.connection.bind('connected', () => {
+                let channel = client.subscribe(channelName);
 
-                    channel.bind('greeting-from-bad', e => {
-                        // throw the test if the bad backend can emit
-                        // meaning that the security does not work
-                        expect(true).toBeFalsy();
-                        done();
+                channel.bind('greeting-from-bad', e => {
+                    // throw the test if the bad backend can emit
+                    // meaning that the security does not work
+                    expect(true).toBeFalsy();
+                    done();
+                });
+
+                channel.bind('greeting-from-good', e => {
+                    client.disconnect();
+                    done();
+                });
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    Utils.sendEventToChannel(badBackend, channelName, 'greeting-from-bad', {
+                        message: 'hello',
+                        array: ['we', 'support', 'array'],
+                        objects: { works: true },
                     });
 
-                    channel.bind('greeting-from-good', e => {
-                        client.disconnect();
-                        done();
+                    Utils.sendEventToChannel(goodBackend, channelName, 'greeting-from-good', {
+                        message: 'hello',
+                        array: ['we', 'support', 'array'],
+                        objects: { works: true },
                     });
-
-                    channel.bind('pusher:subscription_succeeded', () => {
-                        Utils.sendEventToChannel(badBackend, channelName, 'greeting-from-bad', {
-                            message: 'hello',
-                            array: ['we', 'support', 'array'],
-                            objects: { works: true },
-                        });
-
-                        Utils.sendEventToChannel(goodBackend, channelName, 'greeting-from-good', {
-                            message: 'hello',
-                            array: ['we', 'support', 'array'],
-                            objects: { works: true },
-                        });
-                    });
-                }
+                });
             });
         });
     });

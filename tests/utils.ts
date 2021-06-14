@@ -55,7 +55,7 @@ export class Utils {
         });
     }
 
-    static newClientForPrivateChannel(port = 6001, key = 'app-key'): any {
+    static newClientForPrivateChannel(clientOptions = {}, port = 6001, key = 'app-key'): any {
         return this.newClient({
             authorizer: (channel, options) => ({
                 authorize: (socketId, callback) => {
@@ -65,10 +65,11 @@ export class Utils {
                     });
                 },
             }),
+            ...clientOptions,
         }, port, key);
     }
 
-    static newClientForEncryptedPrivateChannel(port = 6001, key = 'app-key'): any {
+    static newClientForEncryptedPrivateChannel(clientOptions = {}, port = 6001, key = 'app-key'): any {
         return this.newClient({
             authorizer: (channel, options) => ({
                 authorize: (socketId, callback) => {
@@ -79,10 +80,11 @@ export class Utils {
                     });
                 },
             }),
+            ...clientOptions,
         }, port, key);
     }
 
-    static newClientForPresenceUser(user: any, options = {}, port = 6001, key = 'app-key'): any {
+    static newClientForPresenceUser(user: any, clientOptions = {}, port = 6001, key = 'app-key'): any {
         return this.newClient({
             authorizer: (channel, options) => ({
                 authorize: (socketId, callback) => {
@@ -92,6 +94,7 @@ export class Utils {
                     });
                 },
             }),
+            ...clientOptions,
         }, port, key);
     }
 

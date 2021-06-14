@@ -17,20 +17,18 @@ describe('public channel test', () => {
             let backend = Utils.newBackend();
             let channelName = Utils.randomChannelName();
 
-            client.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    let channel = client.subscribe(channelName);
+            client.connection.bind('connected', () => {
+                let channel = client.subscribe(channelName);
 
-                    channel.bind('greeting', e => {
-                        expect(e.message).toBe('hello');
-                        client.disconnect();
-                        done();
-                    });
+                channel.bind('greeting', e => {
+                    expect(e.message).toBe('hello');
+                    client.disconnect();
+                    done();
+                });
 
-                    channel.bind('pusher:subscription_succeeded', () => {
-                        Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
-                    });
-                }
+                channel.bind('pusher:subscription_succeeded', () => {
+                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                });
             });
         });
     });

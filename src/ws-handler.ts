@@ -191,21 +191,22 @@ export class WsHandler {
                 if (authError) {
                     return ws.send(JSON.stringify({
                         event: 'pusher:subscription_error',
-                        data: JSON.stringify({
+                        channel,
+                        data: {
                             type: 'AuthError',
                             error: errorMessage,
                             status: 401,
-                        }),
+                        },
                     }));
                 }
 
                 // Otherwise, catch any non-auth related errors.
                 return ws.send(JSON.stringify({
                     event: 'pusher:error',
-                    data: JSON.stringify({
+                    data: {
                         error: errorMessage,
                         status: errorCode,
-                    }),
+                    },
                 }));
             }
 
@@ -233,10 +234,10 @@ export class WsHandler {
             if (memberSizeInKb > this.server.options.presence.maxMemberSizeInKb) {
                 return ws.send(JSON.stringify({
                     event: 'pusher:error',
-                    data: JSON.stringify({
+                    data: {
                         error: `The maximum size for a channel member is ${this.server.options.presence.maxMemberSizeInKb} KB.`,
                         status: 4301,
-                    }),
+                    },
                 }));
             }
 
