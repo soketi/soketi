@@ -30,8 +30,8 @@ interface Request {
 interface Response {
     requestId: string;
     sockets?: Map<string, WebSocket>;
-    members?: [string, PresenceMember][];
-    channels?: [string, Set<string>][];
+    members?: Map<string, PresenceMember>;
+    channels?: Map<string, Set<string>>;
 }
 
 interface BroadcastedMessage {
@@ -380,7 +380,7 @@ export class RedisAdapter extends LocalAdapter {
 
                 response = JSON.stringify({
                     requestId,
-                    members: [...localMembers],
+                    members: localMembers,
                 });
 
                 this.pubClient.publish(this.responseChannel, response);
@@ -396,7 +396,7 @@ export class RedisAdapter extends LocalAdapter {
 
                 response = JSON.stringify({
                     requestId,
-                    channels: [...localChannels],
+                    channels: localChannels,
                 });
 
                 this.pubClient.publish(this.responseChannel, response);
@@ -451,11 +451,11 @@ export class RedisAdapter extends LocalAdapter {
             case RequestType.CHANNEL_MEMBERS:
                 request.msgCount++;
 
-                if (! response.members || ! Array.isArray(response.members)) {
+                if (! response.members) {
                     return;
                 }
 
-                response.members.forEach(([user_id, user_info]) => request.members.set(user_id, user_info));
+                response.members.forEach((user_info, user_id) => request.members.set(user_id, user_info));
 
                 if (request.msgCount === request.numSub) {
                     clearTimeout(request.timeout);
@@ -472,11 +472,11 @@ export class RedisAdapter extends LocalAdapter {
             case RequestType.CHANNELS:
                 request.msgCount++;
 
-                if (! response.channels || ! Array.isArray(response.channels)) {
+                if (! response.channels) {
                     return;
                 }
 
-                response.channels.forEach(([string, set]) => request.channels.set(string, set));
+                response.channels.forEach((connections, channel) => request.channels.set(channel, connections));
 
                 if (request.msgCount === request.numSub) {
                     clearTimeout(request.timeout);

@@ -4,6 +4,7 @@ import { AppManagerInterface } from './app-managers';
 import { EncryptedPrivateChannelManager } from './channels';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { PresenceChannelManager } from './channels';
+import { PresenceMember } from './presence-member';
 import { PrivateChannelManager } from './channels';
 import { PublicChannelManager } from './channels';
 import { Server } from './server';
@@ -57,7 +58,7 @@ export class WsHandler {
 
         ws.id = this.generateSocketId();
         ws.subscribedChannels = new Set();
-        ws.presence = {};
+        ws.presence = new Map<string, PresenceMember>();
 
         this.checkForValidApp(ws).then(validApp => {
             if (! validApp) {
@@ -130,15 +131,15 @@ export class WsHandler {
         return new Promise(resolve => {
             this.adapter.getNamespaces().forEach(namespace => {
                 namespace.getSockets().then(sockets => {
-                    sockets.forEach(socket => {
+                    sockets.forEach(ws => {
                         try {
-                            socket.send(JSON.stringify({
+                            ws.send(JSON.stringify({
                                 event: 'pusher:error',
                                 code: 4200,
                                 message: 'The server got closed. Reconnect in a few seconds.',
                             }));
 
-                            socket.close();
+                            ws.close();
                         } catch (e) {
                             //
                         }
@@ -239,7 +240,9 @@ export class WsHandler {
                 }));
             }
 
-            ws.presence[channel] = { user_id, user_info };
+            let member = { user_id, user_info };
+
+            ws.presence.set(channel, member);
 
             namespace.addSocket(ws);
 
@@ -260,8 +263,8 @@ export class WsHandler {
                     event: 'pusher_internal:member_added',
                     channel,
                     data: JSON.stringify({
-                        user_id,
-                        user_info,
+                        user_id: member.user_id,
+                        user_info: member.user_info,
                     }),
                 }), ws.id);
             });
@@ -271,44 +274,55 @@ export class WsHandler {
     /**
      * Instruct the server to unsubscribe the connection from the channel.
      */
-    unsubscribeFromChannel(ws: WebSocket, channel: string): any {
-        let channelManager = this.getChannelManagerFor(channel);
+    unsubscribeFromChannel(ws: WebSocket, channel: string): Promise<void> {
+        return new Promise(resolve => {
+            let channelManager = this.getChannelManagerFor(channel);
 
-        channelManager.leave(ws, channel).then(response => {
-            if (response.left) {
-                // Send presence channel-speific events and delete specific data.
-                // This can happen only if the user is connected to the presence channel.
-                if (channelManager instanceof PresenceChannelManager && ws.presence[channel]) {
-                    this.adapter.send(ws.app.id, channel, JSON.stringify({
-                        event: 'pusher_internal:member_removed',
-                        channel,
-                        data: JSON.stringify({
-                            user_id: ws.presence[channel].user_id,
-                        }),
-                    }), ws.id);
+            return channelManager.leave(ws, channel).then(response => {
+                if (response.left) {
+                    // Send presence channel-speific events and delete specific data.
+                    // This can happen only if the user is connected to the presence channel.
+                    if (channelManager instanceof PresenceChannelManager && ws.presence.has(channel)) {
+                        this.adapter.send(ws.app.id, channel, JSON.stringify({
+                            event: 'pusher_internal:member_removed',
+                            channel,
+                            data: JSON.stringify({
+                                user_id: ws.presence.get(channel).user_id,
+                            }),
+                        }), ws.id);
 
-                    delete ws.presence[channel];
+                        ws.presence.delete(channel);
+                    }
                 }
-            }
 
-            ws.subscribedChannels.delete(channel);
+                ws.subscribedChannels.delete(channel);
 
-            this.adapter.getNamespace(ws.app.id).addSocket(ws);
+                this.adapter.getNamespace(ws.app.id).removeSocket(ws.id);
 
-            return response;
+                return;
+            });
         });
     }
 
     /**
      * Unsubscribe the connection from all channels.
      */
-    unsubscribeFromAllChannels(ws: WebSocket): any {
-        if (! ws.subscribedChannels) {
-            return;
-        }
+    unsubscribeFromAllChannels(ws: WebSocket): Promise<void> {
+        return new Promise(resolve => {
+            if (! ws.subscribedChannels) {
+                return resolve();
+            }
 
-        ws.subscribedChannels.forEach(channel => {
-            this.unsubscribeFromChannel(ws, channel);
+            let unsubCount = 0
+            let totalUnsub = ws.subscribedChannels.size;
+
+            ws.subscribedChannels.forEach(channel => {
+                this.unsubscribeFromChannel(ws, channel).then(() => unsubCount++).then(() => {
+                    if (totalUnsub === unsubCount) {
+                        resolve();
+                    }
+                });
+            });
         });
     }
 

@@ -45,7 +45,7 @@ export class PresenceChannelManager extends PrivateChannelManager {
             return {
                 ...response,
                 ...{
-                    member: ws.presence[channel],
+                    member: ws.presence.get(channel),
                 },
             };
         });
