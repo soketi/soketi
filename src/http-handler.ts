@@ -10,7 +10,7 @@ export interface ChannelResponse {
     subscription_count: number;
     user_count?: number;
     occupied: boolean;
-};
+}
 
 export class HttpHandler {
     /**
