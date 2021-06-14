@@ -25,12 +25,9 @@ jobs:
       run: |
         npm install
 
-    - name: Lint the code
+    - name: Lint & Compile
       run: |
         npm run lint
-
-    - name: Compile TypeScript
-      run: |
         npm run build
 
     - name: Compute GitHub tag

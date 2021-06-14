@@ -76,6 +76,7 @@
     "test:watch": "npm test -- --watch"
   },
   "bin": {
-    "pws": "bin/server.js"
+    "pws-server": "bin/server.js",
+    "pws-pm2-server": "bin/pm2.js"
   }
 }
