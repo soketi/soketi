@@ -24,6 +24,11 @@ export interface AdapterInterface {
     getSockets(appId: string, onlyLocal?: boolean): Promise<Map<string, WebSocket>>;
 
     /**
+     * Get total sockets count.
+     */
+    getSocketsCount(appId: string, onlyLocal?: boolean): Promise<number>;
+
+    /**
      * Get the list of channels with the websocket IDs.
      */
     getChannels(appId: string, onlyLocal?: boolean): Promise<Map<string, Set<string>>>;
@@ -34,7 +39,17 @@ export interface AdapterInterface {
     getChannelSockets(appId: string, channel: string, onlyLocal?: boolean): Promise<Map<string, WebSocket>>;
 
     /**
+     * Get a given channel's total sockets count.
+     */
+    getChannelSocketsCount(appId: string, channel: string, onlyLocal?: boolean): Promise<number>;
+
+    /**
      * Get a given presence channel's members.
      */
     getChannelMembers(appId: string, channel: string, onlyLocal?: boolean): Promise<Map<string, PresenceMember>>;
+
+    /**
+     * Get a given presence channel's members count
+     */
+    getChannelMembersCount(appId: string, channel: string, onlyLocal?: boolean): Promise<number>;
 }

@@ -13,6 +13,9 @@ enum RequestType {
     CHANNELS = 1,
     CHANNEL_SOCKETS = 2,
     CHANNEL_MEMBERS = 3,
+    SOCKETS_COUNT = 4,
+    CHANNEL_MEMBERS_COUNT = 5,
+    CHANNEL_SOCKETS_COUNT = 6,
 }
 
 interface Request {
@@ -24,6 +27,7 @@ interface Request {
     sockets?: Map<string, any>;
     members?: Map<string, PresenceMember>;
     channels?: Map<string, Set<string>>;
+    totalCount?: number;
     [other: string]: any;
 }
 
@@ -32,6 +36,7 @@ interface Response {
     sockets?: Map<string, WebSocket>;
     members?: Map<string, PresenceMember>;
     channels?: Map<string, Set<string>>;
+    totalCount?: number;
 }
 
 interface BroadcastedMessage {
@@ -41,21 +46,44 @@ interface BroadcastedMessage {
 }
 
 export class RedisAdapter extends LocalAdapter {
-
+    /**
+     * The UID of the current instance.
+     */
     protected uid: string = uid2(6);
 
+    /**
+     * The subscription client.
+     */
     protected subClient: typeof Redis;
 
+    /**
+     * The publishing client.
+     */
     protected pubClient: typeof Redis;
 
+    /**
+     * The channel to broadcast the information.
+     */
     protected channel: string;
 
+    /**
+     * The list of current request made by this instance.
+     */
     protected requests: Map<string, Request> = new Map();
 
-    protected requestChannel = 'redis-adapter#comms#req';
+    /**
+     * The channel to listen for new requests.
+     */
+    protected requestChannel;
 
-    protected responseChannel = 'redis-adapter#comms#res';
+    /**
+     * The channel to emit back based on the requests.
+     */
+    protected responseChannel;
 
+    /**
+     * The time (in ms) for the request to be fulfilled.
+     */
     public readonly requestsTimeout: number;
 
     /**
@@ -65,6 +93,9 @@ export class RedisAdapter extends LocalAdapter {
         super(options, server);
 
         this.requestsTimeout = 5000;
+        this.channel = 'redis-adapter';
+        this.requestChannel = `${this.channel}#comms#req`;
+        this.responseChannel = `${this.channel}#comms#res`;
 
         this.subClient = new Redis(this.options.database.redis);
         this.pubClient = new Redis(this.options.database.redis);
@@ -75,8 +106,6 @@ export class RedisAdapter extends LocalAdapter {
             }
         };
 
-        this.channel = 'redis-adapter';
-
         if (options.adapter.redis.prefix) {
             this.channel = options.adapter.redis.prefix + '#' + this.channel;
         }
@@ -86,10 +115,7 @@ export class RedisAdapter extends LocalAdapter {
         this.subClient.on('pmessageBuffer', this.onMessage.bind(this));
         this.subClient.on('messageBuffer', this.onRequest.bind(this));
 
-        this.subClient.subscribe(
-            [this.requestChannel, this.responseChannel],
-            onError,
-        );
+        this.subClient.subscribe([this.requestChannel, this.responseChannel], onError);
 
         this.pubClient.on('error', onError);
         this.subClient.on('error', onError);
@@ -134,6 +160,51 @@ export class RedisAdapter extends LocalAdapter {
                 timeout,
                 msgCount: 1,
                 sockets: localSockets,
+            });
+
+            this.pubClient.publish(this.requestChannel, request);
+        });
+    }
+
+    /**
+     * Get total sockets count.
+     */
+    async getSocketsCount(appId: string, onlyLocal?: boolean): Promise<number> {
+        const wsCount = await super.getSocketsCount(appId);
+
+        if (onlyLocal) {
+            return new Promise(resolve => resolve(wsCount));
+        }
+
+        const numSub = await this.getNumSub();
+
+        if (numSub <= 1) {
+            return wsCount;
+        }
+
+        const requestId = uid2(6);
+
+        const request = JSON.stringify({
+            requestId,
+            appId,
+            type: RequestType.SOCKETS_COUNT,
+        });
+
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                if (this.requests.has(requestId)) {
+                    reject(new Error('timeout reached while waiting for getChannelSocketsCount response'));
+                    this.requests.delete(requestId);
+                }
+            }, this.requestsTimeout);
+
+            this.requests.set(requestId, {
+                type: RequestType.CHANNEL_SOCKETS_COUNT,
+                numSub,
+                resolve,
+                timeout,
+                msgCount: 1,
+                totalCount: wsCount,
             });
 
             this.pubClient.publish(this.requestChannel, request);
@@ -232,6 +303,52 @@ export class RedisAdapter extends LocalAdapter {
     }
 
     /**
+     * Get a given channel's total sockets count.
+     */
+    async getChannelSocketsCount(appId: string, channel: string, onlyLocal?: boolean): Promise<number> {
+        const wsCount = await super.getChannelSocketsCount(appId, channel);
+
+        if (onlyLocal) {
+            return new Promise(resolve => resolve(wsCount));
+        }
+
+        const numSub = await this.getNumSub();
+
+        if (numSub <= 1) {
+            return wsCount;
+        }
+
+        const requestId = uid2(6);
+
+        const request = JSON.stringify({
+            requestId,
+            appId,
+            type: RequestType.CHANNEL_SOCKETS_COUNT,
+            opts: { channel },
+        });
+
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                if (this.requests.has(requestId)) {
+                    reject(new Error('timeout reached while waiting for getChannelSocketsCount response'));
+                    this.requests.delete(requestId);
+                }
+            }, this.requestsTimeout);
+
+            this.requests.set(requestId, {
+                type: RequestType.CHANNEL_SOCKETS_COUNT,
+                numSub,
+                resolve,
+                timeout,
+                msgCount: 1,
+                totalCount: wsCount,
+            });
+
+            this.pubClient.publish(this.requestChannel, request);
+        });
+    }
+
+    /**
      * Get all the channel sockets associated with a namespace.
      */
     async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
@@ -278,18 +395,62 @@ export class RedisAdapter extends LocalAdapter {
     }
 
     /**
+     * Get a given presence channel's members count
+     */
+    async getChannelMembersCount(appId: string, channel: string, onlyLocal?: boolean): Promise<number> {
+        const localMembersCount = await super.getChannelMembersCount(appId, channel);
+
+        if (onlyLocal) {
+            return new Promise(resolve => resolve(localMembersCount));
+        }
+
+        const numSub = await this.getNumSub();
+
+        if (numSub <= 1) {
+            return localMembersCount;
+        }
+
+        const requestId = uid2(6);
+
+        const request = JSON.stringify({
+            requestId,
+            appId,
+            type: RequestType.CHANNEL_MEMBERS_COUNT,
+            opts: { channel },
+        });
+
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                if (this.requests.has(requestId)) {
+                    reject(new Error('timeout reached while waiting for getChannelMembersCount response'));
+                    this.requests.delete(requestId);
+                }
+            }, this.requestsTimeout);
+
+            this.requests.set(requestId, {
+                type: RequestType.CHANNEL_MEMBERS_COUNT,
+                numSub,
+                resolve,
+                timeout,
+                msgCount: 1,
+                membersCount: localMembersCount,
+            });
+
+            this.pubClient.publish(this.requestChannel, request);
+        });
+    }
+
+    /**
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string): any {
-        let msg = msgpack.encode({
-            uid: this.uid,
+        let msg = msgpack.encode([
+            this.uid,
             appId,
-            message: {
-                channel,
-                data,
-                exceptingId,
-            }
-        });
+            channel,
+            data,
+            exceptingId,
+        ]);
 
         this.pubClient.publish(this.channel, msg);
 
@@ -309,13 +470,11 @@ export class RedisAdapter extends LocalAdapter {
 
         const decodedMessage = msgpack.decode(msg);
 
-        const { uid, appId, message } = decodedMessage;
+        const [uid, appId, channel, data, exceptingId] = decodedMessage;
 
-        if (uid === this.uid || ! message || ! appId) {
+        if (uid === this.uid || ! appId || ! channel || ! data) {
             return;
         }
-
-        let { channel, data, exceptingId } = message as BroadcastedMessage;
 
         super.send(appId, channel, data, exceptingId);
     }
@@ -344,6 +503,7 @@ export class RedisAdapter extends LocalAdapter {
         let localSockets: WebSocket[];
         let localMembers: Map<string, PresenceMember>;
         let localChannels: Map<string, Set<string>>;
+        let localCount: number;
 
         let { requestId, appId } = request;
 
@@ -371,6 +531,22 @@ export class RedisAdapter extends LocalAdapter {
 
                 break;
 
+            case RequestType.CHANNELS:
+                if (this.requests.has(requestId)) {
+                    return;
+                }
+
+                localChannels = await super.getChannels(appId);
+
+                response = JSON.stringify({
+                    requestId,
+                    channels: localChannels,
+                });
+
+                this.pubClient.publish(this.responseChannel, response);
+
+                break;
+
             case RequestType.CHANNEL_MEMBERS:
                 if (this.requests.has(requestId)) {
                     return;
@@ -387,16 +563,35 @@ export class RedisAdapter extends LocalAdapter {
 
                 break;
 
-            case RequestType.CHANNELS:
+            case RequestType.SOCKETS_COUNT:
                 if (this.requests.has(requestId)) {
                     return;
                 }
 
-                localChannels = await super.getChannels(appId);
+                localCount = await super.getSocketsCount(appId);
 
                 response = JSON.stringify({
                     requestId,
-                    channels: localChannels,
+                    totalCount: localCount,
+                });
+
+                this.pubClient.publish(this.responseChannel, response);
+
+                break;
+
+            case RequestType.CHANNEL_MEMBERS_COUNT:
+            case RequestType.CHANNEL_SOCKETS_COUNT:
+                if (this.requests.has(requestId)) {
+                    return;
+                }
+
+                localCount = RequestType.CHANNEL_MEMBERS_COUNT === request.type
+                    ? await super.getChannelMembersCount(appId, request.opts.channel)
+                    : await super.getChannelSocketsCount(appId, request.opts.channel);
+
+                response = JSON.stringify({
+                    requestId,
+                    totalCount: localCount,
                 });
 
                 this.pubClient.publish(this.responseChannel, response);
@@ -430,7 +625,7 @@ export class RedisAdapter extends LocalAdapter {
             case RequestType.CHANNEL_SOCKETS:
                 request.msgCount++;
 
-                if (! response.sockets || ! Array.isArray(response.sockets)) {
+                if (! response.sockets) {
                     return;
                 }
 
@@ -441,6 +636,27 @@ export class RedisAdapter extends LocalAdapter {
 
                     if (request.resolve) {
                         request.resolve(request.sockets);
+                    }
+
+                    this.requests.delete(requestId);
+                }
+
+                break;
+
+            case RequestType.CHANNELS:
+                request.msgCount++;
+
+                if (! response.channels) {
+                    return;
+                }
+
+                response.channels.forEach((connections, channel) => request.channels.set(channel, connections));
+
+                if (request.msgCount === request.numSub) {
+                    clearTimeout(request.timeout);
+
+                    if (request.resolve) {
+                        request.resolve(request.channels);
                     }
 
                     this.requests.delete(requestId);
@@ -469,20 +685,42 @@ export class RedisAdapter extends LocalAdapter {
 
                 break;
 
-            case RequestType.CHANNELS:
+            case RequestType.SOCKETS_COUNT:
                 request.msgCount++;
 
-                if (! response.channels) {
+                if (typeof response.totalCount === 'undefined') {
                     return;
                 }
 
-                response.channels.forEach((connections, channel) => request.channels.set(channel, connections));
+                request.totalCount += response.totalCount;
 
                 if (request.msgCount === request.numSub) {
                     clearTimeout(request.timeout);
 
                     if (request.resolve) {
-                        request.resolve(request.channels);
+                        request.resolve(request.totalCount);
+                    }
+
+                    this.requests.delete(requestId);
+                }
+
+                break;
+
+            case RequestType.CHANNEL_MEMBERS_COUNT:
+            case RequestType.CHANNEL_SOCKETS_COUNT:
+                request.msgCount++;
+
+                if (typeof response.totalCount === 'undefined') {
+                    return;
+                }
+
+                request.totalCount += response.totalCount;
+
+                if (request.msgCount === request.numSub) {
+                    clearTimeout(request.timeout);
+
+                    if (request.resolve) {
+                        request.resolve(request.totalCount);
                     }
 
                     this.requests.delete(requestId);

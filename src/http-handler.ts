@@ -107,9 +107,8 @@ export class HttpHandler {
                     response.user_count = 0;
 
                     if (response.subscription_count > 0) {
-                        // TODO: Idea: A small this.adapter.getChannelMembersCount() method might be great to avoid too much network transfer.
-                        this.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
-                            response.user_count = members.size;
+                        this.adapter.getChannelMembersCount(res.params.appId, res.params.channel).then(membersCount => {
+                            response.user_count = membersCount;
                             res.writeStatus('200 OK').end(JSON.stringify(response));
                         });
 

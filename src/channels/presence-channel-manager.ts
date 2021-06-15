@@ -8,9 +8,8 @@ export class PresenceChannelManager extends PrivateChannelManager {
      * Join the connection to the channel.
      */
     join(ws: WebSocket, channel: string, message?: any): Promise<JoinResponse> {
-        // TODO: Idea: A small this.adapter.getChannelMembersCount() method might be great to avoid too much network transfer.
-        return this.adapter.getChannelMembers(ws.app.id, channel).then(members => {
-            if (members.size + 1 > this.server.options.presence.maxMembersPerChannel) {
+        return this.adapter.getChannelMembersCount(ws.app.id, channel).then(membersCount => {
+            if (membersCount + 1 > this.server.options.presence.maxMembersPerChannel) {
                 return {
                     success: false,
                     ws,

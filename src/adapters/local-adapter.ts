@@ -47,6 +47,15 @@ export class LocalAdapter implements AdapterInterface {
     }
 
     /**
+     * Get total sockets count.
+     */
+    async getSocketsCount(appId: string, onlyLocal?: boolean): Promise<number> {
+        return this.getNamespace(appId).getSockets().then(sockets => {
+            return sockets.size;
+        });
+    }
+
+    /**
      * Get all sockets from the namespace.
      */
     async getChannels(appId: string, onlyLocal = false): Promise<Map<string, Set<string>>> {
@@ -61,10 +70,28 @@ export class LocalAdapter implements AdapterInterface {
     }
 
     /**
+     * Get a given channel's total sockets count.
+     */
+    async getChannelSocketsCount(appId: string, channel: string, onlyLocal?: boolean): Promise<number> {
+        return this.getNamespace(appId).getChannelSockets(channel).then(sockets => {
+            return sockets.size;
+        });
+    }
+
+    /**
      * Get a given presence channel's members.
      */
-     async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
+    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
         return this.getNamespace(appId).getChannelMembers(channel);
+    }
+
+    /**
+     * Get a given presence channel's members count
+     */
+    async getChannelMembersCount(appId: string, channel: string, onlyLocal?: boolean): Promise<number> {
+        return this.getNamespace(appId).getChannelMembers(channel).then(members => {
+            return members.size;
+        });
     }
 
     /**

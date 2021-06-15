@@ -44,8 +44,15 @@ export class Adapter implements AdapterInterface {
     /**
      * Get all sockets from the namespace.
      */
-    getSockets(appId: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
+    async getSockets(appId: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
         return this.driver.getSockets(appId, onlyLocal);
+    }
+
+    /**
+     * Get total sockets count.
+     */
+    async getSocketsCount(appId: string, onlyLocal?: boolean): Promise<number> {
+        return this.driver.getSocketsCount(appId, onlyLocal);
     }
 
     /**
@@ -63,10 +70,24 @@ export class Adapter implements AdapterInterface {
     }
 
     /**
+     * Get a given channel's total sockets count.
+     */
+    async getChannelSocketsCount(appId: string, channel: string, onlyLocal?: boolean): Promise<number> {
+        return this.driver.getChannelSocketsCount(appId, channel, onlyLocal);
+    }
+
+    /**
      * Get a given presence channel's members.
      */
     async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
         return this.driver.getChannelMembers(appId, channel, onlyLocal);
+    }
+
+    /**
+     * Get a given presence channel's members count
+     */
+    async getChannelMembersCount(appId: string, channel: string, onlyLocal?: boolean): Promise<number> {
+        return this.driver.getChannelMembersCount(appId, channel, onlyLocal);
     }
 
     /**

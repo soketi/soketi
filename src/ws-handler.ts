@@ -413,15 +413,14 @@ export class WsHandler {
      * Return a boolean wether the user can connect or not.
      */
     protected checkAppConnectionLimit(ws: WebSocket): Promise<boolean> {
-        // TODO: Implement an adapter getSocketsCount() to minimize network traffic.
-        return this.adapter.getSockets(ws.app.id).then(sockets => {
+        return this.adapter.getSocketsCount(ws.app.id).then(wsCount => {
             let maxConnections = parseInt(ws.app.maxConnections as string) || -1;
 
             if (maxConnections < 0) {
                 return true;
             }
 
-            return sockets.size + 1 <= maxConnections;
+            return wsCount + 1 <= maxConnections;
         });
     }
 
