@@ -3,12 +3,7 @@ import { Utils } from './utils';
 
 describe('presence channel test', () => {
     afterEach(done => {
-        if (Utils.currentServer) {
-            Utils.currentServer.stop().then(() => {
-                Utils.currentServer = null;
-                done();
-            });
-        }
+        Utils.flushServers().then(() => done());
     });
 
     test('connects to presence channel', done => {

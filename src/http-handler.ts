@@ -79,6 +79,8 @@ export class HttpHandler {
                 }, {});
 
                 return response;
+            }, err => {
+                return this.serverErrorResponse(res, 'A server error has occured.');
             }).then(channels => {
                 res.writeStatus('200 OK').end(JSON.stringify({
                     channels,
@@ -95,10 +97,10 @@ export class HttpHandler {
         ]).then(res => {
             let response: ChannelResponse;
 
-            this.adapter.getChannelSockets(res.params.appId, res.params.channel).then(sockets => {
+            this.adapter.getChannelSocketsCount(res.params.appId, res.params.channel).then(socketsCount => {
                 response = {
-                    subscription_count: sockets.size,
-                    occupied: sockets.size > 0,
+                    subscription_count: socketsCount,
+                    occupied: socketsCount > 0,
                 };
 
                 // For presence channels, attach an user_count.
@@ -130,7 +132,7 @@ export class HttpHandler {
             this.authMiddleware,
         ]).then(res => {
             if (! res.params.channel.startsWith('presence-')) {
-                return this.sendBadResponse(res, 'The channel must be a presence channel.');
+                return this.badResponse(res, 'The channel must be a presence channel.');
             }
 
             this.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
@@ -155,26 +157,26 @@ export class HttpHandler {
                 ! message.name ||
                 ! message.data
             ) {
-                return this.sendBadResponse(res, 'The received data is incorrect');
+                return this.badResponse(res, 'The received data is incorrect');
             }
 
             let channels: string[] = message.channels || [message.channel];
 
             // Make sure the channels length is not too big.
             if (channels.length > this.server.options.eventLimits.maxChannelsAtOnce) {
-                return this.sendBadResponse(res, `Cannot broadcast to more than ${this.server.options.eventLimits.maxChannelsAtOnce} channels at once`);
+                return this.badResponse(res, `Cannot broadcast to more than ${this.server.options.eventLimits.maxChannelsAtOnce} channels at once`);
             }
 
             // Make sure the event name length is not too big.
             if (message.name.length > this.server.options.eventLimits.maxNameLength) {
-                return this.sendBadResponse(res, `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`);
+                return this.badResponse(res, `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`);
             }
 
             let payloadSizeInKb = Utils.dataToKilobytes(message.data);
 
             // Make sure the total payload of the message body is not too big.
             if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
-                return this.sendBadResponse(res, `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`);
+                return this.badResponse(res, `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`);
             }
 
             channels.forEach(channel => {
@@ -191,14 +193,14 @@ export class HttpHandler {
         });
     }
 
-    protected sendBadResponse(res: HttpResponse, message: string) {
+    protected badResponse(res: HttpResponse, message: string) {
         return res.writeStatus('400 Bad Request').end(JSON.stringify({
             error: message,
             code: 400,
         }));
     }
 
-    protected sendNotFoundResponse(res: HttpResponse, message: string) {
+    protected notFoundResponse(res: HttpResponse, message: string) {
         return res.writeStatus('404 Not Found').end(JSON.stringify({
             error: message,
             code: 404
@@ -219,6 +221,13 @@ export class HttpHandler {
         }));
     }
 
+    protected serverErrorResponse(res: HttpResponse, message: string) {
+        return res.writeStatus('500 Server Error').end(JSON.stringify({
+            error: message,
+            code: 500,
+        }));
+    }
+
     protected jsonBodyMiddleware(res: HttpResponse, next: CallableFunction): any {
         this.readJson(res, data => {
             res.body = data;
@@ -231,7 +240,7 @@ export class HttpHandler {
 
             next(null, res);
         }, err => {
-            return this.sendBadResponse(res, 'The received data is incorrect.');
+            return this.badResponse(res, 'The received data is incorrect.');
         });
     }
 
@@ -246,7 +255,7 @@ export class HttpHandler {
     protected appMiddleware(res: HttpResponse, next: CallableFunction): any {
         return this.appManager.findById(res.params.appId).then(validApp => {
             if (! validApp) {
-                return this.sendNotFoundResponse(res, `The app ${res.params.appId} could not be found.`);
+                return this.notFoundResponse(res, `The app ${res.params.appId} could not be found.`);
             }
 
             res.app = validApp;
@@ -267,10 +276,16 @@ export class HttpHandler {
 
     protected attachMiddleware(res: HttpResponse, functions: any[]): Promise<HttpResponse> {
         return new Promise(resolve => {
-            let waterfallInit = [callback => callback(null, res)];
+            let abortHandlerMiddleware = callback => {
+                res.onAborted(() => {
+                    console.log('Aborted request.');
+                });
+
+                callback(null, res);
+            };
 
             async.waterfall([
-                ...waterfallInit,
+                abortHandlerMiddleware,
                 ...functions.map(fn => fn.bind(this)),
             ], (err, res) => {
                 resolve(res);

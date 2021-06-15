@@ -2,11 +2,19 @@ import { LocalAdapter } from './local-adapter';
 import { Options } from '../options';
 import { PresenceMember } from '../presence-member';
 import { Server } from '../server';
+import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'uWebSockets.js';
 
-const msgpack = require('notepack.io');
 const Redis = require('ioredis');
-const uid2 = require('uid2');
+const msgpack = require('msgpack');
+
+/**
+ *                                       |-----> NODE1 ----> SEEKS DATA (ONREQUEST) ----> SEND TO THE NODE0 ---> NODE0 (ONRESPONSE) APPENDS DATA TO REQUEST OBJECT
+ *                                      |
+ * NODE0 ---> PUBLISH TO REDIS ------> |-----> NODE2 ----> SEEKS DATA (ONREQUEST) ----> SEND TO THE NODE0 ---> NODE0 (ONRESPONSE) APPENDS DATA TO REQUEST OBJECT
+ *          (IN ADAPTER METHOD)       |
+ *                                   |-----> NODE3 ----> SEEKS DATA (ONREQUEST) ----> SEND TO THE NODE0 ---> NODE0 (ONRESPONSE) APPENDS DATA TO REQUEST OBJECT
+ */
 
 enum RequestType {
     SOCKETS = 0,
@@ -34,8 +42,8 @@ interface Request {
 interface Response {
     requestId: string;
     sockets?: Map<string, WebSocket>;
-    members?: Map<string, PresenceMember>;
-    channels?: Map<string, Set<string>>;
+    members?: [string, PresenceMember][];
+    channels?: [string, string[]][];
     totalCount?: number;
 }
 
@@ -47,9 +55,9 @@ interface BroadcastedMessage {
 
 export class RedisAdapter extends LocalAdapter {
     /**
-     * The UID of the current instance.
+     * The UUID assigned for the current instance.
      */
-    protected uid: string = uid2(6);
+    protected uuid: string = uuidv4();
 
     /**
      * The subscription client.
@@ -97,8 +105,13 @@ export class RedisAdapter extends LocalAdapter {
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
 
-        this.subClient = new Redis(this.options.database.redis);
-        this.pubClient = new Redis(this.options.database.redis);
+        let redisDefaultOptions = {
+            maxRetriesPerRequest: 2,
+            retryStrategy: times => times * 2,
+        };
+
+        this.subClient = new Redis({ ...redisDefaultOptions, ...this.options.database.redis });
+        this.pubClient = new Redis({ ...redisDefaultOptions, ...this.options.database.redis });
 
         const onError = (err) => {
             if (err) {
@@ -137,7 +150,7 @@ export class RedisAdapter extends LocalAdapter {
             return localSockets;
         }
 
-        const requestId = uid2(6);
+        const requestId = uuidv4();
 
         const request = JSON.stringify({
             requestId,
@@ -182,7 +195,7 @@ export class RedisAdapter extends LocalAdapter {
             return wsCount;
         }
 
-        const requestId = uid2(6);
+        const requestId = uuidv4();
 
         const request = JSON.stringify({
             requestId,
@@ -193,7 +206,7 @@ export class RedisAdapter extends LocalAdapter {
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
                 if (this.requests.has(requestId)) {
-                    reject(new Error('timeout reached while waiting for getChannelSocketsCount response'));
+                    reject(new Error('timeout reached while waiting for getSocketsCount response'));
                     this.requests.delete(requestId);
                 }
             }, this.requestsTimeout);
@@ -227,7 +240,7 @@ export class RedisAdapter extends LocalAdapter {
             return localChannels;
         }
 
-        const requestId = uid2(6);
+        const requestId = uuidv4();
 
         const request = JSON.stringify({
             requestId,
@@ -272,7 +285,7 @@ export class RedisAdapter extends LocalAdapter {
             return localSockets;
         }
 
-        const requestId = uid2(6);
+        const requestId = uuidv4();
 
         const request = JSON.stringify({
             requestId,
@@ -318,7 +331,7 @@ export class RedisAdapter extends LocalAdapter {
             return wsCount;
         }
 
-        const requestId = uid2(6);
+        const requestId = uuidv4();
 
         const request = JSON.stringify({
             requestId,
@@ -364,7 +377,7 @@ export class RedisAdapter extends LocalAdapter {
             return localMembers;
         }
 
-        const requestId = uid2(6);
+        const requestId = uuidv4();
 
         const request = JSON.stringify({
             requestId,
@@ -410,7 +423,7 @@ export class RedisAdapter extends LocalAdapter {
             return localMembersCount;
         }
 
-        const requestId = uid2(6);
+        const requestId = uuidv4();
 
         const request = JSON.stringify({
             requestId,
@@ -444,17 +457,39 @@ export class RedisAdapter extends LocalAdapter {
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string): any {
-        let msg = msgpack.encode([
-            this.uid,
+        let msg = msgpack.pack({
+            uuid: this.uuid,
             appId,
             channel,
             data,
             exceptingId,
-        ]);
+        });
 
         this.pubClient.publish(this.channel, msg);
 
         super.send(appId, channel, data, exceptingId);
+    }
+
+    /**
+     * Run a set of instructions after the server closes.
+     * This can be used to disconnect from the drivers, to unset variables, etc.
+     */
+    disconnect(): Promise<void> {
+        return new Promise(resolve => {
+            try {
+                this.pubClient.disconnect();
+            } catch (e) {
+                //
+            }
+
+            try {
+                this.subClient.disconnect();
+            } catch (e) {
+                //
+            }
+
+            resolve();
+        });
     }
 
     /**
@@ -468,11 +503,15 @@ export class RedisAdapter extends LocalAdapter {
             return;
         }
 
-        const decodedMessage = msgpack.decode(msg);
+        const decodedMessage = msgpack.unpack(msg);
 
-        const [uid, appId, channel, data, exceptingId] = decodedMessage;
+        if (typeof decodedMessage !== 'object') {
+            return;
+        }
 
-        if (uid === this.uid || ! appId || ! channel || ! data) {
+        const { uuid, appId, channel, data, exceptingId } = decodedMessage;
+
+        if (uuid === this.uuid || ! appId || ! channel || ! data) {
             return;
         }
 
@@ -540,7 +579,9 @@ export class RedisAdapter extends LocalAdapter {
 
                 response = JSON.stringify({
                     requestId,
-                    channels: localChannels,
+                    channels: [...localChannels].map(([, connections]) => {
+                        return [...connections];
+                    }),
                 });
 
                 this.pubClient.publish(this.responseChannel, response);
@@ -556,7 +597,7 @@ export class RedisAdapter extends LocalAdapter {
 
                 response = JSON.stringify({
                     requestId,
-                    members: localMembers,
+                    members: [...localMembers],
                 });
 
                 this.pubClient.publish(this.responseChannel, response);
@@ -650,7 +691,7 @@ export class RedisAdapter extends LocalAdapter {
                     return;
                 }
 
-                response.channels.forEach((connections, channel) => request.channels.set(channel, connections));
+                response.channels.forEach(([channel, connections]) => request.channels.set(channel, new Set(connections)));
 
                 if (request.msgCount === request.numSub) {
                     clearTimeout(request.timeout);
@@ -671,7 +712,7 @@ export class RedisAdapter extends LocalAdapter {
                     return;
                 }
 
-                response.members.forEach((user_info, user_id) => request.members.set(user_id, user_info));
+                response.members.forEach(([id, member]) => request.members.set(id, member));
 
                 if (request.msgCount === request.numSub) {
                     clearTimeout(request.timeout);

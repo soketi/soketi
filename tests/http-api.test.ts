@@ -4,12 +4,7 @@ import { Utils } from './utils';
 
 describe('http api test', () => {
     afterEach(done => {
-        if (Utils.currentServer) {
-            Utils.currentServer.stop().then(() => {
-                Utils.currentServer = null;
-                done();
-            });
-        }
+        Utils.flushServers().then(() => done());
     });
 
     test('health checks', done => {
@@ -33,98 +28,88 @@ describe('http api test', () => {
     });
 
     test('get api channels', done => {
-        let client1 = Utils.newClient();
-        let client2 = Utils.newClient();
-        let backend = Utils.newBackend();
-        let channelName = Utils.randomChannelName();
-
         Utils.newServer({}, (server: Server) => {
-            client1.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    let channel = client1.subscribe(channelName);
+            let client1 = Utils.newClient();
+            let backend = Utils.newBackend();
+            let channelName = Utils.randomChannelName();
 
-                    channel.bind('pusher:subscription_succeeded', () => {
-                        backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
-                            expect(body.channels[channelName]).toBeDefined();
-                            expect(body.channels[channelName].subscription_count).toBe(1);
-                            expect(body.channels[channelName].occupied).toBe(true);
-                        });
-                    });
-                }
-            });
+            client1.connection.bind('connected', () => {
+                let channel = client1.subscribe(channelName);
 
-            client2.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    Utils.wait(5000).then(() => {
-                        let channel = client2.subscribe(channelName);
+                channel.bind('pusher:subscription_succeeded', () => {
+                    backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
+                        expect(body.channels[channelName]).toBeDefined();
+                        expect(body.channels[channelName].subscription_count).toBe(1);
+                        expect(body.channels[channelName].occupied).toBe(true);
 
-                        channel.bind('pusher:subscription_succeeded', () => {
-                            backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
-                                expect(body.channels[channelName]).toBeDefined();
-                                expect(body.channels[channelName].subscription_count).toBe(2);
-                                expect(body.channels[channelName].occupied).toBe(true);
+                        let client2 = Utils.newClient();
 
-                                client1.disconnect();
-                                client2.disconnect();
+                        client2.connection.bind('connected', () => {
+                            let channel = client2.subscribe(channelName);
 
-                                Utils.wait(3000).then(() => {
-                                    backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
-                                        expect(body.channels[channelName]).toBeUndefined();
-                                        done();
+                            channel.bind('pusher:subscription_succeeded', () => {
+                                backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
+                                    expect(body.channels[channelName]).toBeDefined();
+                                    expect(body.channels[channelName].subscription_count).toBe(2);
+                                    expect(body.channels[channelName].occupied).toBe(true);
+
+                                    client1.disconnect();
+                                    client2.disconnect();
+
+                                    Utils.wait(3000).then(() => {
+                                        backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
+                                            expect(body.channels[channelName]).toBeUndefined();
+                                            done();
+                                        });
                                     });
                                 });
                             });
                         });
                     });
-                }
+                });
             });
         });
     });
 
     test('get api channel', done => {
-        let client1 = Utils.newClient();
-        let client2 = Utils.newClient();
-        let backend = Utils.newBackend();
-        let channelName = Utils.randomChannelName();
-
         Utils.newServer({}, (server: Server) => {
-            client1.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    let channel = client1.subscribe(channelName);
+            let client1 = Utils.newClient();
+            let backend = Utils.newBackend();
+            let channelName = Utils.randomChannelName();
 
-                    channel.bind('pusher:subscription_succeeded', () => {
-                        backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
-                            expect(body.subscription_count).toBe(1);
-                            expect(body.occupied).toBe(true);
-                        });
-                    });
-                }
-            });
+            client1.connection.bind('connected', () => {
+                let channel = client1.subscribe(channelName);
 
-            client2.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    Utils.wait(5000).then(() => {
-                        let channel = client2.subscribe(channelName);
+                channel.bind('pusher:subscription_succeeded', () => {
+                    backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
+                        expect(body.subscription_count).toBe(1);
+                        expect(body.occupied).toBe(true);
 
-                        channel.bind('pusher:subscription_succeeded', () => {
-                            backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
-                                expect(body.subscription_count).toBe(2);
-                                expect(body.occupied).toBe(true);
+                        let client2 = Utils.newClient();
 
-                                client1.disconnect();
-                                client2.disconnect();
+                        client2.connection.bind('connected', () => {
+                            let channel = client2.subscribe(channelName);
 
-                                Utils.wait(3000).then(() => {
-                                    backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
-                                        expect(body.subscription_count).toBe(0);
-                                        expect(body.occupied).toBe(false);
-                                        done();
+                            channel.bind('pusher:subscription_succeeded', () => {
+                                backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
+                                    expect(body.subscription_count).toBe(2);
+                                    expect(body.occupied).toBe(true);
+
+                                    client1.disconnect();
+                                    client2.disconnect();
+
+                                    Utils.wait(3000).then(() => {
+                                        backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
+                                            expect(body.subscription_count).toBe(0);
+                                            expect(body.occupied).toBe(false);
+                                            done();
+                                        });
                                     });
                                 });
                             });
                         });
                     });
-                }
+                });
             });
         });
     });
@@ -146,51 +131,46 @@ describe('http api test', () => {
             },
         };
 
-        let client1 = Utils.newClientForPresenceUser(user1);
-        let client2 = Utils.newClientForPresenceUser(user2);
-        let backend = Utils.newBackend();
-        let channelName = `presence-${Utils.randomChannelName()}`;
-
         Utils.newServer({}, (server: Server) => {
-            client1.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    let channel = client1.subscribe(channelName);
+            let client1 = Utils.newClientForPresenceUser(user1);
+            let backend = Utils.newBackend();
+            let channelName = `presence-${Utils.randomChannelName()}`;
 
-                    channel.bind('pusher:subscription_succeeded', () => {
-                        backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
-                            expect(body.subscription_count).toBe(1);
-                            expect(body.occupied).toBe(true);
-                        });
-                    });
-                }
-            });
+            client1.connection.bind('connected', () => {
+                let channel = client1.subscribe(channelName);
 
-            client2.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    Utils.wait(5000).then(() => {
-                        let channel = client2.subscribe(channelName);
+                channel.bind('pusher:subscription_succeeded', () => {
+                    backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
+                        expect(body.subscription_count).toBe(1);
+                        expect(body.occupied).toBe(true);
 
-                        channel.bind('pusher:subscription_succeeded', () => {
-                            backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
-                                expect(body.subscription_count).toBe(2);
-                                expect(body.user_count).toBe(2);
-                                expect(body.occupied).toBe(true);
+                        let client2 = Utils.newClientForPresenceUser(user2);
 
-                                client1.disconnect();
-                                client2.disconnect();
+                        client2.connection.bind('connected', () => {
+                            let channel = client2.subscribe(channelName);
 
-                                Utils.wait(3000).then(() => {
-                                    backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
-                                        expect(body.subscription_count).toBe(0);
-                                        expect(body.user_count).toBe(0);
-                                        expect(body.occupied).toBe(false);
-                                        done();
+                            channel.bind('pusher:subscription_succeeded', () => {
+                                backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
+                                    expect(body.subscription_count).toBe(2);
+                                    expect(body.user_count).toBe(2);
+                                    expect(body.occupied).toBe(true);
+
+                                    client1.disconnect();
+                                    client2.disconnect();
+
+                                    Utils.wait(3000).then(() => {
+                                        backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
+                                            expect(body.subscription_count).toBe(0);
+                                            expect(body.user_count).toBe(0);
+                                            expect(body.occupied).toBe(false);
+                                            done();
+                                        });
                                     });
                                 });
                             });
                         });
                     });
-                }
+                });
             });
         });
     });
@@ -212,46 +192,41 @@ describe('http api test', () => {
             },
         };
 
-        let client1 = Utils.newClientForPresenceUser(user1);
-        let client2 = Utils.newClientForPresenceUser(user2);
-        let backend = Utils.newBackend();
-        let channelName = `presence-${Utils.randomChannelName()}`;
-
         Utils.newServer({}, (server: Server) => {
-            client1.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    let channel = client1.subscribe(channelName);
+            let client1 = Utils.newClientForPresenceUser(user1);
+            let backend = Utils.newBackend();
+            let channelName = `presence-${Utils.randomChannelName()}`;
 
-                    channel.bind('pusher:subscription_succeeded', () => {
-                        backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
-                            expect(body.users.length).toBe(1);
-                        });
-                    });
-                }
-            });
+            client1.connection.bind('connected', () => {
+                let channel = client1.subscribe(channelName);
 
-            client2.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    Utils.wait(5000).then(() => {
-                        let channel = client2.subscribe(channelName);
+                channel.bind('pusher:subscription_succeeded', () => {
+                    backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
+                        expect(body.users.length).toBe(1);
 
-                        channel.bind('pusher:subscription_succeeded', () => {
-                            backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
-                                expect(body.users.length).toBe(2);
+                        let client2 = Utils.newClientForPresenceUser(user2);
 
-                                client1.disconnect();
-                                client2.disconnect();
+                        client2.connection.bind('connected', () => {
+                            let channel = client2.subscribe(channelName);
 
-                                Utils.wait(3000).then(() => {
-                                    backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
-                                        expect(body.users.length).toBe(0);
-                                        done();
+                            channel.bind('pusher:subscription_succeeded', () => {
+                                backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
+                                    expect(body.users.length).toBe(2);
+
+                                    client1.disconnect();
+                                    client2.disconnect();
+
+                                    Utils.wait(3000).then(() => {
+                                        backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
+                                            expect(body.users.length).toBe(0);
+                                            done();
+                                        });
                                     });
                                 });
                             });
                         });
                     });
-                }
+                });
             });
         });
     });
@@ -265,46 +240,41 @@ describe('http api test', () => {
             },
         };
 
-        let client1 = Utils.newClientForPresenceUser(user);
-        let client2 = Utils.newClientForPresenceUser(user);
-        let backend = Utils.newBackend();
-        let channelName = `presence-${Utils.randomChannelName()}`;
-
         Utils.newServer({}, (server: Server) => {
-            client1.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    let channel = client1.subscribe(channelName);
+            let client1 = Utils.newClientForPresenceUser(user);
+            let backend = Utils.newBackend();
+            let channelName = `presence-${Utils.randomChannelName()}`;
 
-                    channel.bind('pusher:subscription_succeeded', () => {
-                        backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
-                            expect(body.users.length).toBe(1);
-                        });
-                    });
-                }
-            });
+            client1.connection.bind('connected', () => {
+                let channel = client1.subscribe(channelName);
 
-            client2.connection.bind('state_change', ({ current }) => {
-                if (current === 'connected') {
-                    Utils.wait(5000).then(() => {
-                        let channel = client2.subscribe(channelName);
+                channel.bind('pusher:subscription_succeeded', () => {
+                    backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
+                        expect(body.users.length).toBe(1);
 
-                        channel.bind('pusher:subscription_succeeded', () => {
-                            backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
-                                expect(body.users.length).toBe(1);
+                        let client2 = Utils.newClientForPresenceUser(user);
 
-                                client1.disconnect();
-                                client2.disconnect();
+                        client2.connection.bind('connected', () => {
+                            let channel = client2.subscribe(channelName);
 
-                                Utils.wait(3000).then(() => {
-                                    backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
-                                        expect(body.users.length).toBe(0);
-                                        done();
+                            channel.bind('pusher:subscription_succeeded', () => {
+                                backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
+                                    expect(body.users.length).toBe(1);
+
+                                    client1.disconnect();
+                                    client2.disconnect();
+
+                                    Utils.wait(3000).then(() => {
+                                        backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
+                                            expect(body.users.length).toBe(0);
+                                            done();
+                                        });
                                     });
                                 });
                             });
                         });
                     });
-                }
+                });
             });
         });
     });

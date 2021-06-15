@@ -3,12 +3,7 @@ import { Utils } from './utils';
 
 describe('ws test', () => {
     afterEach(done => {
-        if (Utils.currentServer) {
-            Utils.currentServer.stop().then(() => {
-                Utils.currentServer = null;
-                done();
-            });
-        }
+        Utils.flushServers().then(() => done());
     });
 
     test('cannot connect using invalid app key', done => {
@@ -97,6 +92,7 @@ describe('ws test', () => {
                     name: 'John',
                 },
             };
+
             let user2 = {
                 user_id: 2,
                 user_info: {

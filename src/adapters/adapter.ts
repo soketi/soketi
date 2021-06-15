@@ -96,4 +96,12 @@ export class Adapter implements AdapterInterface {
     send(appId: string, channel: string, data: string, exceptingId?: string): void {
         return this.driver.send(appId, channel, data, exceptingId);
     }
+
+    /**
+     * Run a set of instructions after the server closes.
+     * This can be used to disconnect from the drivers, to unset variables, etc.
+     */
+    disconnect(): Promise<void> {
+        return this.driver.disconnect();
+    }
 }

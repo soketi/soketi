@@ -4,7 +4,7 @@ const Pusher = require('pusher');
 const PusherJS = require('pusher-js');
 
 export class Utils {
-    public static currentServer: Server = null;
+    public static currentServers: Server[] = [];
 
     static newServer(options = {}, callback): any {
         options = {
@@ -14,9 +14,25 @@ export class Utils {
         };
 
         return Server.start(options, (server: Server) => {
-            Utils.currentServer = server;
+            Utils.currentServers.push(server);
 
             callback(server);
+        });
+    }
+
+    static flushServers(callback?: CallableFunction): Promise<void> {
+        return new Promise(resolve => {
+            this.currentServers.forEach(server => {
+                server.stop().then(() => {
+                    if (callback) {
+                        callback();
+                    }
+                });
+            });
+
+            this.currentServers = [];
+
+            resolve();
         });
     }
 
@@ -134,5 +150,9 @@ export class Utils {
 
     static randomChannelName(): string {
         return `channel-${Math.floor(Math.random() * 10000000)}`;
+    }
+
+    static shouldRun(condition): jest.It {
+        return condition ? it : it.skip;
     }
 }

@@ -211,12 +211,14 @@ export class Server {
                 Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
             }
 
-            return this.wsHandler.closeAllLocalSockets().then(() => {
-                if (this.options.debug) {
-                    Log.warning('⚡ All sockets were closed. Now closing the server.');
-                }
+            return this.adapter.disconnect().then(() => {
+                this.wsHandler.closeAllLocalSockets().then(() => {
+                    if (this.options.debug) {
+                        Log.warning('⚡ All sockets were closed. Now closing the adapters & the server.');
+                    }
 
-                uWS.us_listen_socket_close(this.serverProcess);
+                    uWS.us_listen_socket_close(this.serverProcess);
+                });
             });
         }
 

@@ -52,4 +52,10 @@ export interface AdapterInterface {
      * Get a given presence channel's members count
      */
     getChannelMembersCount(appId: string, channel: string, onlyLocal?: boolean): Promise<number>;
+
+    /**
+     * Run a set of instructions after the server closes.
+     * This can be used to disconnect from the drivers, to unset variables, etc.
+     */
+    disconnect(): Promise<void>;
 }

@@ -26,13 +26,12 @@
     "async": "^3.2.0",
     "axios": "^0.21.1",
     "colors": "^1.4.0",
-    "dayjs": "^1.10.4",
     "dot-wild": "^3.0.1",
     "dotenv": "^8.2.0",
     "ioredis": "^4.19.0",
     "knex": "^0.95.2",
+    "msgpack": "^1.0.3",
     "mysql": "^2.18.1",
-    "notepack.io": "^2.3.0",
     "pg": "^8.6.0",
     "prom-client": "^13.1.0",
     "prometheus-query": "^3.0.0",
@@ -40,7 +39,6 @@
     "query-string": "^7.0.0",
     "rate-limiter-flexible": "^2.2.2",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v19.2.0",
-    "uid2": "0.0.3",
     "uuid": "^8.3.2",
     "yargs": "^16.2.0"
   },
@@ -71,7 +69,7 @@
     "build-watch": "./node_modules/.bin/tsc -W",
     "lint": "eslint --ext .js,.ts ./src",
     "prepublish": "npm run build",
-    "test": "jest --detectOpenHandles --forceExit",
+    "test": "jest --detectOpenHandles",
     "test:watch": "npm test -- --watch"
   },
   "bin": {
