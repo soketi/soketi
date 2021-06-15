@@ -95,13 +95,4 @@ export class Utils {
 
         return isClientEvent;
     }
-
-    /**
-     * Check if the channel requires authentication.
-     */
-    static requireAuthentication(channel: string): boolean {
-        return this.isPresenceChannel(channel) ||
-            this.isPrivateChannel(channel) ||
-            this.isEncryptedPrivateChannel(channel);
-    }
 }
