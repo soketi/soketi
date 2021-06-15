@@ -10,6 +10,7 @@ export interface JoinResponse {
     member?: PresenceMember;
     errorMessage?: string;
     errorCode?: number;
+    type?: string;
 }
 
 export interface LeaveResponse {

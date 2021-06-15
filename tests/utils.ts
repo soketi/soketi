@@ -8,6 +8,7 @@ export class Utils {
 
     static newServer(options = {}, callback): any {
         options = {
+            ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APPS_MANAGER || 'array',
         };
@@ -19,7 +20,7 @@ export class Utils {
         });
     }
 
-    static newClient(options = {}, port = 6001, key = 'app-key'): any {
+    static newClient(options = {}, port = 6001, key = 'app-key', withStateChange = true): any {
         let client = new PusherJS(key, {
             wsHost: '127.0.0.1',
             httpHost: '127.0.0.1',
@@ -35,11 +36,13 @@ export class Utils {
             ...options,
         });
 
-        client.connection.bind('state_change', ({ current }) => {
-            if (current === 'unavailable') {
-                throw new Error('The connection could not be made. Status: ' + current);
-            }
-        });
+        if (withStateChange) {
+            client.connection.bind('state_change', ({ current }) => {
+                if (current === 'unavailable') {
+                    throw new Error('The connection could not be made. Status: ' + current);
+                }
+            });
+        }
 
         return client;
     }
@@ -98,7 +101,7 @@ export class Utils {
         }, port, key);
     }
 
-    static sendEventToChannel(pusher, channel: string, event: string, body: any): any {
+    static sendEventToChannel(pusher, channel: string|string[], event: string, body: any): any {
         return pusher.trigger(channel, event, body);
     }
 

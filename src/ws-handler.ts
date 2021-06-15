@@ -62,23 +62,29 @@ export class WsHandler {
 
         this.checkForValidApp(ws).then(validApp => {
             if (! validApp) {
-                return ws.send(JSON.stringify({
+                ws.send(JSON.stringify({
                     event: 'pusher:error',
                     code: 4001,
                     message: `App key ${ws.appKey} does not exist.`,
                 }));
+
+                return ws.close();
             }
 
             ws.app = validApp;
 
             this.checkAppConnectionLimit(ws).then(canConnect => {
                 if (! canConnect) {
-                    return ws.send(JSON.stringify({
+                    ws.send(JSON.stringify({
                         event: 'pusher:error',
                         code: 4100,
                         message: 'The current concurrent connections quota has been reached.',
                     }));
+
+                    return ws.close();
                 }
+
+                this.adapter.getNamespace(ws.app.id).addSocket(ws);
 
                 ws.send(JSON.stringify({
                     event: 'pusher:connection_established',
@@ -136,7 +142,7 @@ export class WsHandler {
                             ws.send(JSON.stringify({
                                 event: 'pusher:error',
                                 code: 4200,
-                                message: 'The server got closed. Reconnect in a few seconds.',
+                                message: 'Please reconnect shortly.',
                             }));
 
                             ws.close();
@@ -177,15 +183,19 @@ export class WsHandler {
 
         if (channel.length > this.server.options.channelLimits.maxNameLength) {
             return ws.send(JSON.stringify({
-                event: 'pusher:error',
-                code: 4009,
-                message: `The channel name is longer than the allowed ${this.server.options.channelLimits.maxNameLength} characters.`
+                event: 'pusher:subscription_error',
+                channel,
+                data: {
+                    type: 'LimitReached',
+                    error: `The channel name is longer than the allowed ${this.server.options.channelLimits.maxNameLength} characters.`,
+                    status: 4009,
+                },
             }));
         }
 
         channelManager.join(ws, channel, message).then((response) => {
             if (! response.success) {
-                let { authError, errorMessage, errorCode } = response;
+                let { authError, type, errorMessage, errorCode } = response;
 
                 // For auth errors, send pusher:subscription_error
                 if (authError) {
@@ -202,8 +212,10 @@ export class WsHandler {
 
                 // Otherwise, catch any non-auth related errors.
                 return ws.send(JSON.stringify({
-                    event: 'pusher:error',
+                    event: 'pusher:subscription_error',
+                    channel,
                     data: {
+                        type: type,
                         error: errorMessage,
                         status: errorCode,
                     },
@@ -214,9 +226,7 @@ export class WsHandler {
                 ws.subscribedChannels.add(channel);
             }
 
-            let namespace = this.adapter.getNamespace(ws.app.id);
-
-            namespace.addSocket(ws);
+            this.adapter.getNamespace(ws.app.id).addSocket(ws);
 
             // For non-presence channels, end with subscription succeeded.
             if (! (channelManager instanceof PresenceChannelManager)) {
@@ -233,8 +243,10 @@ export class WsHandler {
 
             if (memberSizeInKb > this.server.options.presence.maxMemberSizeInKb) {
                 return ws.send(JSON.stringify({
-                    event: 'pusher:error',
+                    event: 'pusher:subscription_error',
+                    channel,
                     data: {
+                        type: 'LimitReached',
                         error: `The maximum size for a channel member is ${this.server.options.presence.maxMemberSizeInKb} KB.`,
                         status: 4301,
                     },
@@ -245,7 +257,8 @@ export class WsHandler {
 
             ws.presence.set(channel, member);
 
-            namespace.addSocket(ws);
+            // Make sure to update the socket after new data was pushed in.
+            this.adapter.getNamespace(ws.app.id).addSocket(ws);
 
             this.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
                 ws.send(JSON.stringify({
@@ -397,12 +410,18 @@ export class WsHandler {
 
     /**
      * Make sure the connection limit is not reached with this connection.
+     * Return a boolean wether the user can connect or not.
      */
     protected checkAppConnectionLimit(ws: WebSocket): Promise<boolean> {
+        // TODO: Implement an adapter getSocketsCount() to minimize network traffic.
         return this.adapter.getSockets(ws.app.id).then(sockets => {
             let maxConnections = parseInt(ws.app.maxConnections as string) || -1;
 
-            return sockets.size + 1 > maxConnections;
+            if (maxConnections < 0) {
+                return true;
+            }
+
+            return sockets.size + 1 <= maxConnections;
         });
     }
 

@@ -315,7 +315,28 @@ describe('http api test', () => {
 
             backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
                 expect(body.error).toBeDefined();
+                expect(body.code).toBe(404);
                 done();
+            });
+        });
+    });
+
+    test('a non-presence channel cannot read users', done => {
+        Utils.newServer({}, (server: Server) => {
+            let client = Utils.newClient();
+            let channelName = Utils.randomChannelName();
+            let backend = Utils.newBackend();
+
+            client.connection.bind('connected', () => {
+                let channel = client.subscribe(channelName);
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
+                        expect(body.error).toBeDefined();
+                        expect(body.code).toBe(400);
+                        done();
+                    });
+                });
             });
         });
     });
@@ -356,6 +377,62 @@ describe('http api test', () => {
                     });
                 });
             });
+        });
+    });
+
+    test('should check for eventLimits.maxChannelsAtOnce', done => {
+        Utils.newServer({ 'eventLimits.maxChannelsAtOnce': 1 }, (server: Server) => {
+            let backend = Utils.newBackend();
+
+            Utils.sendEventToChannel(backend, ['ch1', 'ch2'], 'greeting', { message: 'hello' })
+                .then(res => res.json())
+                .then(res => {
+                    expect(res.error).toBeDefined();
+                    expect(res.code).toBe(400);
+                    done();
+                });
+        });
+    });
+
+    test('should check for eventLimits.maxNameLength', done => {
+        Utils.newServer({ 'eventLimits.maxNameLength': 7 }, (server: Server) => {
+            let backend = Utils.newBackend();
+
+            Utils.sendEventToChannel(backend, 'ch1', 'greeting', { message: 'hello' })
+                .then(res => res.json())
+                .then(res => {
+                    expect(res.error).toBeDefined();
+                    expect(res.code).toBe(400);
+                    done();
+                });
+        });
+    });
+
+    test('should check for eventLimits.maxPayloadInKb', done => {
+        Utils.newServer({ 'eventLimits.maxPayloadInKb': 1/1024 }, (server: Server) => {
+            let backend = Utils.newBackend();
+
+            Utils.sendEventToChannel(backend, 'ch1', 'greeting', { message: 'hello' })
+                .then(res => res.json())
+                .then(res => {
+                    expect(res.error).toBeDefined();
+                    expect(res.code).toBe(400);
+                    done();
+                });
+        });
+    });
+
+    test('should check for httpApi.requestLimitInMb', done => {
+        Utils.newServer({ 'httpApi.requestLimitInMb': 1/1024/1024 }, (server: Server) => {
+            let backend = Utils.newBackend();
+
+            Utils.sendEventToChannel(backend, 'ch1', 'greeting', { message: 'hello' })
+                .then(res => res.json())
+                .then(res => {
+                    expect(res.error).toBeDefined();
+                    expect(res.code).toBe(413);
+                    done();
+                });
         });
     });
 });

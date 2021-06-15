@@ -156,8 +156,10 @@ export class Server {
             this,
         );
 
-        Log.title('\n📡 pWS Server initialization started.\n');
-        Log.info('⚡ Initializing the HTTP API & Websockets Server...\n');
+        if (this.options.debug) {
+            Log.title('\n📡 pWS Server initialization started.\n');
+            Log.info('⚡ Initializing the HTTP API & Websockets Server...\n');
+        }
 
         let server: TemplatedApp = this.shouldConfigureSsl()
             ? uWS.SSLApp({
@@ -167,20 +169,26 @@ export class Server {
             })
             : uWS.App();
 
-        Log.info('⚡ Initializing the Websocket listeners and channels...\n');
+        if (this.options.debug) {
+            Log.info('⚡ Initializing the Websocket listeners and channels...\n');
+        }
 
         this.configureWebsockets(server).then(server => {
-            Log.info('⚡ Initializing the HTTP webserver...\n');
+            if (this.options.debug) {
+                Log.info('⚡ Initializing the HTTP webserver...\n');
+            }
 
             this.configureHttp(server).then(server => {
                 server.listen('0.0.0.0', this.options.port, serverProcess => {
                     this.serverProcess = serverProcess;
 
-                    Log.success('🎉 Server is up and running!\n');
+                    if (this.options.debug) {
+                        Log.success('🎉 Server is up and running!\n');
 
-                    Log.success(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
-                    Log.success(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
-                    Log.info('👂 The server is now listening for events and managing the channels.\n');
+                        Log.success(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
+                        Log.success(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
+                        Log.info('👂 The server is now listening for events and managing the channels.\n');
+                    }
 
                     if (callback) {
                         callback(this);
@@ -197,12 +205,16 @@ export class Server {
         if (this.serverProcess) {
             this.closing = true;
 
-            Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...\n');
+            if (this.options.debug) {
+                Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...\n');
 
-            Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
+                Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
+            }
 
             return this.wsHandler.closeAllLocalSockets().then(() => {
-                Log.warning('⚡ All sockets were closed. Now closing the server.');
+                if (this.options.debug) {
+                    Log.warning('⚡ All sockets were closed. Now closing the server.');
+                }
 
                 uWS.us_listen_socket_close(this.serverProcess);
             });

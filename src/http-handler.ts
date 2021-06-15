@@ -195,24 +195,28 @@ export class HttpHandler {
     protected sendBadResponse(res: HttpResponse, message: string) {
         return res.writeStatus('400 Bad Request').end(JSON.stringify({
             error: message,
+            code: 400,
         }));
     }
 
     protected sendNotFoundResponse(res: HttpResponse, message: string) {
         return res.writeStatus('404 Not Found').end(JSON.stringify({
             error: message,
+            code: 404
         }));
     }
 
     protected unauthorizedResponse(res: HttpResponse, message: string) {
         return res.writeStatus('401 Unauthorized').end(JSON.stringify({
             error: message,
+            code: 401,
         }));
     }
 
     protected entityTooLargeResponse(res: HttpResponse, message: string) {
         return res.writeStatus('413 Entity Too Large').end(JSON.stringify({
             error: message,
+            code: 413,
         }));
     }
 
