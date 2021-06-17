@@ -1,6 +1,8 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
+jest.retryTimes(3);
+
 describe('public channel test', () => {
     afterEach(done => {
         Utils.flushServers().then(() => done());

@@ -110,8 +110,12 @@ export class HttpHandler {
 
                     if (response.subscription_count > 0) {
                         this.adapter.getChannelMembersCount(res.params.appId, res.params.channel).then(membersCount => {
-                            response.user_count = membersCount;
-                            res.writeStatus('200 OK').end(JSON.stringify(response));
+                            res.writeStatus('200 OK').end(JSON.stringify({
+                                ...response,
+                                ... {
+                                    user_count: membersCount,
+                                },
+                            }));
                         });
 
                         return;
@@ -179,17 +183,19 @@ export class HttpHandler {
                 return this.badResponse(res, `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`);
             }
 
-            channels.forEach(channel => {
+            async.each(channels, (channel, callback) => {
                 this.adapter.send(res.params.appId, channel, JSON.stringify({
                     event: message.name,
                     channel,
                     data: message.data,
                 }), message.socket_id);
-            });
 
-            res.writeStatus('200 OK').end(JSON.stringify({
-                ok: true,
-            }));
+                callback();
+            }).then(() => {
+                res.writeStatus('200 OK').end(JSON.stringify({
+                    ok: true,
+                }));
+            });
         });
     }
 
@@ -351,6 +357,6 @@ export class HttpHandler {
      * Get the signed token from the given request.
      */
     protected getSignedToken(res: HttpResponse): Promise<string> {
-        return new Promise(resolve => resolve(res.app.signingTokenFromRequest(res)));
+        return Promise.resolve(res.app.signingTokenFromRequest(res));
     }
 }

@@ -1,6 +1,7 @@
 import { AdapterInterface } from './adapters/adapter-interface';
 import { App } from './app';
 import { AppManagerInterface } from './app-managers';
+import async from 'async';
 import { EncryptedPrivateChannelManager } from './channels';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { PresenceChannelManager } from './channels';
@@ -135,8 +136,28 @@ export class WsHandler {
      */
     async closeAllLocalSockets(): Promise<void> {
         return new Promise(resolve => {
-            this.adapter.getNamespaces().forEach(namespace => {
+            let namespaces = this.adapter.getNamespaces();
+            let totalNamesapaces = namespaces.size;
+            let closedNamespaces = 0;
+
+            if (namespaces.size === 0) {
+                return resolve();
+            }
+
+            namespaces.forEach(namespace => {
                 namespace.getSockets().then(sockets => {
+                    let totalSockets = sockets.size;
+
+                    if (totalSockets === 0) {
+                        closedNamespaces++;
+
+                        if(closedNamespaces === totalNamesapaces) {
+                            resolve();
+                        }
+                    }
+
+                    let closedSockets = 0;
+
                     sockets.forEach(ws => {
                         try {
                             ws.send(JSON.stringify({
@@ -149,11 +170,19 @@ export class WsHandler {
                         } catch (e) {
                             //
                         }
+
+                        closedSockets++;
+
+                        if (closedSockets === totalSockets) {
+                            closedNamespaces++;
+
+                            if(closedNamespaces === totalNamesapaces) {
+                                resolve();
+                            }
+                        }
                     });
                 });
             });
-
-            resolve();
         });
     }
 
@@ -327,16 +356,9 @@ export class WsHandler {
                 return resolve();
             }
 
-            let unsubCount = 0
-            let totalUnsub = ws.subscribedChannels.size;
-
-            ws.subscribedChannels.forEach(channel => {
-                this.unsubscribeFromChannel(ws, channel).then(() => unsubCount++).then(() => {
-                    if (totalUnsub === unsubCount) {
-                        resolve();
-                    }
-                });
-            });
+            async.each(ws.subscribedChannels, (channel, callback) => {
+                this.unsubscribeFromChannel(ws, channel).then(() => callback());
+            }).then(() => resolve());
         });
     }
 

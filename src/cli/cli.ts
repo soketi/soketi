@@ -94,8 +94,10 @@ export class Cli {
     async start(yargs: any): Promise<any> {
         this.overwriteOptionsFromEnv();
 
-        const handleFailure = async () => {
-            this.server.stop();
+        const handleFailure = () => {
+            this.server.stop().then(() => {
+                process.exit();
+            });
         }
 
         process.on('SIGINT', handleFailure);

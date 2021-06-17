@@ -47,12 +47,6 @@ interface Response {
     totalCount?: number;
 }
 
-interface BroadcastedMessage {
-    channel: string;
-    data: string;
-    exceptingId?: string;
-}
-
 export class RedisAdapter extends LocalAdapter {
     /**
      * The UUID assigned for the current instance.
@@ -141,7 +135,7 @@ export class RedisAdapter extends LocalAdapter {
         const localSockets = await super.getSockets(appId, true);
 
         if (onlyLocal) {
-            return new Promise(resolve => resolve(localSockets));
+            return Promise.resolve(localSockets);
         }
 
         const numSub = await this.getNumSub();
@@ -186,13 +180,13 @@ export class RedisAdapter extends LocalAdapter {
         const wsCount = await super.getSocketsCount(appId);
 
         if (onlyLocal) {
-            return new Promise(resolve => resolve(wsCount));
+            return Promise.resolve(wsCount);
         }
 
         const numSub = await this.getNumSub();
 
         if (numSub <= 1) {
-            return wsCount;
+            return Promise.resolve(wsCount);
         }
 
         const requestId = uuidv4();
@@ -231,13 +225,13 @@ export class RedisAdapter extends LocalAdapter {
         const localChannels = await super.getChannels(appId);
 
         if (onlyLocal) {
-            return new Promise(resolve => resolve(localChannels));
+            return Promise.resolve(localChannels);
         }
 
         const numSub = await this.getNumSub();
 
         if (numSub <= 1) {
-            return localChannels;
+            return Promise.resolve(localChannels);
         }
 
         const requestId = uuidv4();
@@ -276,13 +270,13 @@ export class RedisAdapter extends LocalAdapter {
         const localSockets = await super.getChannelSockets(appId, channel);
 
         if (onlyLocal) {
-            return new Promise(resolve => resolve(localSockets));
+            return Promise.resolve(localSockets);
         }
 
         const numSub = await this.getNumSub();
 
         if (numSub <= 1) {
-            return localSockets;
+            return Promise.resolve(localSockets);
         }
 
         const requestId = uuidv4();
@@ -322,13 +316,13 @@ export class RedisAdapter extends LocalAdapter {
         const wsCount = await super.getChannelSocketsCount(appId, channel);
 
         if (onlyLocal) {
-            return new Promise(resolve => resolve(wsCount));
+            return Promise.resolve(wsCount);
         }
 
         const numSub = await this.getNumSub();
 
         if (numSub <= 1) {
-            return wsCount;
+            return Promise.resolve(wsCount);
         }
 
         const requestId = uuidv4();
@@ -368,13 +362,13 @@ export class RedisAdapter extends LocalAdapter {
         const localMembers = await super.getChannelMembers(appId, channel);
 
         if (onlyLocal) {
-            return new Promise(resolve => resolve(localMembers));
+            return Promise.resolve(localMembers);
         }
 
         const numSub = await this.getNumSub();
 
         if (numSub <= 1) {
-            return localMembers;
+            return Promise.resolve(localMembers);
         }
 
         const requestId = uuidv4();
@@ -414,13 +408,13 @@ export class RedisAdapter extends LocalAdapter {
         const localMembersCount = await super.getChannelMembersCount(appId, channel);
 
         if (onlyLocal) {
-            return new Promise(resolve => resolve(localMembersCount));
+            return Promise.resolve(localMembersCount);
         }
 
         const numSub = await this.getNumSub();
 
         if (numSub <= 1) {
-            return localMembersCount;
+            return Promise.resolve(localMembersCount);
         }
 
         const requestId = uuidv4();
@@ -446,7 +440,7 @@ export class RedisAdapter extends LocalAdapter {
                 resolve,
                 timeout,
                 msgCount: 1,
-                membersCount: localMembersCount,
+                totalCount: localMembersCount,
             });
 
             this.pubClient.publish(this.requestChannel, request);
@@ -468,28 +462,6 @@ export class RedisAdapter extends LocalAdapter {
         this.pubClient.publish(this.channel, msg);
 
         super.send(appId, channel, data, exceptingId);
-    }
-
-    /**
-     * Run a set of instructions after the server closes.
-     * This can be used to disconnect from the drivers, to unset variables, etc.
-     */
-    disconnect(): Promise<void> {
-        return new Promise(resolve => {
-            try {
-                this.pubClient.disconnect();
-            } catch (e) {
-                //
-            }
-
-            try {
-                this.subClient.disconnect();
-            } catch (e) {
-                //
-            }
-
-            resolve();
-        });
     }
 
     /**
@@ -579,8 +551,8 @@ export class RedisAdapter extends LocalAdapter {
 
                 response = JSON.stringify({
                     requestId,
-                    channels: [...localChannels].map(([, connections]) => {
-                        return [...connections];
+                    channels: [...localChannels].map(([channel, connections]) => {
+                        return [channel, [...connections]];
                     }),
                 });
 
@@ -691,7 +663,15 @@ export class RedisAdapter extends LocalAdapter {
                     return;
                 }
 
-                response.channels.forEach(([channel, connections]) => request.channels.set(channel, new Set(connections)));
+                response.channels.forEach(([channel, connections]) => {
+                    if (request.channels.has(channel)) {
+                        connections.forEach(connection => {
+                            request.channels.set(channel, request.channels.get(channel).add(connection));
+                        });
+                    } else {
+                        request.channels.set(channel, new Set(connections));
+                    }
+                });
 
                 if (request.msgCount === request.numSub) {
                     clearTimeout(request.timeout);

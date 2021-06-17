@@ -1,12 +1,14 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
+jest.retryTimes(3);
+
 describe('presence channel test for redis adapter', () => {
     afterEach(done => {
         Utils.flushServers().then(() => done());
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('handles joins and leaves', done => {
+    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('handles joins and leaves for redis adapter', done => {
         Utils.newServer({ port: 6001 }, (server: Server) => {
             Utils.newServer({ port: 6002 }, (server: Server) => {
                 let john = {
@@ -26,7 +28,6 @@ describe('presence channel test for redis adapter', () => {
                 };
 
                 let johnClient = Utils.newClientForPresenceUser(john);
-                let aliceClient = Utils.newClientForPresenceUser(alice, {}, 6002);
                 let channelName = `presence-${Utils.randomChannelName()}`;
 
                 johnClient.connection.bind('connected', () => {
@@ -37,6 +38,21 @@ describe('presence channel test for redis adapter', () => {
                         expect(data.me.id).toBe(1);
                         expect(data.members['1'].id).toBe(1);
                         expect(data.me.info.name).toBe('John');
+
+                        let aliceClient = Utils.newClientForPresenceUser(alice, {}, 6002);
+
+                        aliceClient.connection.bind('connected', () => {
+                            let aliceChannel = aliceClient.subscribe(channelName);
+
+                            aliceChannel.bind('pusher:subscription_succeeded', (data) => {
+                                expect(data.count).toBe(2);
+                                expect(data.me.id).toBe(2);
+                                expect(data.members['1'].id).toBe(1);
+                                expect(data.members['2'].id).toBe(2);
+                                expect(data.me.info.name).toBe('Alice');
+                                aliceClient.disconnect();
+                            });
+                        });
                     });
 
                     johnChannel.bind('pusher:member_added', data => {
@@ -48,21 +64,6 @@ describe('presence channel test for redis adapter', () => {
                         expect(data.id).toBe(2);
                         expect(data.info.name).toBe('Alice');
                         done();
-                    });
-                });
-
-                aliceClient.connection.bind('connected', () => {
-                    Utils.wait(5000).then(() => {
-                        let aliceChannel = aliceClient.subscribe(channelName);
-
-                        aliceChannel.bind('pusher:subscription_succeeded', (data) => {
-                            expect(data.count).toBe(2);
-                            expect(data.me.id).toBe(2);
-                            expect(data.members['1'].id).toBe(1);
-                            expect(data.members['2'].id).toBe(2);
-                            expect(data.me.info.name).toBe('Alice');
-                            aliceClient.disconnect();
-                        });
                     });
                 });
             });

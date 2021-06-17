@@ -211,8 +211,8 @@ export class Server {
                 Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
             }
 
-            return this.adapter.disconnect().then(() => {
-                this.wsHandler.closeAllLocalSockets().then(() => {
+            return this.wsHandler.closeAllLocalSockets().then(() => {
+                return this.adapter.disconnect().then(() => {
                     if (this.options.debug) {
                         Log.warning('⚡ All sockets were closed. Now closing the adapters & the server.');
                     }
@@ -222,7 +222,7 @@ export class Server {
             });
         }
 
-        return new Promise(resolve => resolve());
+        return Promise.resolve();
     }
 
     /**

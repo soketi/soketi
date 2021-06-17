@@ -1,6 +1,8 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
+jest.retryTimes(3);
+
 describe('presence channel test', () => {
     afterEach(done => {
         Utils.flushServers().then(() => done());
@@ -60,7 +62,6 @@ describe('presence channel test', () => {
             };
 
             let johnClient = Utils.newClientForPresenceUser(john);
-            let aliceClient = Utils.newClientForPresenceUser(alice);
             let channelName = `presence-${Utils.randomChannelName()}`;
 
             johnClient.connection.bind('connected', () => {
@@ -71,6 +72,21 @@ describe('presence channel test', () => {
                     expect(data.me.id).toBe(1);
                     expect(data.members['1'].id).toBe(1);
                     expect(data.me.info.name).toBe('John');
+
+                    let aliceClient = Utils.newClientForPresenceUser(alice);
+
+                    aliceClient.connection.bind('connected', () => {
+                        let aliceChannel = aliceClient.subscribe(channelName);
+
+                        aliceChannel.bind('pusher:subscription_succeeded', (data) => {
+                            expect(data.count).toBe(2);
+                            expect(data.me.id).toBe(2);
+                            expect(data.members['1'].id).toBe(1);
+                            expect(data.members['2'].id).toBe(2);
+                            expect(data.me.info.name).toBe('Alice');
+                            aliceClient.disconnect();
+                        });
+                    });
                 });
 
                 johnChannel.bind('pusher:member_added', data => {
@@ -82,21 +98,6 @@ describe('presence channel test', () => {
                     expect(data.id).toBe(2);
                     expect(data.info.name).toBe('Alice');
                     done();
-                });
-            });
-
-            aliceClient.connection.bind('connected', () => {
-                Utils.wait(5000).then(() => {
-                    let aliceChannel = aliceClient.subscribe(channelName);
-
-                    aliceChannel.bind('pusher:subscription_succeeded', (data) => {
-                        expect(data.count).toBe(2);
-                        expect(data.me.id).toBe(2);
-                        expect(data.members['1'].id).toBe(1);
-                        expect(data.members['2'].id).toBe(2);
-                        expect(data.me.info.name).toBe('Alice');
-                        aliceClient.disconnect();
-                    });
                 });
             });
         });

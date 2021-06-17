@@ -1,6 +1,8 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
+jest.retryTimes(3);
+
 describe('http api test for redis adapter', () => {
     afterEach(done => {
         Utils.flushServers().then(() => done());
@@ -34,15 +36,19 @@ describe('http api test for redis adapter', () => {
                                         expect(body.channels[channelName].subscription_count).toBe(2);
                                         expect(body.channels[channelName].occupied).toBe(true);
 
-                                        client1.disconnect();
-                                        client2.disconnect();
+                                        client1.connection.bind('disconnected', () => {
+                                            client2.disconnect();
+                                        });
 
-                                        Utils.wait(3000).then(() => {
+                                        client2.connection.bind('disconnected', () => {
                                             backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
                                                 expect(body.channels[channelName]).toBeUndefined();
                                                 done();
                                             });
                                         });
+
+                                        client1.disconnect();
+                                        client2.disconnect();
                                     });
                                 });
                             });
@@ -78,16 +84,20 @@ describe('http api test for redis adapter', () => {
                                         expect(body.subscription_count).toBe(2);
                                         expect(body.occupied).toBe(true);
 
-                                        client1.disconnect();
-                                        client2.disconnect();
+                                        client1.connection.bind('disconnected', () => {
+                                            client2.disconnect();
+                                        });
 
-                                        Utils.wait(3000).then(() => {
+                                        client2.connection.bind('disconnected', () => {
                                             backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
                                                 expect(body.subscription_count).toBe(0);
                                                 expect(body.occupied).toBe(false);
                                                 done();
                                             });
                                         });
+
+                                        client1.disconnect();
+                                        client2.disconnect();
                                     });
                                 });
                             });
@@ -140,10 +150,11 @@ describe('http api test for redis adapter', () => {
                                         expect(body.user_count).toBe(2);
                                         expect(body.occupied).toBe(true);
 
-                                        client1.disconnect();
-                                        client2.disconnect();
+                                        client1.connection.bind('disconnected', () => {
+                                            client2.disconnect();
+                                        });
 
-                                        Utils.wait(3000).then(() => {
+                                        client2.connection.bind('disconnected', () => {
                                             backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
                                                 expect(body.subscription_count).toBe(0);
                                                 expect(body.user_count).toBe(0);
@@ -151,6 +162,9 @@ describe('http api test for redis adapter', () => {
                                                 done();
                                             });
                                         });
+
+                                        client1.disconnect();
+                                        client2.disconnect();
                                     });
                                 });
                             });
@@ -200,15 +214,19 @@ describe('http api test for redis adapter', () => {
                                     backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
                                         expect(body.users.length).toBe(2);
 
-                                        client1.disconnect();
-                                        client2.disconnect();
+                                        client1.connection.bind('disconnected', () => {
+                                            client2.disconnect();
+                                        });
 
-                                        Utils.wait(3000).then(() => {
+                                        client2.connection.bind('disconnected', () => {
                                             backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
                                                 expect(body.users.length).toBe(0);
                                                 done();
                                             });
                                         });
+
+                                        client1.disconnect();
+                                        client2.disconnect();
                                     });
                                 });
                             });
@@ -250,15 +268,19 @@ describe('http api test for redis adapter', () => {
                                     backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
                                         expect(body.users.length).toBe(1);
 
-                                        client1.disconnect();
-                                        client2.disconnect();
+                                        client1.connection.bind('disconnected', () => {
+                                            client2.disconnect();
+                                        });
 
-                                        Utils.wait(3000).then(() => {
+                                        client2.connection.bind('disconnected', () => {
                                             backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
                                                 expect(body.users.length).toBe(0);
                                                 done();
                                             });
                                         });
+
+                                        client1.disconnect();
+                                        client2.disconnect();
                                     });
                                 });
                             });

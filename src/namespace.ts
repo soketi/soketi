@@ -23,7 +23,7 @@ export class Namespace {
      * Get all sockets from this namespace.
      */
     getSockets(): Promise<Map<string, WebSocket>> {
-        return new Promise(resolve => resolve(this.sockets));
+        return Promise.resolve(this.sockets);
     }
 
     /**
@@ -91,7 +91,7 @@ export class Namespace {
      * Get the list of channels with the websocket IDs.
      */
     getChannels(): Promise<Map<string, Set<string>>> {
-        return new Promise(resolve => resolve(this.channels));
+        return Promise.resolve(this.channels);
     }
 
     /**

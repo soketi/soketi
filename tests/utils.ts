@@ -1,3 +1,4 @@
+import async from 'async';
 import { Server } from './../src/server';
 
 const Pusher = require('pusher');
@@ -20,19 +21,19 @@ export class Utils {
         });
     }
 
-    static flushServers(callback?: CallableFunction): Promise<void> {
-        return new Promise(resolve => {
-            this.currentServers.forEach(server => {
-                server.stop().then(() => {
-                    if (callback) {
-                        callback();
-                    }
-                });
+    static flushServers(): Promise<void> {
+        if (this.currentServers.length === 0) {
+            return Promise.resolve();
+        }
+
+        return async.each(this.currentServers, function (server: Server, serverCallback?: CallableFunction) {
+            server.stop().then(() => {
+                if (serverCallback) {
+                    serverCallback();
+                }
             });
-
+        }).then(() => {
             this.currentServers = [];
-
-            resolve();
         });
     }
 

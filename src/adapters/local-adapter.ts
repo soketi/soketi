@@ -120,6 +120,6 @@ export class LocalAdapter implements AdapterInterface {
      * This can be used to disconnect from the drivers, to unset variables, etc.
      */
     disconnect(): Promise<void> {
-        return new Promise(resolve => resolve());
+        return Promise.resolve();
     }
 }
