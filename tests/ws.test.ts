@@ -257,7 +257,7 @@ describe('ws test', () => {
                     client2.connection.bind('message', ({ event, channel, data }) => {
                         if (event === 'pusher:subscription_error' && channel === channelName) {
                             expect(data.type).toBe('LimitReached');
-                            expect(data.code).toBe(4100);
+                            expect(data.status).toBe(4100);
                             expect(data.error).toBeDefined();
                             done();
                         }
