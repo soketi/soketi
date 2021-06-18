@@ -15,6 +15,7 @@ export class Cli {
      */
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
+        ADAPTER_REDIS_PREFIX: 'adapter.redis.prefix',
         APP_MANAGER_DRIVER: 'appManager.driver',
         CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength',
         DEBUG: 'debug',

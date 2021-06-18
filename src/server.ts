@@ -141,8 +141,8 @@ export class Server {
             this.options = dot.set(this.options, path, options[path]);
         }
 
-        this.appManager = new AppManager(this.options);
-        this.adapter = new Adapter(this.options, this);
+        this.appManager = new AppManager(this);
+        this.adapter = new Adapter(this);
 
         this.wsHandler = new WsHandler(
             this.appManager,
@@ -202,27 +202,23 @@ export class Server {
      * Stop the server.
      */
     stop(): Promise<void> {
-        if (this.serverProcess) {
+        if (this.options.debug) {
             this.closing = true;
 
-            if (this.options.debug) {
-                Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...\n');
+            Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...\n');
 
-                Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
-            }
-
-            return this.wsHandler.closeAllLocalSockets().then(() => {
-                return this.adapter.disconnect().then(() => {
-                    if (this.options.debug) {
-                        Log.warning('⚡ All sockets were closed. Now closing the adapters & the server.');
-                    }
-
-                    uWS.us_listen_socket_close(this.serverProcess);
-                });
-            });
+            Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
         }
 
-        return Promise.resolve();
+        return this.wsHandler.closeAllLocalSockets().then(() => {
+            return this.adapter.disconnect().then(() => {
+                if (this.options.debug) {
+                    Log.warning('⚡ All sockets were closed. Now closing the adapters & the server.');
+                }
+
+                uWS.us_listen_socket_close(this.serverProcess);
+            });
+        });
     }
 
     /**

@@ -52,6 +52,7 @@ However, Redis is needed if you plan to run on multiple instances or processes a
 | Environment variable | Default | Available values | Description |
 | - | - | - | - |
 | `ADAPTER_DRIVER` | `local` | `redis`, `local` | The adapter driver to use to store and retrieve each app with channels' persistent data. |
+| `ADAPTER_REDIS_PREFIX` | `''` | - | The Redis adapter's Pub/Sub channels prefix. |
 
 - `redis` - Enabled Pub/Sub communication between processes/nodes, can be scaled horizontally without issues.
 - `local` - There is no communication or Pub/Sub. Recommended for single-instance, single-process apps.

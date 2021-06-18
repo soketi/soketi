@@ -4,6 +4,7 @@ import { AppManagerInterface } from './app-managers';
 import async from 'async';
 import { EncryptedPrivateChannelManager } from './channels';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
+import { Log } from './log';
 import { PresenceChannelManager } from './channels';
 import { PresenceMember } from './presence-member';
 import { PrivateChannelManager } from './channels';
@@ -54,6 +55,14 @@ export class WsHandler {
      */
     onOpen(ws: WebSocket): any {
         if (this.server.closing) {
+            ws.send(JSON.stringify({
+                event: 'pusher:error',
+                data: {
+                    code: 4200,
+                    message: 'Server is closing. Please reconnect shortly.',
+                },
+            }));
+
             return ws.close();
         }
 
@@ -65,8 +74,10 @@ export class WsHandler {
             if (! validApp) {
                 ws.send(JSON.stringify({
                     event: 'pusher:error',
-                    code: 4001,
-                    message: `App key ${ws.appKey} does not exist.`,
+                    data: {
+                        code: 4001,
+                        message: `App key ${ws.appKey} does not exist.`,
+                    },
                 }));
 
                 return ws.close();
@@ -78,23 +89,25 @@ export class WsHandler {
                 if (! canConnect) {
                     ws.send(JSON.stringify({
                         event: 'pusher:error',
-                        code: 4100,
-                        message: 'The current concurrent connections quota has been reached.',
+                        data: {
+                            code: 4100,
+                            message: 'The current concurrent connections quota has been reached.',
+                        },
                     }));
 
-                    return ws.close();
+                    ws.close();
+                } else {
+                    this.adapter.getNamespace(ws.app.id).addSocket(ws);
+
+                    ws.send(JSON.stringify({
+                        event: 'pusher:connection_established',
+                        data: JSON.stringify({
+                            socket_id: ws.id,
+                            activity_timeout: 30,
+                        }),
+                    }));
                 }
-
-                this.adapter.getNamespace(ws.app.id).addSocket(ws);
-
-                ws.send(JSON.stringify({
-                    event: 'pusher:connection_established',
-                    data: JSON.stringify({
-                        socket_id: ws.id,
-                        activity_timeout: 30,
-                    }),
-                }));
-            })
+            });
         });
     }
 
@@ -119,7 +132,7 @@ export class WsHandler {
             } else {
                 // TODO: Add encrypted private channels support.
                 // TODO: Add unsubscribe support
-                console.log(message);
+                Log.info(message);
             }
         }
     }
@@ -162,8 +175,10 @@ export class WsHandler {
                         try {
                             ws.send(JSON.stringify({
                                 event: 'pusher:error',
-                                code: 4200,
-                                message: 'Please reconnect shortly.',
+                                data: {
+                                    code: 4200,
+                                    message: 'Server closed. Please reconnect shortly.',
+                                },
                             }));
 
                             ws.close();
@@ -310,6 +325,18 @@ export class WsHandler {
                         user_info: member.user_info,
                     }),
                 }), ws.id);
+            }).catch(err => {
+                Log.error(err);
+
+                ws.send(JSON.stringify({
+                    event: 'pusher:error',
+                    channel,
+                    data: {
+                        type: 'ServerError',
+                        error: 'A server error has occured.',
+                        status: 4302,
+                    },
+                }));
             });
         });
     }
@@ -371,8 +398,10 @@ export class WsHandler {
         if (! ws.app.enableClientMessages) {
             return ws.send(JSON.stringify({
                 event: 'pusher:error',
-                code: 4301,
-                message: `The app does not have client messaging enabled.`,
+                data: {
+                    code: 4301,
+                    message: `The app does not have client messaging enabled.`,
+                },
             }));
         }
 
@@ -380,8 +409,11 @@ export class WsHandler {
         if (event.length > this.server.options.eventLimits.maxNameLength) {
             return ws.send(JSON.stringify({
                 event: 'pusher:error',
-                code: 4301,
-                message: `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`,
+                channel,
+                data: {
+                    code: 4301,
+                    message: `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`,
+                },
             }));
         }
 
@@ -391,8 +423,11 @@ export class WsHandler {
         if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
             return ws.send(JSON.stringify({
                 event: 'pusher:error',
-                code: 4301,
-                message: `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`,
+                channel,
+                data: {
+                    code: 4301,
+                    message: `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`,
+                },
             }));
         }
 
@@ -443,6 +478,9 @@ export class WsHandler {
             }
 
             return wsCount + 1 <= maxConnections;
+        }).catch(err => {
+            Log.error(err);
+            return false;
         });
     }
 

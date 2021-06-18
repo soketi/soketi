@@ -2,7 +2,7 @@ import { App } from './../app';
 import { AppManagerInterface } from './app-manager-interface';
 import { ArrayAppManager } from './array-app-manager';
 import { Log } from '../log';
-import { Options } from '../options';
+import { Server } from '../server';
 
 /**
  * Class that controls the key/value data store.
@@ -16,9 +16,9 @@ export class AppManager implements AppManagerInterface {
     /**
      * Create a new database instance.
      */
-    constructor(protected options: Options) {
-        if (options.appManager.driver === 'array') {
-            this.driver = new ArrayAppManager(options);
+    constructor(protected server: Server) {
+        if (server.options.appManager.driver === 'array') {
+            this.driver = new ArrayAppManager(server);
         } else {
             Log.error('Clients driver not set.');
         }

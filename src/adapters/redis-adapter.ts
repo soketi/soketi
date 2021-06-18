@@ -1,5 +1,5 @@
 import { LocalAdapter } from './local-adapter';
-import { Options } from '../options';
+import { Log } from '../log';
 import { PresenceMember } from '../presence-member';
 import { Server } from '../server';
 import { v4 as uuidv4 } from 'uuid';
@@ -91,11 +91,16 @@ export class RedisAdapter extends LocalAdapter {
     /**
      * Initialize the adapter.
      */
-    constructor(protected options: Options, server: Server) {
-        super(options, server);
+    constructor(server: Server) {
+        super(server);
 
         this.requestsTimeout = 5000;
         this.channel = 'redis-adapter';
+
+        if (server.options.adapter.redis.prefix) {
+            this.channel = server.options.adapter.redis.prefix + '#' + this.channel;
+        }
+
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
 
@@ -104,18 +109,14 @@ export class RedisAdapter extends LocalAdapter {
             retryStrategy: times => times * 2,
         };
 
-        this.subClient = new Redis({ ...redisDefaultOptions, ...this.options.database.redis });
-        this.pubClient = new Redis({ ...redisDefaultOptions, ...this.options.database.redis });
+        this.subClient = new Redis({ ...redisDefaultOptions, ...server.options.database.redis });
+        this.pubClient = new Redis({ ...redisDefaultOptions, ...server.options.database.redis });
 
-        const onError = (err) => {
+        const onError = err => {
             if (err) {
-                console.log(err);
+                Log.warning(err);
             }
         };
-
-        if (options.adapter.redis.prefix) {
-            this.channel = options.adapter.redis.prefix + '#' + this.channel;
-        }
 
         this.subClient.psubscribe(`${this.channel}*`, onError);
 
@@ -206,7 +207,7 @@ export class RedisAdapter extends LocalAdapter {
             }, this.requestsTimeout);
 
             this.requests.set(requestId, {
-                type: RequestType.CHANNEL_SOCKETS_COUNT,
+                type: RequestType.SOCKETS_COUNT,
                 numSub,
                 resolve,
                 timeout,
@@ -763,14 +764,10 @@ export class RedisAdapter extends LocalAdapter {
                 nodes.map((node) =>
                     node.send_command('pubsub', ['numsub', this.requestChannel])
                 )
-            ).then(values => {
-                let numSub = 0;
-
-                values.map((value) => {
-                    numSub += parseInt(value[1], 10);
-                });
-
-                return numSub;
+            ).then((values: any[]) => {
+                return values.reduce((numSub, value) => {
+                    return numSub += parseInt(value[1], 10);
+                }, 0);
             });
         } else {
             // RedisClient or Redis

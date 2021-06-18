@@ -1,7 +1,7 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
-jest.retryTimes(3);
+jest.retryTimes(2);
 
 describe('ws test', () => {
     afterEach(done => {
@@ -13,15 +13,14 @@ describe('ws test', () => {
             let client = Utils.newClient({}, 6001, 'invalid-key', false);
 
             client.connection.bind('state_change', ({ current }) => {
-                if (current === 'unavailable') {
+                if (current === 'unavailable' || current === 'failed') {
                     done();
                 }
             });
         });
     });
 
-    // TODO: This test seems to fail if running the entire suit.
-    /* test('throw over quota error if reached connection limit', done => {
+    test('throw over quota error if reached connection limit', done => {
         Utils.newServer({ 'appManager.array.apps.0.maxConnections': 1 }, (server: Server) => {
             let client1 = Utils.newClient({}, 6001, 'app-key', false);
 
@@ -29,13 +28,13 @@ describe('ws test', () => {
                 let client2 = Utils.newClient({}, 6001, 'app-key', false);
 
                 client2.connection.bind('state_change', ({ current }) => {
-                    if (current === 'unavailable') {
+                    if (current === 'unavailable' || current === 'failed') {
                         done();
                     }
                 });
             });
         });
-    }); */
+    });
 
     test('should check for channelLimits.maxNameLength', done => {
         Utils.newServer({ 'channelLimits.maxNameLength': 25 }, (server: Server) => {

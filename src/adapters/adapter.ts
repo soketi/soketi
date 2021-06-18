@@ -2,7 +2,6 @@ import { AdapterInterface } from './adapter-interface';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { Namespace } from '../namespace';
-import { Options } from '../options';
 import { PresenceMember } from '../presence-member';
 import { RedisAdapter } from './redis-adapter';
 import { Server } from '../server';
@@ -17,11 +16,11 @@ export class Adapter implements AdapterInterface {
     /**
      * Initialize adapter scaling.
      */
-    constructor(protected options: Options, server: Server) {
-        if (options.adapter.driver === 'local') {
-            this.driver = new LocalAdapter(options, server);
-        } else if (options.adapter.driver === 'redis') {
-            this.driver = new RedisAdapter(options, server);
+    constructor(server: Server) {
+        if (server.options.adapter.driver === 'local') {
+            this.driver = new LocalAdapter(server);
+        } else if (server.options.adapter.driver === 'redis') {
+            this.driver = new RedisAdapter(server);
         } else {
             Log.error('Adapter driver not set.');
         }

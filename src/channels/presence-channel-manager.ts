@@ -1,4 +1,5 @@
 import { JoinResponse, LeaveResponse } from './public-channel-manager';
+import { Log } from '../log';
 import { PresenceMember } from '../presence-member';
 import { PrivateChannelManager } from './private-channel-manager';
 import { WebSocket } from 'uWebSockets.js';
@@ -34,6 +35,15 @@ export class PresenceChannelManager extends PrivateChannelManager {
                     },
                 };
             });
+        }).catch(err => {
+            Log.error(err);
+            return {
+                success: false,
+                ws,
+                errorCode: 4302,
+                errorMessage: 'A server error has occured.',
+                type: 'ServerError',
+            };
         });
     }
 

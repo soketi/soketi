@@ -4,6 +4,7 @@ import async from 'async';
 import { HttpResponse } from 'uWebSockets.js';
 import { Server } from './server';
 import { Utils } from './utils';
+import { Log } from './log';
 
 const v8 = require('v8');
 
@@ -12,6 +13,9 @@ export interface ChannelResponse {
     user_count?: number;
     occupied: boolean;
 }
+
+// TODO: Mark API message in Prometheus
+// TODO: Create middleware for the rate limiting.
 
 export class HttpHandler {
     /**
@@ -55,9 +59,6 @@ export class HttpHandler {
         });
     }
 
-    // TODO: Create functions to apply before functions for the rate limiting.
-    // TODO: Mark API message in Prometheus
-
     channels(res: HttpResponse) {
         this.attachMiddleware(res, [
             this.corsMiddleware,
@@ -79,7 +80,8 @@ export class HttpHandler {
                 }, {});
 
                 return response;
-            }, err => {
+            }).catch(err => {
+                Log.error(err);
                 return this.serverErrorResponse(res, 'A server error has occured.');
             }).then(channels => {
                 res.writeStatus('200 OK').end(JSON.stringify({
@@ -116,6 +118,9 @@ export class HttpHandler {
                                     user_count: membersCount,
                                 },
                             }));
+                        }).catch(err => {
+                            Log.error(err);
+                            return this.serverErrorResponse(res, 'A server error has occured.');
                         });
 
                         return;
@@ -125,6 +130,9 @@ export class HttpHandler {
                 } else {
                     return res.writeStatus('200 OK').end(JSON.stringify(response));
                 }
+            }).catch(err => {
+                Log.error(err);
+                return this.serverErrorResponse(res, 'A server error has occured.');
             });
         });
     }
@@ -284,7 +292,7 @@ export class HttpHandler {
         return new Promise(resolve => {
             let abortHandlerMiddleware = callback => {
                 res.onAborted(() => {
-                    console.log('Aborted request.');
+                    Log.warning(['Aborted request.', res]);
                 });
 
                 callback(null, res);

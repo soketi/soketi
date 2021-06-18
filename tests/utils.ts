@@ -1,5 +1,6 @@
 import async from 'async';
 import { Server } from './../src/server';
+import { v4 as uuidv4 } from 'uuid';
 
 const Pusher = require('pusher');
 const PusherJS = require('pusher-js');
@@ -9,6 +10,7 @@ export class Utils {
 
     static newServer(options = {}, callback): any {
         options = {
+            'adapter.redis.prefix': uuidv4(),
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APPS_MANAGER || 'array',
@@ -21,12 +23,20 @@ export class Utils {
         });
     }
 
+    static newClonedServer(server: Server, options = {}, callback): any {
+        return this.newServer({
+            // Make sure the same prefixes exists so that they can communicate
+            'adapter.redis.prefix': server.options.adapter.redis.prefix,
+            ...options,
+        }, callback);
+    }
+
     static flushServers(): Promise<void> {
         if (this.currentServers.length === 0) {
             return Promise.resolve();
         }
 
-        return async.each(this.currentServers, function (server: Server, serverCallback?: CallableFunction) {
+        return async.each(this.currentServers, (server: Server, serverCallback) => {
             server.stop().then(() => {
                 if (serverCallback) {
                     serverCallback();

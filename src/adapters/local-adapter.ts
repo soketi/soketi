@@ -1,6 +1,5 @@
 import { AdapterInterface } from './adapter-interface';
 import { Namespace } from '../namespace';
-import { Options } from '../options';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
 import { PresenceMember } from '../presence-member';
@@ -17,7 +16,7 @@ export class LocalAdapter implements AdapterInterface {
     /**
      * Initialize the adapter.
      */
-    constructor(protected options: Options, server: Server) {
+    constructor(server: Server) {
         //
     }
 

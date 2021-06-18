@@ -1,12 +1,12 @@
 import { App } from '../app';
 import { AppManagerInterface } from './app-manager-interface';
-import { Options } from '../options';
+import { Server } from '../server';
 
 export class ArrayAppManager implements AppManagerInterface {
     /**
      * Create a new app manager instance.
      */
-    constructor(protected options: Options) {
+    constructor(protected server: Server) {
         //
     }
 
@@ -15,7 +15,7 @@ export class ArrayAppManager implements AppManagerInterface {
      */
     findById(id: string): Promise<App|null> {
         return new Promise(resolve => {
-            let app = this.options.appManager.array.apps.find(app => app.id == id);
+            let app = this.server.options.appManager.array.apps.find(app => app.id == id);
 
             if (typeof app !== 'undefined') {
                 resolve(new App(app));
@@ -30,7 +30,7 @@ export class ArrayAppManager implements AppManagerInterface {
      */
     findByKey(key: string): Promise<App|null> {
         return new Promise(resolve => {
-            let app = this.options.appManager.array.apps.find(app => app.key == key);
+            let app = this.server.options.appManager.array.apps.find(app => app.key == key);
 
             if (typeof app !== 'undefined') {
                 resolve(new App(app));

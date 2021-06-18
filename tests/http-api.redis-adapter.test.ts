@@ -1,7 +1,7 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
-jest.retryTimes(3);
+jest.retryTimes(2);
 
 describe('http api test for redis adapter', () => {
     afterEach(done => {
@@ -9,8 +9,8 @@ describe('http api test for redis adapter', () => {
     });
 
     Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('get api channels with redis adapter', done => {
-        Utils.newServer({ port: 6001 }, (server: Server) => {
-            Utils.newServer({ port: 6002 }, (server: Server) => {
+        Utils.newServer({ port: 6001 }, (server1: Server) => {
+            Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();
                 let backend = Utils.newBackend();
                 let channelName = Utils.randomChannelName();
@@ -60,8 +60,8 @@ describe('http api test for redis adapter', () => {
     });
 
     Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('get api channel with redis adapter', done => {
-        Utils.newServer({ port: 6001 }, (server: Server) => {
-            Utils.newServer({ port: 6002 }, (server: Server) => {
+        Utils.newServer({ port: 6001 }, (server1: Server) => {
+            Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();
                 let backend = Utils.newBackend();
                 let channelName = Utils.randomChannelName();
@@ -125,8 +125,8 @@ describe('http api test for redis adapter', () => {
             },
         };
 
-        Utils.newServer({ port: 6001 }, (server: Server) => {
-            Utils.newServer({ port: 6002 }, (server: Server) => {
+        Utils.newServer({ port: 6001 }, (server1: Server) => {
+            Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPresenceUser(user1);
                 let backend = Utils.newBackend();
                 let channelName = `presence-${Utils.randomChannelName()}`;
@@ -192,8 +192,8 @@ describe('http api test for redis adapter', () => {
             },
         };
 
-        Utils.newServer({ port: 6001 }, (server: Server) => {
-            Utils.newServer({ port: 6002 }, (server: Server) => {
+        Utils.newServer({ port: 6001 }, (server1: Server) => {
+            Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPresenceUser(user1);
                 let backend = Utils.newBackend();
                 let channelName = `presence-${Utils.randomChannelName()}`;
@@ -246,8 +246,8 @@ describe('http api test for redis adapter', () => {
             },
         };
 
-        Utils.newServer({ port: 6001 }, (server: Server) => {
-            Utils.newServer({ port: 6002 }, (server: Server) => {
+        Utils.newServer({ port: 6001 }, (server1: Server) => {
+            Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPresenceUser(user);
                 let backend = Utils.newBackend();
                 let channelName = `presence-${Utils.randomChannelName()}`;
