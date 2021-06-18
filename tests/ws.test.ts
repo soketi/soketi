@@ -190,7 +190,7 @@ describe('ws test', () => {
                 client.connection.bind('message', ({ event, channel, data }) => {
                     if (event === 'pusher:subscription_error' && channel === channelName) {
                         expect(data.type).toBe('LimitReached');
-                        expect(data.status).toBe(4009);
+                        expect(data.code).toBe(4009);
                         expect(data.error).toBeDefined();
                         done();
                     }
@@ -218,7 +218,7 @@ describe('ws test', () => {
                 client.connection.bind('message', ({ event, channel, data }) => {
                     if (event === 'pusher:subscription_error' && channel === channelName) {
                         expect(data.type).toBe('LimitReached');
-                        expect(data.status).toBe(4301);
+                        expect(data.code).toBe(4301);
                         expect(data.error).toBeDefined();
                         done();
                     }
@@ -257,13 +257,75 @@ describe('ws test', () => {
                     client2.connection.bind('message', ({ event, channel, data }) => {
                         if (event === 'pusher:subscription_error' && channel === channelName) {
                             expect(data.type).toBe('LimitReached');
-                            expect(data.status).toBe(4100);
+                            expect(data.code).toBe(4100);
                             expect(data.error).toBeDefined();
                             done();
                         }
                     });
 
                     client2.subscribe(channelName);
+                });
+            });
+        });
+    });
+
+    test('adapter getSockets works', done => {
+        Utils.newServer({}, (server: Server) => {
+            let client1 = Utils.newClient();
+
+            client1.connection.bind('connected', () => {
+                server.adapter.getSockets('app-id').then(sockets => {
+                    expect(sockets.size).toBe(1);
+
+                    let client2 = Utils.newClient({});
+
+                    client2.connection.bind('connected', () => {
+                        server.adapter.getSockets('app-id').then(sockets => {
+                            expect(sockets.size).toBe(2);
+                            done();
+                        });
+                    });
+                })
+            });
+        });
+    });
+
+    test('adapter getChannelSockets works', done => {
+        Utils.newServer({}, (server: Server) => {
+            let client1 = Utils.newClient();
+            let channelName = Utils.randomChannelName();
+
+            client1.connection.bind('connected', () => {
+                server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                    expect(sockets.size).toBe(0);
+
+                    let channel1 = client1.subscribe(channelName);
+
+                    channel1.bind('pusher:subscription_succeeded', () => {
+                        server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                            expect(sockets.size).toBe(1);
+
+                            let client2 = Utils.newClient({});
+
+                            client2.connection.bind('connected', () => {
+                                let channel2 = client2.subscribe(channelName);
+
+                                channel2.bind('pusher:subscription_succeeded', () => {
+                                    server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                        expect(sockets.size).toBe(2);
+
+                                        client2.unsubscribe(channelName);
+
+                                        server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                            // TODO: Expect
+                                            // expect(sockets.size).toBe(1);
+                                            done();
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
                 });
             });
         });

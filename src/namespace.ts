@@ -32,7 +32,6 @@ export class Namespace {
     addSocket(ws: WebSocket): Promise<boolean> {
         return new Promise(resolve => {
             this.sockets.set(ws.id, ws);
-
             resolve(true);
         });
     }
@@ -41,9 +40,7 @@ export class Namespace {
      * Remove a socket from the namespace.
      */
     removeSocket(wsId: string): Promise<boolean> {
-        return new Promise(resolve => {
-            resolve(this.sockets.delete(wsId));
-        });
+        return Promise.resolve(this.sockets.delete(wsId));
     }
 
     /**

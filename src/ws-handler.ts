@@ -238,7 +238,7 @@ export class WsHandler {
                 data: {
                     type: 'LimitReached',
                     error: `The channel name is longer than the allowed ${this.server.options.channelLimits.maxNameLength} characters.`,
-                    status: 4009,
+                    code: 4009,
                 },
             }));
         }
@@ -298,7 +298,7 @@ export class WsHandler {
                     data: {
                         type: 'LimitReached',
                         error: `The maximum size for a channel member is ${this.server.options.presence.maxMemberSizeInKb} KB.`,
-                        status: 4301,
+                        code: 4301,
                     },
                 }));
             }
@@ -340,7 +340,7 @@ export class WsHandler {
                     data: {
                         type: 'ServerError',
                         error: 'A server error has occured.',
-                        status: 4302,
+                        code: 4302,
                     },
                 }));
             });

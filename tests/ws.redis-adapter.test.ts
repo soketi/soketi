@@ -1,3 +1,4 @@
+import { assert } from 'console';
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
@@ -213,6 +214,72 @@ describe('ws test for redis adapter', () => {
                         });
 
                         client2.subscribe(channelName);
+                    });
+                });
+            });
+        });
+    });
+
+    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('adapter getSockets works with redis adapter', done => {
+        Utils.newServer({}, (server1: Server) => {
+            Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
+                let client1 = Utils.newClient();
+
+                client1.connection.bind('connected', () => {
+                    server1.adapter.getSockets('app-id').then(sockets => {
+                        expect(sockets.size).toBe(1);
+
+                        let client2 = Utils.newClient({}, 6002);
+
+                        client2.connection.bind('connected', () => {
+                            server1.adapter.getSockets('app-id').then(sockets => {
+                                expect(sockets.size).toBe(2);
+                                done();
+                            });
+                        });
+                    })
+                });
+            });
+        });
+    });
+
+    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('adapter getChannelSockets works with redis adapter', done => {
+        Utils.newServer({}, (server1: Server) => {
+            Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
+                let client1 = Utils.newClient();
+                let channelName = Utils.randomChannelName();
+
+                client1.connection.bind('connected', () => {
+                    server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                        expect(sockets.size).toBe(0);
+
+                        let channel1 = client1.subscribe(channelName);
+
+                        channel1.bind('pusher:subscription_succeeded', () => {
+                            server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                expect(sockets.size).toBe(1);
+
+                                let client2 = Utils.newClient({}, 6002);
+
+                                client2.connection.bind('connected', () => {
+                                    let channel2 = client2.subscribe(channelName);
+
+                                    channel2.bind('pusher:subscription_succeeded', () => {
+                                        server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                            expect(sockets.size).toBe(2);
+
+                                            client2.unsubscribe(channelName);
+
+                                            server1.adapter.getChannelSockets('app-id', channelName).then(sockets =>{
+                                                // TODO: Expect
+                                                // expect(sockets.size).toBe(1);
+                                                done();
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
                     });
                 });
             });

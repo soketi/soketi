@@ -584,6 +584,8 @@ export class RedisAdapter extends LocalAdapter {
                         id: ws.id,
                         subscribedChannels: ws.subscribedChannels,
                         presence: ws.presence,
+                        ip: ws.ip,
+                        ip2: ws.ip2,
                     })),
                 });
 
