@@ -127,6 +127,8 @@ export class WsHandler {
                 }));
             } else if (message.event === 'pusher:subscribe') {
                 this.subscribeToChannel(ws, message);
+            } else if (message.event === 'pusher:unsubscribe') {
+                this.unsubscribeFromChannel(ws, message.data.channel);
             } else if (Utils.isClientEvent(message.event)) {
                 this.handleClientEvent(ws, message);
             } else {
@@ -141,7 +143,11 @@ export class WsHandler {
      * Handle the event of the client closing the connection.
      */
     onClose(ws: WebSocket, code: number, message: any): any {
-        this.unsubscribeFromAllChannels(ws);
+        this.unsubscribeFromAllChannels(ws).then(() => {
+            if (ws.app) {
+                this.adapter.getNamespace(ws.app.id).removeSocket(ws.id);
+            }
+        });
     }
 
     /**
@@ -367,7 +373,12 @@ export class WsHandler {
 
                 ws.subscribedChannels.delete(channel);
 
-                this.adapter.getNamespace(ws.app.id).removeSocket(ws.id);
+                this.adapter.getNamespace(ws.app.id).removeFromChannel(ws.id, channel);
+
+                // ws.send(JSON.stringify({
+                //     event: 'pusher_internal:unsubscribed',
+                //     channel,
+                // }));
 
                 return;
             });
@@ -398,6 +409,7 @@ export class WsHandler {
         if (! ws.app.enableClientMessages) {
             return ws.send(JSON.stringify({
                 event: 'pusher:error',
+                channel,
                 data: {
                     code: 4301,
                     message: `The app does not have client messaging enabled.`,

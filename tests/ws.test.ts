@@ -41,6 +41,115 @@ describe('ws test', () => {
         });
     });
 
+    test('client events dont get emitted when client messaging is disabled', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': false }, (server: Server) => {
+            let client1 = Utils.newClientForPrivateChannel();
+            let channelName = `private-${Utils.randomChannelName()}`;
+
+            client1.connection.bind('connected', () => {
+                client1.connection.bind('message', ({ event, channel, data }) => {
+                    if (event === 'client-greeting' && channel === channelName) {
+                        throw new Error('The message was actually sent.');
+                    }
+                });
+
+                let channel = client1.subscribe(channelName);
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    let client2 = Utils.newClientForPrivateChannel({});
+
+                    client2.connection.bind('connected', () => {
+                        let channel = client2.subscribe(channelName);
+
+                        channel.bind('pusher:subscription_succeeded', () => {
+                            channel.bind('pusher:error', (error) => {
+                                expect(error.code).toBe(4301);
+                                done();
+                            });
+
+                            channel.trigger('client-greeting', {
+                                message: 'hello',
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    test('client events dont get emitted when event name is big', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxNameLength': 25 }, (server: Server) => {
+            let client1 = Utils.newClientForPrivateChannel();
+            let channelName = `private-${Utils.randomChannelName()}`;
+            let eventName = 'client-a8hsuNFXUhfStiWE02R'; // 26 characters
+
+            client1.connection.bind('connected', () => {
+                client1.connection.bind('message', ({ event, channel, data }) => {
+                    if (event === eventName && channel === channelName) {
+                        throw new Error('The message was actually sent.');
+                    }
+                });
+
+                let channel = client1.subscribe(channelName);
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    let client2 = Utils.newClientForPrivateChannel({});
+
+                    client2.connection.bind('connected', () => {
+                        let channel = client2.subscribe(channelName);
+
+                        channel.bind('pusher:subscription_succeeded', () => {
+                            channel.bind('pusher:error', (error) => {
+                                expect(error.code).toBe(4301);
+                                done();
+                            });
+
+                            channel.trigger(eventName, {
+                                message: 'hello',
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    test('client events dont get emitted when event payload is big', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxPayloadInKb': 1/1024/1024 }, (server: Server) => {
+            let client1 = Utils.newClientForPrivateChannel();
+            let channelName = `private-${Utils.randomChannelName()}`;
+
+            client1.connection.bind('connected', () => {
+                client1.connection.bind('message', ({ event, channel, data }) => {
+                    if (event === 'client-greeting' && channel === channelName) {
+                        throw new Error('The message was actually sent.');
+                    }
+                });
+
+                let channel = client1.subscribe(channelName);
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    let client2 = Utils.newClientForPrivateChannel({});
+
+                    client2.connection.bind('connected', () => {
+                        let channel = client2.subscribe(channelName);
+
+                        channel.bind('pusher:subscription_succeeded', () => {
+                            channel.bind('pusher:error', (error) => {
+                                expect(error.code).toBe(4301);
+                                done();
+                            });
+
+                            channel.trigger('client-greeting', {
+                                message: 'hello',
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
     test('cannot connect using invalid app key', done => {
         Utils.newServer({}, (server: Server) => {
             let client = Utils.newClient({}, 6001, 'invalid-key', false);
