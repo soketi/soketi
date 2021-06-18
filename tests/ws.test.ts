@@ -1,3 +1,4 @@
+import { assert } from 'console';
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
@@ -6,6 +7,38 @@ jest.retryTimes(2);
 describe('ws test', () => {
     afterEach(done => {
         Utils.flushServers().then(() => done());
+    });
+
+    test('client events', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server: Server) => {
+            let client1 = Utils.newClientForPrivateChannel();
+            let channelName = `private-${Utils.randomChannelName()}`;
+
+            client1.connection.bind('connected', () => {
+                client1.connection.bind('message', ({ event, channel, data }) => {
+                    if (event === 'client-greeting' && channel === channelName) {
+                        expect(data.message).toBe('hello');
+                        done();
+                    }
+                });
+
+                let channel = client1.subscribe(channelName);
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    let client2 = Utils.newClientForPrivateChannel();
+
+                    client2.connection.bind('connected', () => {
+                        let channel = client2.subscribe(channelName);
+
+                        channel.bind('pusher:subscription_succeeded', () => {
+                            channel.trigger('client-greeting', {
+                                message: 'hello',
+                            });
+                        });
+                    });
+                });
+            });
+        });
     });
 
     test('cannot connect using invalid app key', done => {

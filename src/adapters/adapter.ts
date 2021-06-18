@@ -90,6 +90,13 @@ export class Adapter implements AdapterInterface {
     }
 
     /**
+     * Check if a given connection ID exists in a channel.
+     */
+    async isInChannel(appId: string, channel: string, wsId: string, onlyLocal?: boolean): Promise<boolean> {
+        return this.driver.isInChannel(appId, channel, wsId, onlyLocal);
+    }
+
+    /**
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string): void {

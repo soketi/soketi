@@ -24,6 +24,7 @@ enum RequestType {
     SOCKETS_COUNT = 4,
     CHANNEL_MEMBERS_COUNT = 5,
     CHANNEL_SOCKETS_COUNT = 6,
+    SOCKET_EXISTS_IN_CHANNEL = 7,
 }
 
 interface Request {
@@ -45,6 +46,7 @@ interface Response {
     members?: [string, PresenceMember][];
     channels?: [string, string[]][];
     totalCount?: number;
+    exists?: boolean;
 }
 
 export class RedisAdapter extends LocalAdapter {
@@ -449,6 +451,51 @@ export class RedisAdapter extends LocalAdapter {
     }
 
     /**
+     * Check if a given connection ID exists in a channel.
+     */
+    async isInChannel(appId: string, channel: string, wsId: string, onlyLocal?: boolean): Promise<boolean> {
+        const existsLocally = await super.isInChannel(appId, channel, wsId);
+
+        if (onlyLocal || existsLocally) {
+            return Promise.resolve(existsLocally);
+        }
+
+        const numSub = await this.getNumSub();
+
+        if (numSub <= 1) {
+            return Promise.resolve(existsLocally);
+        }
+
+        const requestId = uuidv4();
+
+        const request = JSON.stringify({
+            requestId,
+            appId,
+            type: RequestType.SOCKET_EXISTS_IN_CHANNEL,
+            opts: { channel, wsId },
+        });
+
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                if (this.requests.has(requestId)) {
+                    reject(new Error('timeout reached while waiting for getChannelMembersCount response'));
+                    this.requests.delete(requestId);
+                }
+            }, this.requestsTimeout);
+
+            this.requests.set(requestId, {
+                type: RequestType.SOCKET_EXISTS_IN_CHANNEL,
+                numSub,
+                resolve,
+                timeout,
+                msgCount: 1,
+            });
+
+            this.pubClient.publish(this.requestChannel, request);
+        });
+    }
+
+    /**
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string): any {
@@ -503,7 +550,7 @@ export class RedisAdapter extends LocalAdapter {
             return;
         }
 
-        let request: any;
+        let request: Request;
 
         try {
             request = JSON.parse(msg);
@@ -516,6 +563,7 @@ export class RedisAdapter extends LocalAdapter {
         let localMembers: Map<string, PresenceMember>;
         let localChannels: Map<string, Set<string>>;
         let localCount: number;
+        let existsLocally: boolean;
 
         let { requestId, appId } = request;
 
@@ -606,6 +654,22 @@ export class RedisAdapter extends LocalAdapter {
                 response = JSON.stringify({
                     requestId,
                     totalCount: localCount,
+                });
+
+                this.pubClient.publish(this.responseChannel, response);
+
+                break;
+
+            case RequestType.SOCKET_EXISTS_IN_CHANNEL:
+                if (this.requests.has(requestId)) {
+                    return;
+                }
+
+                existsLocally = await super.isInChannel(appId, request.opts.channel, request.opts.wsId);
+
+                response = JSON.stringify({
+                    requestId,
+                    exists: existsLocally,
                 });
 
                 this.pubClient.publish(this.responseChannel, response);
@@ -743,6 +807,25 @@ export class RedisAdapter extends LocalAdapter {
 
                     if (request.resolve) {
                         request.resolve(request.totalCount);
+                    }
+
+                    this.requests.delete(requestId);
+                }
+
+                break;
+
+            case RequestType.SOCKET_EXISTS_IN_CHANNEL:
+                request.msgCount++;
+
+                if (typeof response.exists === 'undefined') {
+                    return;
+                }
+
+                if (response.exists === true || request.msgCount === request.numSub) {
+                    clearTimeout(request.timeout);
+
+                    if (request.resolve) {
+                        request.resolve(response.exists);
                     }
 
                     this.requests.delete(requestId);

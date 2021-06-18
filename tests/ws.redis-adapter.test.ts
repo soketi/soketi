@@ -8,6 +8,40 @@ describe('ws test for redis adapter', () => {
         Utils.flushServers().then(() => done());
     });
 
+    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('client events with redis adapter', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server1: Server) => {
+            Utils.newClonedServer(server1, { 'appManager.array.apps.0.enableClientMessages': true, port: 6002 }, (server2: Server) => {
+                let client1 = Utils.newClientForPrivateChannel();
+                let channelName = `private-${Utils.randomChannelName()}`;
+
+                client1.connection.bind('connected', () => {
+                    client1.connection.bind('message', ({ event, channel, data }) => {
+                        if (event === 'client-greeting' && channel === channelName) {
+                            expect(data.message).toBe('hello');
+                            done();
+                        }
+                    });
+
+                    let channel = client1.subscribe(channelName);
+
+                    channel.bind('pusher:subscription_succeeded', () => {
+                        let client2 = Utils.newClientForPrivateChannel({}, 6002);
+
+                        client2.connection.bind('connected', () => {
+                            let channel = client2.subscribe(channelName);
+
+                            channel.bind('pusher:subscription_succeeded', () => {
+                                channel.trigger('client-greeting', {
+                                    message: 'hello',
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
     Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('throw over quota error if reached connection limit for redis adapter', done => {
         Utils.newServer({ 'appManager.array.apps.0.maxConnections': 1, port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.maxConnections': 1, port: 6002 }, (server2: Server) => {

@@ -433,7 +433,7 @@ export class WsHandler {
 
         // TODO: Rate limit the frontend event points (code 4301)
 
-        this.adapter.getNamespace(ws.app.id).isInChannel(ws.id, channel).then(canBroadcast => {
+        this.adapter.isInChannel(ws.app.id, channel, ws.id).then(canBroadcast => {
             if (! canBroadcast) {
                 return;
             }

@@ -94,6 +94,13 @@ export class LocalAdapter implements AdapterInterface {
     }
 
     /**
+     * Check if a given connection ID exists in a channel.
+     */
+    async isInChannel(appId: string, channel: string, wsId: string, onlyLocal?: boolean): Promise<boolean> {
+        return this.getNamespace(appId).isInChannel(wsId, channel);
+    }
+
+    /**
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string): any {

@@ -32,7 +32,7 @@ export class Server {
                         key: 'app-key',
                         secret: 'app-secret',
                         maxConnections: -1,
-                        enableClientMessages: true,
+                        enableClientMessages: false,
                         maxBackendEventsPerMinute: -1,
                         maxClientEventsPerMinute: -1,
                         maxReadRequestsPerMinute: -1,
