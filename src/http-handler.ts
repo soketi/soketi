@@ -1,5 +1,5 @@
 import async from 'async';
-import { HttpResponse, RecognizedString } from 'uWebSockets.js';
+import { HttpResponse } from 'uWebSockets.js';
 import { Server } from './server';
 import { Utils } from './utils';
 import { Log } from './log';

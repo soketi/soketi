@@ -123,7 +123,7 @@ export class Server {
     /**
      * The HTTP handler for the REST API.
      */
-     public httpHandler: HttpHandler;
+    public httpHandler: HttpHandler;
 
     /**
      * The app manager used for retrieving apps.
