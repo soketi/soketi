@@ -65,6 +65,7 @@ jobs:
         env:
           TEST_ADAPTER: ${{ matrix.adapter }}
           TEST_APPS_MANAGER: ${{ matrix.apps_manager }}
+          TEST_METRICS_ENABLED: "1"
 
       - uses: codecov/codecov-action@v1
         with:

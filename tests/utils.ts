@@ -14,6 +14,7 @@ export class Utils {
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APPS_MANAGER || 'array',
+            'metrics.enabled': process.env.TEST_METRICS_ENABLED || 0,
         };
 
         return Server.start(options, (server: Server) => {

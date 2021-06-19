@@ -46,6 +46,13 @@ export interface Options {
         process_id: string|number;
         pod_id: string|number|null;
     };
+    metrics: {
+        enabled: boolean;
+        driver: string;
+        prometheus: {
+            prefix: string;
+        };
+    },
     port: number;
     presence: {
         maxMembersPerChannel: string|number;

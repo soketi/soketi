@@ -4,11 +4,13 @@ import { AppManager, AppManagerInterface } from './app-managers';
 import { HttpHandler } from './http-handler';
 import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js';
 import { Log } from './log';
+import { Metrics, MetricsInterface } from './metrics';
 import { Options } from './options';
 import { v4 as uuidv4 } from 'uuid';
 import { WsHandler } from './ws-handler';
 import { WebSocket } from 'uWebSockets.js';
 
+const ab2str = require('arraybuffer-to-string');
 const queryString = require('query-string');
 const uWS = require('uWebSockets.js');
 
@@ -81,6 +83,13 @@ export class Server {
             process_id: process.pid || uuidv4(),
             pod_id: null,
         },
+        metrics: {
+            enabled: false,
+            driver: 'prometheus',
+            prometheus: {
+                prefix: 'pws_',
+            },
+        },
         port: 6001,
         presence: {
             maxMembersPerChannel: 100,
@@ -114,12 +123,17 @@ export class Server {
     /**
      * The HTTP handler for the REST API.
      */
-    protected httpHandler: HttpHandler;
+     public httpHandler: HttpHandler;
 
     /**
      * The app manager used for retrieving apps.
      */
-    protected appManager: AppManagerInterface;
+    public appManager: AppManagerInterface;
+
+    /**
+     * The metrics handler.
+     */
+    public metricsManager: MetricsInterface;
 
     /**
      * The adapter used to interact with the socket storage.
@@ -143,18 +157,9 @@ export class Server {
 
         this.appManager = new AppManager(this);
         this.adapter = new Adapter(this);
-
-        this.wsHandler = new WsHandler(
-            this.appManager,
-            this.adapter,
-            this,
-        );
-
-        this.httpHandler = new HttpHandler(
-            this.appManager,
-            this.adapter,
-            this,
-        );
+        this.metricsManager = new Metrics(this);
+        this.wsHandler = new WsHandler(this);
+        this.httpHandler = new HttpHandler(this);
 
         if (this.options.debug) {
             Log.title('\n📡 pWS Server initialization started.\n');
@@ -229,7 +234,7 @@ export class Server {
             server = server.ws('/app/:id', {
                 idleTimeout: 120, // According to protocol
                 maxBackpressure: 1024 * 1024,
-                maxPayloadLength: 50 * 1024,
+                maxPayloadLength: 25 * 1024,
                 message: (ws: WebSocket, message: any, isBinary: boolean) => this.wsHandler.onMessage(ws, message, isBinary),
                 open: (ws: WebSocket) => this.wsHandler.onOpen(ws),
                 close: (ws: WebSocket, code: number, message: any) => this.wsHandler.onClose(ws, code, message),
@@ -247,6 +252,14 @@ export class Server {
         return new Promise(resolve => {
             server.get('/', (res, req) => this.httpHandler.healthCheck(res));
             server.get('/usage', (res, req) => this.httpHandler.usage(res));
+
+            if (this.options.metrics.enabled) {
+                server.get('/metrics', (res, req) => {
+                    res.query = queryString.parse(req.getQuery());
+
+                    return this.httpHandler.metrics(res);
+                });
+            }
 
             server.get('/apps/:appId/channels', (res, req) => {
                 res.params = { appId: req.getParameter(0) };
