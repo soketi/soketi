@@ -88,4 +88,11 @@ export class Metrics implements MetricsInterface {
 
         return this.driver.getMetricsAsJson();
     }
+
+    /**
+     * Reset the metrics at the server level.
+     */
+    clear(): Promise<void> {
+        return this.driver.clear();
+    }
 }

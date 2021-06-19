@@ -166,6 +166,15 @@ export class PrometheusMetricsDriver implements MetricsInterface {
     }
 
     /**
+     * Reset the metrics at the server level.
+     */
+    clear(): Promise<void> {
+        this.register.clear();
+
+        return Promise.resolve();
+    }
+
+    /**
      * Get the tags for Prometheus.
      */
     protected getTags(appId: string): NamespaceTags {
