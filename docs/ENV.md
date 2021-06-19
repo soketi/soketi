@@ -85,9 +85,7 @@ The apps manager manages the allowed apps to connect to the WS and the API. Defa
 
 | Environment variable | Default | Available values | Description |
 | - | - | - | - |
-| `METRICS_ENABLED` | `false` | `true`, `false` | Wether to enable the metrics or not. For Prometheus, enabling it will expose a `/metrics` endpoint. |
-| `METRICS_DRIVER` | `prometheus` | `prometheus` | The driver used to scrap the metrics. For now, only `prometheus` is available. Soon, Pushgateway will be available. |
-| `METRICS_PROMETHEUS_PREFIX` | `pws_` | - | The prefix to add to the metrics in Prometheus to differentiate from other metrics in Prometheus. |
+| `APP_MANAGER_DRIVER` | `array` | `array` | The driver used to retrieve the app. |
 
 ### Metrics
 
@@ -95,7 +93,9 @@ The metrics feature allows you to store metrics at the node level. This can easi
 
 | Environment variable | Default | Available values | Description |
 | - | - | - | - |
-| `APP_MANAGER_DRIVER` | `array` | `array` | The driver used to retrieve the app. |
+| `METRICS_ENABLED` | `false` | `true`, `false` | Wether to enable the metrics or not. For Prometheus, enabling it will expose a `/metrics` endpoint. |
+| `METRICS_DRIVER` | `prometheus` | `prometheus` | The driver used to scrap the metrics. For now, only `prometheus` is available. Soon, Pushgateway will be available. |
+| `METRICS_PROMETHEUS_PREFIX` | `pws_` | - | The prefix to add to the metrics in Prometheus to differentiate from other metrics in Prometheus. |
 
 ## Rate Limiting
 
