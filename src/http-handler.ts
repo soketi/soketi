@@ -1,5 +1,3 @@
-import { AdapterInterface } from './adapters';
-import { AppManagerInterface } from './app-managers/app-manager-interface';
 import async from 'async';
 import { HttpResponse } from 'uWebSockets.js';
 import { Server } from './server';
@@ -21,11 +19,7 @@ export class HttpHandler {
     /**
      * Initialize the HTTP handler.
      */
-     constructor(
-        protected appManager: AppManagerInterface,
-        protected adapter: AdapterInterface,
-        protected server: Server,
-    ) {
+     constructor(protected server: Server) {
         //
     }
 
@@ -59,13 +53,29 @@ export class HttpHandler {
         });
     }
 
+    metrics(res: HttpResponse) {
+        this.attachMiddleware(res, [
+            this.corsMiddleware,
+        ]).then(res => {
+            let metricsResponse = metrics => {
+                res.writeStatus('200 OK').end(res.query.json ? JSON.stringify(metrics) : metrics);
+            };
+
+            if (res.query.json) {
+                this.server.metricsManager.getMetricsAsJson().then(metricsResponse);
+            } else {
+                this.server.metricsManager.getMetricsAsPlaintext().then(metricsResponse);
+            }
+        });
+    }
+
     channels(res: HttpResponse) {
         this.attachMiddleware(res, [
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
         ]).then(res => {
-            this.adapter.getChannels(res.params.appId).then(channels => {
+            this.server.adapter.getChannels(res.params.appId).then(channels => {
                 let response: { [channel: string]: ChannelResponse } = [...channels].reduce((channels, [channel, connections]) => {
                     if (connections.size === 0) {
                         return channels;
@@ -84,9 +94,11 @@ export class HttpHandler {
                 Log.error(err);
                 return this.serverErrorResponse(res, 'A server error has occured.');
             }).then(channels => {
-                res.writeStatus('200 OK').end(JSON.stringify({
-                    channels,
-                }));
+                let message = { channels };
+
+                this.server.metricsManager.markApiMessage(res.params.appId, {}, message);
+
+                res.writeStatus('200 OK').end(JSON.stringify(message));
             });
         });
     }
@@ -99,7 +111,7 @@ export class HttpHandler {
         ]).then(res => {
             let response: ChannelResponse;
 
-            this.adapter.getChannelSocketsCount(res.params.appId, res.params.channel).then(socketsCount => {
+            this.server.adapter.getChannelSocketsCount(res.params.appId, res.params.channel).then(socketsCount => {
                 response = {
                     subscription_count: socketsCount,
                     occupied: socketsCount > 0,
@@ -111,13 +123,17 @@ export class HttpHandler {
                     response.user_count = 0;
 
                     if (response.subscription_count > 0) {
-                        this.adapter.getChannelMembersCount(res.params.appId, res.params.channel).then(membersCount => {
-                            res.writeStatus('200 OK').end(JSON.stringify({
+                        this.server.adapter.getChannelMembersCount(res.params.appId, res.params.channel).then(membersCount => {
+                            let message = {
                                 ...response,
                                 ... {
                                     user_count: membersCount,
                                 },
-                            }));
+                            };
+
+                            this.server.metricsManager.markApiMessage(res.params.appId, {}, message);
+
+                            res.writeStatus('200 OK').end(JSON.stringify(message));
                         }).catch(err => {
                             Log.error(err);
                             return this.serverErrorResponse(res, 'A server error has occured.');
@@ -125,9 +141,13 @@ export class HttpHandler {
 
                         return;
                     } else {
+                        this.server.metricsManager.markApiMessage(res.params.appId, {}, response);
+
                         return res.writeStatus('200 OK').end(JSON.stringify(response));
                     }
                 } else {
+                    this.server.metricsManager.markApiMessage(res.params.appId, {}, response);
+
                     return res.writeStatus('200 OK').end(JSON.stringify(response));
                 }
             }).catch(err => {
@@ -147,10 +167,14 @@ export class HttpHandler {
                 return this.badResponse(res, 'The channel must be a presence channel.');
             }
 
-            this.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
-                res.writeStatus('200 OK').end(JSON.stringify({
+            this.server.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
+                let message = {
                     users: [...members].map(([user_id, user_info]) => ({ id: user_id })),
-                }));
+                };
+
+                this.server.metricsManager.markApiMessage(res.params.appId, {}, message);
+
+                res.writeStatus('200 OK').end(JSON.stringify(message));
             });
         });
     }
@@ -192,7 +216,7 @@ export class HttpHandler {
             }
 
             async.each(channels, (channel, callback) => {
-                this.adapter.send(res.params.appId, channel, JSON.stringify({
+                this.server.adapter.send(res.params.appId, channel, JSON.stringify({
                     event: message.name,
                     channel,
                     data: message.data,
@@ -200,6 +224,8 @@ export class HttpHandler {
 
                 callback();
             }).then(() => {
+                this.server.metricsManager.markApiMessage(res.params.appId, message, { ok: true });
+
                 res.writeStatus('200 OK').end(JSON.stringify({
                     ok: true,
                 }));
@@ -267,7 +293,7 @@ export class HttpHandler {
     }
 
     protected appMiddleware(res: HttpResponse, next: CallableFunction): any {
-        return this.appManager.findById(res.params.appId).then(validApp => {
+        return this.server.appManager.findById(res.params.appId).then(validApp => {
             if (! validApp) {
                 return this.notFoundResponse(res, `The app ${res.params.appId} could not be found.`);
             }

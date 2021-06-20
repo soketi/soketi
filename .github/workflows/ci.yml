@@ -33,12 +33,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Cache Dependencies
-        uses: actions/cache@v2
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package.json') }}
-
       - uses: actions/setup-node@v2.1.5
         name: Installing Node.js v${{ matrix.node }}
         with:

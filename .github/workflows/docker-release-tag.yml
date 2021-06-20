@@ -14,7 +14,6 @@ jobs:
     strategy:
       matrix:
         node:
-          - 16-alpine
           - 14-alpine
 
     name: Tag Release (node:${{ matrix.node }})

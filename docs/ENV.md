@@ -6,6 +6,7 @@
 - [Applications](#applications)
   - [Default Application](#default-application)
   - [Apps Manager](#apps-manager)
+  - [Metrics](#metrics)
 - [Rate Limiting](#rate-limiting)
   - [Events Soft Limits](#events-soft-limits)
 - [Channels](#channels)
@@ -73,7 +74,7 @@ For the rate limiting and max connections options, setting limits to `-1` will d
 | `DEFAULT_APP_KEY` | `app-key` | - | The default app key for the array driver. |
 | `DEFAULT_APP_SECRET` | `app-secret` | - | The default app secret for the array driver. |
 | `DEFAULT_APP_MAX_CONNS` | `-1` | - | The default app's limit of concurrent connections. |
-| `DEFAULT_APP_ENABLE_CLIENT_MESSAGES` | `false` | - | Wether client messages should be enabled for the app. |
+| `DEFAULT_APP_ENABLE_CLIENT_MESSAGES` | `false` | `true`, `false` | Wether client messages should be enabled for the app. |
 | `DEFAULT_APP_MAX_BACKEND_EVENTS_PER_MIN` | `-1` | - | The default app's limit of `/events` endpoint events broadcasted per minute. You can [configure rate limiting database store](#rate-limiting) |
 | `DEFAULT_APP_MAX_CLIENT_EVENTS_PER_MIN` | `-1` | - | The default app's limit of client events broadcasted per minute, by a single socket. You can [configure rate limiting database store](#rate-limiting) |
 | `DEFAULT_APP_MAX_READ_REQ_PER_MIN` | `-1` | - | The default app's limit of read endpoint calls per minute. You can [configure rate limiting database store](#rate-limiting) |
@@ -85,6 +86,16 @@ The apps manager manages the allowed apps to connect to the WS and the API. Defa
 | Environment variable | Default | Available values | Description |
 | - | - | - | - |
 | `APP_MANAGER_DRIVER` | `array` | `array` | The driver used to retrieve the app. |
+
+### Metrics
+
+The metrics feature allows you to store metrics at the node level. This can easily be done under the hood with Prometheus. All you need to do is to set up your own Prometheus server and make it scrap the HTTP REST API of the each node that pWS runs on, on the `/metrics` endpoint.
+
+| Environment variable | Default | Available values | Description |
+| - | - | - | - |
+| `METRICS_ENABLED` | `false` | `true`, `false` | Wether to enable the metrics or not. For Prometheus, enabling it will expose a `/metrics` endpoint. |
+| `METRICS_DRIVER` | `prometheus` | `prometheus` | The driver used to scrap the metrics. For now, only `prometheus` is available. Soon, Pushgateway will be available. |
+| `METRICS_PROMETHEUS_PREFIX` | `pws_` | - | The prefix to add to the metrics in Prometheus to differentiate from other metrics in Prometheus. |
 
 ## Rate Limiting
 

@@ -1,8 +1,8 @@
 import { AdapterInterface } from './adapter-interface';
 import { Namespace } from '../namespace';
+import { PresenceMember } from '../presence-member';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
-import { PresenceMember } from '../presence-member';
 
 export class LocalAdapter implements AdapterInterface {
     // TODO: Force disconnect a specific socket
@@ -16,7 +16,7 @@ export class LocalAdapter implements AdapterInterface {
     /**
      * Initialize the adapter.
      */
-    constructor(server: Server) {
+    constructor(protected server: Server) {
         //
     }
 
@@ -117,6 +117,8 @@ export class LocalAdapter implements AdapterInterface {
                 }
 
                 ws.send(data);
+
+                this.server.metricsManager.markWsMessageSent(ws.app.id, data);
             });
         });
     }

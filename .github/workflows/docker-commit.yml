@@ -19,7 +19,6 @@ jobs:
     strategy:
       matrix:
         node:
-          - 16-alpine
           - 14-alpine
 
     name: Tag Commit (node:${{ matrix.node }})

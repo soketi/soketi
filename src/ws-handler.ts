@@ -1,6 +1,4 @@
-import { AdapterInterface } from './adapters/adapter-interface';
 import { App } from './app';
-import { AppManagerInterface } from './app-managers';
 import async from 'async';
 import { EncryptedPrivateChannelManager } from './channels';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
@@ -39,15 +37,11 @@ export class WsHandler {
     /**
      * Initialize the Websocket connections handler.
      */
-    constructor(
-        protected appManager: AppManagerInterface,
-        protected adapter: AdapterInterface,
-        protected server: Server,
-    ) {
-        this.publicChannelManager = new PublicChannelManager(adapter, this.server);
-        this.privateChannelManager = new PrivateChannelManager(adapter, this.server);
-        this.encryptedPrivateChannelManager = new EncryptedPrivateChannelManager(adapter, this.server);
-        this.presenceChannelManager = new PresenceChannelManager(adapter, this.server);
+    constructor(protected server: Server) {
+        this.publicChannelManager = new PublicChannelManager(server);
+        this.privateChannelManager = new PrivateChannelManager(server);
+        this.encryptedPrivateChannelManager = new EncryptedPrivateChannelManager(server);
+        this.presenceChannelManager = new PresenceChannelManager(server);
     }
 
     /**
@@ -97,15 +91,20 @@ export class WsHandler {
 
                     ws.close();
                 } else {
-                    this.adapter.getNamespace(ws.app.id).addSocket(ws);
+                    this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
-                    ws.send(JSON.stringify({
+                    let message = {
                         event: 'pusher:connection_established',
                         data: JSON.stringify({
                             socket_id: ws.id,
                             activity_timeout: 30,
                         }),
-                    }));
+                    };
+
+                    ws.send(JSON.stringify(message));
+
+                    this.server.metricsManager.markNewConnection(ws);
+                    this.server.metricsManager.markWsMessageSent(ws.app.id, message);
                 }
             });
         });
@@ -121,10 +120,7 @@ export class WsHandler {
 
         if (message) {
             if (message.event === 'pusher:ping') {
-                ws.send(JSON.stringify({
-                    event: 'pusher:pong',
-                    data: {},
-                }));
+                this.handlePong(ws);
             } else if (message.event === 'pusher:subscribe') {
                 this.subscribeToChannel(ws, message);
             } else if (message.event === 'pusher:unsubscribe') {
@@ -137,6 +133,10 @@ export class WsHandler {
                 Log.info(message);
             }
         }
+
+        if (ws.app) {
+            this.server.metricsManager.markWsMessageReceived(ws.app.id, message);
+        }
     }
 
     /**
@@ -145,7 +145,8 @@ export class WsHandler {
     onClose(ws: WebSocket, code: number, message: any): any {
         this.unsubscribeFromAllChannels(ws).then(() => {
             if (ws.app) {
-                this.adapter.getNamespace(ws.app.id).removeSocket(ws.id);
+                this.server.adapter.getNamespace(ws.app.id).removeSocket(ws.id);
+                this.server.metricsManager.markDisconnection(ws);
             }
         });
     }
@@ -155,7 +156,7 @@ export class WsHandler {
      */
     async closeAllLocalSockets(): Promise<void> {
         return new Promise(resolve => {
-            let namespaces = this.adapter.getNamespaces();
+            let namespaces = this.server.adapter.getNamespaces();
             let totalNamesapaces = namespaces.size;
             let closedNamespaces = 0;
 
@@ -225,6 +226,16 @@ export class WsHandler {
     }
 
     /**
+     * Send back the pong response.
+     */
+    handlePong(ws: WebSocket): any {
+        ws.send(JSON.stringify({
+            event: 'pusher:pong',
+            data: {},
+        }));
+    }
+
+    /**
      * Instruct the server to subscribe the connection to the channel.
      */
     subscribeToChannel(ws: WebSocket, message: any): any {
@@ -232,7 +243,7 @@ export class WsHandler {
         let channelManager = this.getChannelManagerFor(channel);
 
         if (channel.length > this.server.options.channelLimits.maxNameLength) {
-            return ws.send(JSON.stringify({
+            let message = {
                 event: 'pusher:subscription_error',
                 channel,
                 data: {
@@ -240,7 +251,13 @@ export class WsHandler {
                     error: `The channel name is longer than the allowed ${this.server.options.channelLimits.maxNameLength} characters.`,
                     code: 4009,
                 },
-            }));
+            };
+
+            ws.send(JSON.stringify(message));
+
+            this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+
+            return;
         }
 
         channelManager.join(ws, channel, message).then((response) => {
@@ -276,14 +293,20 @@ export class WsHandler {
                 ws.subscribedChannels.add(channel);
             }
 
-            this.adapter.getNamespace(ws.app.id).addSocket(ws);
+            this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
             // For non-presence channels, end with subscription succeeded.
             if (! (channelManager instanceof PresenceChannelManager)) {
-                return ws.send(JSON.stringify({
+                let message = {
                     event: 'pusher_internal:subscription_succeeded',
                     channel,
-                }));
+                };
+
+                ws.send(JSON.stringify(message));
+
+                this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+
+                return;
             }
 
             // Otherwise, prepare a response for the presence channel.
@@ -292,7 +315,7 @@ export class WsHandler {
             let memberSizeInKb = Utils.dataToKilobytes(user_info);
 
             if (memberSizeInKb > this.server.options.presence.maxMemberSizeInKb) {
-                return ws.send(JSON.stringify({
+                let message = {
                     event: 'pusher:subscription_error',
                     channel,
                     data: {
@@ -300,7 +323,13 @@ export class WsHandler {
                         error: `The maximum size for a channel member is ${this.server.options.presence.maxMemberSizeInKb} KB.`,
                         code: 4301,
                     },
-                }));
+                };
+
+                ws.send(JSON.stringify(message));
+
+                this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+
+                return;
             }
 
             let member = { user_id, user_info };
@@ -308,10 +337,10 @@ export class WsHandler {
             ws.presence.set(channel, member);
 
             // Make sure to update the socket after new data was pushed in.
-            this.adapter.getNamespace(ws.app.id).addSocket(ws);
+            this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
-            this.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
-                ws.send(JSON.stringify({
+            this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
+                let message = {
                     event: 'pusher_internal:subscription_succeeded',
                     channel,
                     data: JSON.stringify({
@@ -321,9 +350,13 @@ export class WsHandler {
                             count: members.size,
                         },
                     }),
-                }));
+                };
 
-                this.adapter.send(ws.app.id, channel, JSON.stringify({
+                ws.send(JSON.stringify(message));
+
+                this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+
+                this.server.adapter.send(ws.app.id, channel, JSON.stringify({
                     event: 'pusher_internal:member_added',
                     channel,
                     data: JSON.stringify({
@@ -351,37 +384,35 @@ export class WsHandler {
      * Instruct the server to unsubscribe the connection from the channel.
      */
     unsubscribeFromChannel(ws: WebSocket, channel: string): Promise<void> {
-        return new Promise(resolve => {
-            let channelManager = this.getChannelManagerFor(channel);
+        let channelManager = this.getChannelManagerFor(channel);
 
-            return channelManager.leave(ws, channel).then(response => {
-                if (response.left) {
-                    // Send presence channel-speific events and delete specific data.
-                    // This can happen only if the user is connected to the presence channel.
-                    if (channelManager instanceof PresenceChannelManager && ws.presence.has(channel)) {
-                        this.adapter.send(ws.app.id, channel, JSON.stringify({
-                            event: 'pusher_internal:member_removed',
-                            channel,
-                            data: JSON.stringify({
-                                user_id: ws.presence.get(channel).user_id,
-                            }),
-                        }), ws.id);
+        return channelManager.leave(ws, channel).then(response => {
+            if (response.left) {
+                // Send presence channel-speific events and delete specific data.
+                // This can happen only if the user is connected to the presence channel.
+                if (channelManager instanceof PresenceChannelManager && ws.presence.has(channel)) {
+                    this.server.adapter.send(ws.app.id, channel, JSON.stringify({
+                        event: 'pusher_internal:member_removed',
+                        channel,
+                        data: JSON.stringify({
+                            user_id: ws.presence.get(channel).user_id,
+                        }),
+                    }), ws.id);
 
-                        ws.presence.delete(channel);
-                    }
+                    ws.presence.delete(channel);
                 }
+            }
 
-                ws.subscribedChannels.delete(channel);
+            ws.subscribedChannels.delete(channel);
 
-                this.adapter.getNamespace(ws.app.id).removeFromChannel(ws.id, channel);
+            this.server.adapter.getNamespace(ws.app.id).removeFromChannel(ws.id, channel);
 
-                // ws.send(JSON.stringify({
-                //     event: 'pusher_internal:unsubscribed',
-                //     channel,
-                // }));
+            // ws.send(JSON.stringify({
+            //     event: 'pusher_internal:unsubscribed',
+            //     channel,
+            // }));
 
-                return;
-            });
+            return;
         });
     }
 
@@ -389,14 +420,11 @@ export class WsHandler {
      * Unsubscribe the connection from all channels.
      */
     unsubscribeFromAllChannels(ws: WebSocket): Promise<void> {
-        return new Promise(resolve => {
-            if (! ws.subscribedChannels) {
-                return resolve();
-            }
-
-            async.each(ws.subscribedChannels, (channel, callback) => {
-                this.unsubscribeFromChannel(ws, channel).then(() => callback());
-            }).then(() => resolve());
+        if (! ws.subscribedChannels) {
+            return Promise.resolve();
+        }
+        return async.each(ws.subscribedChannels, (channel, callback) => {
+            this.unsubscribeFromChannel(ws, channel).then(() => callback());
         });
     }
 
@@ -419,38 +447,50 @@ export class WsHandler {
 
         // Make sure the event name length is not too big.
         if (event.length > this.server.options.eventLimits.maxNameLength) {
-            return ws.send(JSON.stringify({
+            let message = {
                 event: 'pusher:error',
                 channel,
                 data: {
                     code: 4301,
                     message: `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`,
                 },
-            }));
+            };
+
+            ws.send(JSON.stringify(message));
+
+            this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+
+            return;
         }
 
         let payloadSizeInKb = Utils.dataToKilobytes(message.data);
 
         // Make sure the total payload of the message body is not too big.
         if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
-            return ws.send(JSON.stringify({
+            let message = {
                 event: 'pusher:error',
                 channel,
                 data: {
                     code: 4301,
                     message: `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`,
                 },
-            }));
+            };
+
+            ws.send(JSON.stringify(message));
+
+            this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+
+            return;
         }
 
         // TODO: Rate limit the frontend event points (code 4301)
 
-        this.adapter.isInChannel(ws.app.id, channel, ws.id).then(canBroadcast => {
+        this.server.adapter.isInChannel(ws.app.id, channel, ws.id).then(canBroadcast => {
             if (! canBroadcast) {
                 return;
             }
 
-            this.adapter.send(ws.app.id, channel, JSON.stringify({ event, channel, data }), ws.id);
+            this.server.adapter.send(ws.app.id, channel, JSON.stringify({ event, channel, data }), ws.id);
         });
     }
 
@@ -474,7 +514,7 @@ export class WsHandler {
      * Use the app manager to retrieve a valid app.
      */
     protected checkForValidApp(ws: WebSocket): Promise<App|null> {
-        return this.appManager.findByKey(ws.appKey);
+        return this.server.appManager.findByKey(ws.appKey);
     }
 
     /**
@@ -482,7 +522,7 @@ export class WsHandler {
      * Return a boolean wether the user can connect or not.
      */
     protected checkAppConnectionLimit(ws: WebSocket): Promise<boolean> {
-        return this.adapter.getSocketsCount(ws.app.id).then(wsCount => {
+        return this.server.adapter.getSocketsCount(ws.app.id).then(wsCount => {
             let maxConnections = parseInt(ws.app.maxConnections as string) || -1;
 
             if (maxConnections < 0) {
