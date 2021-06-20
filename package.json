@@ -38,7 +38,7 @@
     "pusher": "^5.0.0",
     "query-string": "^7.0.0",
     "rate-limiter-flexible": "^2.2.2",
-    "uWebSockets.js": "git+https://github.com/uNetworking/uWebSockets.js.git#v19.2.0",
+    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v19.2.0",
     "uuid": "^8.3.2",
     "yargs": "^16.2.0"
   },
