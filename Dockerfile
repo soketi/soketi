@@ -9,6 +9,7 @@ ENV PYTHONUNBUFFERED=1
 COPY . /app
 
 RUN apk add --no-cache --update git python3 && \
+    apk add --virtual build-dependencies build-base gcc wget && \
     ln -sf python3 /usr/bin/python && \
     python3 -m ensurepip && \
     pip3 install --no-cache --upgrade pip setuptools && \
@@ -19,6 +20,7 @@ RUN apk add --no-cache --update git python3 && \
     npm install modclean -g && \
     rm -rf coverage/ docs/ src/ tests/ typings/ .git/ .github/ *.md && \
     rm -rf node_modules/*/test/ node_modules/*/tests/ && \
+    apk --purge del build-dependencies && \
     npm prune && \
     modclean -n default:safe --run && \
     npm uninstall -g modclean
