@@ -6,8 +6,8 @@ LABEL maintainer="Renoki Co. <alex@renoki.org>"
 
 COPY . /app
 
-RUN cd /app && \
-    mkdir stats && \
+RUN apk add --no-cache git && \
+    cd /app && \
     npm install && \
     npm run lint && \
     npm run build && \
