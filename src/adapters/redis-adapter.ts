@@ -132,17 +132,6 @@ export class RedisAdapter extends LocalAdapter {
     }
 
     /**
-     * Run a set of instructions after the server closes.
-     * This can be used to disconnect from the drivers, to unset variables, etc.
-     */
-    disconnect(): Promise<void> {
-        this.subClient.disconnect();
-        this.pubClient.disconnect();
-
-        return Promise.resolve();
-    }
-
-    /**
      * Get all sockets from the namespace.
      */
     async getSockets(appId: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
