@@ -2,6 +2,8 @@ import { App } from './../app';
 import { AppManagerInterface } from './app-manager-interface';
 import { ArrayAppManager } from './array-app-manager';
 import { Log } from '../log';
+import { MysqlAppManager } from './mysql-app-manager';
+import { PostgresAppManager } from './postgres-app-manager';
 import { Server } from '../server';
 
 /**
@@ -19,6 +21,10 @@ export class AppManager implements AppManagerInterface {
     constructor(protected server: Server) {
         if (server.options.appManager.driver === 'array') {
             this.driver = new ArrayAppManager(server);
+        } else if (server.options.appManager.driver === 'mysql') {
+            this.driver = new MysqlAppManager(server);
+        } else if (server.options.appManager.driver === 'postgres') {
+            this.driver = new PostgresAppManager(server);
         } else {
             Log.error('Clients driver not set.');
         }
@@ -36,5 +42,13 @@ export class AppManager implements AppManagerInterface {
      */
     findByKey(key: string): Promise<App|null> {
         return this.driver.findByKey(key);
+    }
+
+    /**
+     * Run a set of instructions after the server closes.
+     * This can be used to disconnect from the drivers, to unset variables, etc.
+     */
+    disconnect(): Promise<void> {
+        return this.driver.disconnect();
     }
 }

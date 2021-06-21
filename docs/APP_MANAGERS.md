@@ -1,5 +1,8 @@
 - [Implementing App Managers](#implementing-app-managers)
   - [Array Driver](#array-driver)
+  - [SQL Drivers](#sql-drivers)
+    - [MySQL Driver](#mysql-driver)
+    - [PostgreSQL Driver](#postgresql-driver)
 
 # Implementing App Managers
 
@@ -10,3 +13,52 @@ Apps are used to allow access to clients, as well as to be able to securely publ
 The default driver is called `array`. This is a static array in-memory that is kept while the uWS Server process is running. Whenever a connection is made or an event is broadcasted, the app credentials will be checked using this method.
 
 You might use the `DEFAULT_APP_*` variables to set the default app details.
+
+## SQL Drivers
+
+SQL Drivers are an abstraction that connect directly to the SQL servers and query from a specific database and table directly, without using a third-party API.
+
+Behind the scenes, pWS uses [Knex](https://knexjs.org/) to connect to relational databases and pull the needed data.
+
+Each table should have a specific format, in which the fields indicated for each one are mandatory. Optionally, you might append data to it if you need to, but pWS will extract only the necessary fields.
+
+### MySQL Driver
+
+For the MySQL driver, you need to configure the [MySQL Database](ENV.md#mysql-configuration).
+
+The table format with the mandatory fields is the following:
+
+```sql
+CREATE TABLE IF NOT EXISTS `apps` (
+    `id` varchar(255) NOT NULL,
+    `key` varchar(255) NOT NULL,
+    `secret` varchar(255) NOT NULL,
+    `max_connections` integer(10) NOT NULL,
+    `enable_stats` tinyint(1) NOT NULL,
+    `enable_client_messages` tinyint(1) NOT NULL,
+    `max_backend_events_per_sec` integer(10) NOT NULL,
+    `max_client_events_per_sec` integer(10) NOT NULL,
+    `max_read_req_per_sec` integer(10) NOT NULL,
+    PRIMARY KEY (`id`)
+);
+```
+
+### PostgreSQL Driver
+
+For the PostgreSQL driver, you need to configure the [PostgreSQL Database](ENV.md#postgres-configuration).
+
+The table format with the mandatory fields is the following:
+
+```sql
+CREATE TABLE IF NOT EXISTS apps (
+    id varchar(255) PRIMARY KEY,
+    "key" varchar(255) NOT NULL,
+    secret varchar(255) NOT NULL,
+    max_connections integer NOT NULL,
+    enable_stats smallint NOT NULL,
+    enable_client_messages smallint NOT NULL,
+    max_backend_events_per_sec integer NOT NULL,
+    max_client_events_per_sec integer NOT NULL,
+    max_read_req_per_sec integer NOT NULL
+);
+```

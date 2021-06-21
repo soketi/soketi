@@ -27,6 +27,8 @@ jobs:
           - redis
         apps_manager:
           - array
+          - mysql
+          - postgres
 
     name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.apps_manager }})
 
@@ -43,6 +45,33 @@ jobs:
         with:
           redis version: 6
           number of databases: 100
+
+      - name: Setup MySQL
+        uses: haltuf/mysql-action@master
+        with:
+          host port: 3306
+          container port: 3306
+          character set server: utf8mb4
+          collation server: utf8mb4_unicode_ci
+          mysql version: 8.0
+          mysql database: main
+          mysql root password: password
+
+      - name: Setup PostgreSQL
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql version: 13.3
+          postgresql db: main
+          postgresql user: postgres
+          postgresql password: password
+
+      - name: Load SQL into databases
+        run: |
+          sleep 15
+          mysql --host=127.0.0.1 --user=root --password=password --database=main < tests/fixtures/app_mysql.sql
+          psql --host=127.0.0.1 --username=postgres2 main < tests/fixtures/app_postgres.sql
+        env:
+          PGPASSWORD: password
 
       - name: Installing dependencies
         run: |

@@ -10,7 +10,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { WsHandler } from './ws-handler';
 import { WebSocket } from 'uWebSockets.js';
 
-const ab2str = require('arraybuffer-to-string');
 const queryString = require('query-string');
 const uWS = require('uWebSockets.js');
 
@@ -35,11 +34,19 @@ export class Server {
                         secret: 'app-secret',
                         maxConnections: -1,
                         enableClientMessages: false,
-                        maxBackendEventsPerMinute: -1,
-                        maxClientEventsPerMinute: -1,
-                        maxReadRequestsPerMinute: -1,
+                        maxBackendEventsPerSecond: -1,
+                        maxClientEventsPerSecond: -1,
+                        maxReadRequestsPerSecond: -1,
                     },
                 ],
+            },
+            mysql: {
+                table: 'apps',
+                version: '8.0',
+            },
+            postgres: {
+                table: 'apps',
+                version: '13.3',
             },
         },
         channelLimits: {
@@ -62,12 +69,31 @@ export class Server {
             ],
         },
         database: {
+            mysql: {
+                host: '127.0.0.1',
+                port: 3306,
+                user: 'root',
+                password: 'password',
+                database: 'main',
+            },
+            postgres: {
+                host: '127.0.0.1',
+                port: 5432,
+                user: 'root',
+                password: 'password',
+                database: 'main',
+            },
             redis: {
                 host: '127.0.0.1',
                 port: 6379,
                 password: null,
                 keyPrefix: '',
             },
+        },
+        databasePooling: {
+            enabled: false,
+            min: 0,
+            max: 7,
         },
         debug: false,
         eventLimits: {
@@ -218,6 +244,7 @@ export class Server {
         return this.wsHandler.closeAllLocalSockets().then(() => {
             return Promise.all([
                 this.adapter.disconnect(),
+                this.appManager.disconnect(),
                 this.metricsManager.clear(),
             ]).then(() => {
                 if (this.options.debug) {

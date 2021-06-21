@@ -30,9 +30,9 @@ app.get('/pws/app', (req, res) => {
             secret: 'app-secret',
             maxConnections: 100,
             enableClientMessages: true,
-            maxBackendEventsPerMinute: -1,
-            maxClientEventsPerMinute: -1,
-            maxReadRequestsPerMinute: -1,
+            maxBackendEventsPerSecond: -1,
+            maxClientEventsPerSecond: -1,
+            maxReadRequestsPerSecond: -1,
         },
     });
 });

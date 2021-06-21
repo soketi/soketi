@@ -7,6 +7,14 @@ interface Redis {
     keyPrefix: string;
 }
 
+interface KnexConnection {
+    host: string;
+    port: number;
+    user: string;
+    password: string;
+    database: string;
+}
+
 export interface Options {
     adapter: {
         driver: string;
@@ -19,6 +27,14 @@ export interface Options {
         array: {
             apps: AppInterface[];
         };
+        mysql: {
+            table: string;
+            version: string|number;
+        };
+        postgres: {
+            table: string;
+            version: string|number;
+        };
     };
     channelLimits: {
         maxNameLength: number;
@@ -30,7 +46,14 @@ export interface Options {
         allowedHeaders: string[];
     };
     database: {
+        mysql: KnexConnection;
+        postgres: KnexConnection;
         redis: Redis;
+    };
+    databasePooling: {
+        enabled: boolean;
+        min: number;
+        max: number;
     };
     debug: boolean;
     eventLimits: {
