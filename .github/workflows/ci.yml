@@ -69,7 +69,7 @@ jobs:
         run: |
           sleep 15
           mysql --host=127.0.0.1 --user=root --password=password --database=main < tests/fixtures/app_mysql.sql
-          psql --host=127.0.0.1 --username=postgres2 main < tests/fixtures/app_postgres.sql
+          psql --host=127.0.0.1 --username=postgres main < tests/fixtures/app_postgres.sql
         env:
           PGPASSWORD: password
 
