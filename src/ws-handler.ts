@@ -93,7 +93,7 @@ export class WsHandler {
                 } else {
                     this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
-                    let message = {
+                    let broadcastMessage = {
                         event: 'pusher:connection_established',
                         data: JSON.stringify({
                             socket_id: ws.id,
@@ -101,10 +101,10 @@ export class WsHandler {
                         }),
                     };
 
-                    ws.send(JSON.stringify(message));
+                    ws.send(JSON.stringify(broadcastMessage));
 
                     this.server.metricsManager.markNewConnection(ws);
-                    this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+                    this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
                 }
             });
         });
@@ -243,7 +243,7 @@ export class WsHandler {
         let channelManager = this.getChannelManagerFor(channel);
 
         if (channel.length > this.server.options.channelLimits.maxNameLength) {
-            let message = {
+            let broadcastMessage = {
                 event: 'pusher:subscription_error',
                 channel,
                 data: {
@@ -253,9 +253,9 @@ export class WsHandler {
                 },
             };
 
-            ws.send(JSON.stringify(message));
+            ws.send(JSON.stringify(broadcastMessage));
 
-            this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+            this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
 
             return;
         }
@@ -297,14 +297,14 @@ export class WsHandler {
 
             // For non-presence channels, end with subscription succeeded.
             if (! (channelManager instanceof PresenceChannelManager)) {
-                let message = {
+                let broadcastMessage = {
                     event: 'pusher_internal:subscription_succeeded',
                     channel,
                 };
 
-                ws.send(JSON.stringify(message));
+                ws.send(JSON.stringify(broadcastMessage));
 
-                this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+                this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
 
                 return;
             }
@@ -315,7 +315,7 @@ export class WsHandler {
             let memberSizeInKb = Utils.dataToKilobytes(user_info);
 
             if (memberSizeInKb > this.server.options.presence.maxMemberSizeInKb) {
-                let message = {
+                let broadcastMessage = {
                     event: 'pusher:subscription_error',
                     channel,
                     data: {
@@ -325,9 +325,9 @@ export class WsHandler {
                     },
                 };
 
-                ws.send(JSON.stringify(message));
+                ws.send(JSON.stringify(broadcastMessage));
 
-                this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+                this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
 
                 return;
             }
@@ -340,7 +340,7 @@ export class WsHandler {
             this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
             this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
-                let message = {
+                let broadcastMessage = {
                     event: 'pusher_internal:subscription_succeeded',
                     channel,
                     data: JSON.stringify({
@@ -352,9 +352,9 @@ export class WsHandler {
                     }),
                 };
 
-                ws.send(JSON.stringify(message));
+                ws.send(JSON.stringify(broadcastMessage));
 
-                this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+                this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
 
                 this.server.adapter.send(ws.app.id, channel, JSON.stringify({
                     event: 'pusher_internal:member_added',
@@ -447,7 +447,7 @@ export class WsHandler {
 
         // Make sure the event name length is not too big.
         if (event.length > this.server.options.eventLimits.maxNameLength) {
-            let message = {
+            let broadcastMessage = {
                 event: 'pusher:error',
                 channel,
                 data: {
@@ -456,9 +456,9 @@ export class WsHandler {
                 },
             };
 
-            ws.send(JSON.stringify(message));
+            ws.send(JSON.stringify(broadcastMessage));
 
-            this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+            this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
 
             return;
         }
@@ -467,7 +467,7 @@ export class WsHandler {
 
         // Make sure the total payload of the message body is not too big.
         if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
-            let message = {
+            let broadcastMessage = {
                 event: 'pusher:error',
                 channel,
                 data: {
@@ -476,9 +476,9 @@ export class WsHandler {
                 },
             };
 
-            ws.send(JSON.stringify(message));
+            ws.send(JSON.stringify(broadcastMessage));
 
-            this.server.metricsManager.markWsMessageSent(ws.app.id, message);
+            this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
 
             return;
         }

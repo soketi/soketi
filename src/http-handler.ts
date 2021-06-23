@@ -94,11 +94,11 @@ export class HttpHandler {
                 Log.error(err);
                 return this.serverErrorResponse(res, 'A server error has occured.');
             }).then(channels => {
-                let message = { channels };
+                let broadcastMessage = { channels };
 
-                this.server.metricsManager.markApiMessage(res.params.appId, {}, message);
+                this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
 
-                res.writeStatus('200 OK').end(JSON.stringify(message));
+                res.writeStatus('200 OK').end(JSON.stringify(broadcastMessage));
             });
         });
     }
@@ -124,16 +124,16 @@ export class HttpHandler {
 
                     if (response.subscription_count > 0) {
                         this.server.adapter.getChannelMembersCount(res.params.appId, res.params.channel).then(membersCount => {
-                            let message = {
+                            let broadcastMessage = {
                                 ...response,
                                 ... {
                                     user_count: membersCount,
                                 },
                             };
 
-                            this.server.metricsManager.markApiMessage(res.params.appId, {}, message);
+                            this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
 
-                            res.writeStatus('200 OK').end(JSON.stringify(message));
+                            res.writeStatus('200 OK').end(JSON.stringify(broadcastMessage));
                         }).catch(err => {
                             Log.error(err);
                             return this.serverErrorResponse(res, 'A server error has occured.');
@@ -168,13 +168,13 @@ export class HttpHandler {
             }
 
             this.server.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
-                let message = {
+                let broadcastMessage = {
                     users: [...members].map(([user_id, user_info]) => ({ id: user_id })),
                 };
 
-                this.server.metricsManager.markApiMessage(res.params.appId, {}, message);
+                this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
 
-                res.writeStatus('200 OK').end(JSON.stringify(message));
+                res.writeStatus('200 OK').end(JSON.stringify(broadcastMessage));
             });
         });
     }
