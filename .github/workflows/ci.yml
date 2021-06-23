@@ -25,12 +25,12 @@ jobs:
         adapter:
           - local
           - redis
-        apps_manager:
+        app_manager:
           - array
           - mysql
           - postgres
 
-    name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.apps_manager }})
+    name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }})
 
     steps:
       - uses: actions/checkout@v2
@@ -87,7 +87,7 @@ jobs:
           npm run test
         env:
           TEST_ADAPTER: ${{ matrix.adapter }}
-          TEST_APPS_MANAGER: ${{ matrix.apps_manager }}
+          TEST_APP_MANAGER: ${{ matrix.app_manager }}
 
       - uses: codecov/codecov-action@v1
         with:
