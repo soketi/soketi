@@ -181,6 +181,10 @@ export class Server {
             this.options = dot.set(this.options, path, options[path]);
         }
 
+        if (this.options.debug) {
+            console.dir(this.options, { depth: 100 });
+        }
+
         this.appManager = new AppManager(this);
         this.adapter = new Adapter(this);
         this.metricsManager = new Metrics(this);
