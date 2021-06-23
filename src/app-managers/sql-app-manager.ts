@@ -61,7 +61,7 @@ export abstract class SqlAppManager implements AppManagerInterface {
     /**
      * Make a Knex selection for the app ID.
      */
-    protected selectById(id: string): any {
+    protected selectById(id: string): Promise<App[]> {
         return this.connection<App>(this.appsTableName())
             .where('id', id)
             .select('*');
@@ -70,7 +70,7 @@ export abstract class SqlAppManager implements AppManagerInterface {
     /**
      * Make a Knex selection for the app key.
      */
-    protected selectByKey(key: string): any {
+    protected selectByKey(key: string): Promise<App[]> {
         return this.connection<App>(this.appsTableName())
             .where('key', key)
             .select('*');
