@@ -356,8 +356,8 @@ export class HttpHandler {
                         // @ts-ignore
                         json = JSON.parse(Buffer.concat([buffer, chunk]));
                     } catch (e) {
-                      res.close();
-                      return;
+                        res.close();
+                        return;
                     }
 
                     cb(json);
@@ -373,7 +373,7 @@ export class HttpHandler {
                     cb(json);
                 }
             } else {
-            if (buffer) {
+                if (buffer) {
                     buffer = Buffer.concat([buffer, chunk]);
                 } else {
                     buffer = Buffer.concat([chunk]);
