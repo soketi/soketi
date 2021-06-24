@@ -181,9 +181,9 @@ export class HttpHandler {
 
     events(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.jsonBodyMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
-            this.jsonBodyMiddleware,
             this.authMiddleware,
         ]).then(res => {
             let message = res.body;
