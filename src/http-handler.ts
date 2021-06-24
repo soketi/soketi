@@ -316,16 +316,22 @@ export class HttpHandler {
 
     protected attachMiddleware(res: HttpResponse, functions: any[]): Promise<HttpResponse> {
         return new Promise(resolve => {
-            let abortHandlerMiddleware = callback => {
+            let waterfallInit = callback => callback(null, res);
+
+            let abortHandlerMiddleware = (res, callback) => {
                 res.onAborted(() => {
-                    Log.warning(['Aborted request.', res]);
+                    Log.warning({ message: 'Aborted request.', res });
+                    this.serverErrorResponse(res, 'Aborted request.');
                 });
 
                 callback(null, res);
             };
 
             async.waterfall([
-                abortHandlerMiddleware,
+                ...[
+                    waterfallInit.bind(this),
+                    abortHandlerMiddleware.bind(this),
+                ],
                 ...functions.map(fn => fn.bind(this)),
             ], (err, res) => {
                 resolve(res);
@@ -350,8 +356,8 @@ export class HttpHandler {
                         // @ts-ignore
                         json = JSON.parse(Buffer.concat([buffer, chunk]));
                     } catch (e) {
-                        res.close();
-                        return;
+                      res.close();
+                      return;
                     }
 
                     cb(json);
@@ -367,7 +373,7 @@ export class HttpHandler {
                     cb(json);
                 }
             } else {
-                if (buffer) {
+            if (buffer) {
                     buffer = Buffer.concat([buffer, chunk]);
                 } else {
                     buffer = Buffer.concat([chunk]);
