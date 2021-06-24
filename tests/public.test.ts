@@ -22,7 +22,10 @@ describe('public channel test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' })
+                        .catch(error => {
+                            throw new Error(error);
+                        });
                 });
             });
         });

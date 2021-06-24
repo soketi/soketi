@@ -35,7 +35,10 @@ describe('presence channel test', () => {
                     expect(data.members['1'].id).toBe(1);
                     expect(data.me.info.name).toBe('John');
 
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' })
+                        .catch(error => {
+                            throw new Error(error);
+                        });
                 });
             });
         });

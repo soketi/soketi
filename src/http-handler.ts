@@ -140,16 +140,12 @@ export class HttpHandler {
                         });
 
                         return;
-                    } else {
-                        this.server.metricsManager.markApiMessage(res.params.appId, {}, response);
-
-                        return res.writeStatus('200 OK').end(JSON.stringify(response));
                     }
-                } else {
-                    this.server.metricsManager.markApiMessage(res.params.appId, {}, response);
-
-                    return res.writeStatus('200 OK').end(JSON.stringify(response));
                 }
+
+                this.server.metricsManager.markApiMessage(res.params.appId, {}, response);
+
+                return res.writeStatus('200 OK').end(JSON.stringify(response));
             }).catch(err => {
                 Log.error(err);
                 return this.serverErrorResponse(res, 'A server error has occured.');
@@ -234,7 +230,7 @@ export class HttpHandler {
     }
 
     protected badResponse(res: HttpResponse, message: string) {
-        return res.writeStatus('400 Bad Request').end(JSON.stringify({
+        return res.writeStatus('400 Invalid Request').end(JSON.stringify({
             error: message,
             code: 400,
         }));
@@ -255,14 +251,14 @@ export class HttpHandler {
     }
 
     protected entityTooLargeResponse(res: HttpResponse, message: string) {
-        return res.writeStatus('413 Entity Too Large').end(JSON.stringify({
+        return res.writeStatus('413 Payload Too Large').end(JSON.stringify({
             error: message,
             code: 413,
         }));
     }
 
     protected serverErrorResponse(res: HttpResponse, message: string) {
-        return res.writeStatus('500 Server Error').end(JSON.stringify({
+        return res.writeStatus('500 Internal Server Error').end(JSON.stringify({
             error: message,
             code: 500,
         }));

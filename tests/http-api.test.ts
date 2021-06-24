@@ -358,12 +358,16 @@ describe('http api test', () => {
                         message: 'hello',
                         array: ['we', 'support', 'array'],
                         objects: { works: true },
+                    }).catch(error => {
+                        throw new Error(error);
                     });
 
                     Utils.sendEventToChannel(goodBackend, channelName, 'greeting-from-good', {
                         message: 'hello',
                         array: ['we', 'support', 'array'],
                         objects: { works: true },
+                    }).catch(error => {
+                        throw new Error(error);
                     });
                 });
             });
@@ -380,6 +384,9 @@ describe('http api test', () => {
                     expect(res.error).toBeDefined();
                     expect(res.code).toBe(400);
                     done();
+                })
+                .catch(error => {
+                    throw new Error(error);
                 });
         });
     });
@@ -394,6 +401,9 @@ describe('http api test', () => {
                     expect(res.error).toBeDefined();
                     expect(res.code).toBe(400);
                     done();
+                })
+                .catch(error => {
+                    throw new Error(error);
                 });
         });
     });
@@ -408,6 +418,9 @@ describe('http api test', () => {
                     expect(res.error).toBeDefined();
                     expect(res.code).toBe(400);
                     done();
+                })
+                .catch(error => {
+                    throw new Error(error);
                 });
         });
     });
@@ -417,11 +430,15 @@ describe('http api test', () => {
             let backend = Utils.newBackend();
 
             Utils.sendEventToChannel(backend, 'ch1', 'greeting', { message: 'hello' })
-                .then(res => res.json())
-                .then(res => {
-                    expect(res.error).toBeDefined();
-                    expect(res.code).toBe(413);
+                .catch(err => {
+                    expect(err.body).toBeDefined();
+                    expect(err.status).toBe(413);
                     done();
+                })
+                .then(res => {
+                    if (res.json()) {
+                        throw new Error('The request limit did not work.');
+                    }
                 });
         });
     });
