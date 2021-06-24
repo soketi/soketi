@@ -9,9 +9,9 @@ export interface AppInterface {
     secret: string;
     maxConnections: string|number;
     enableClientMessages: boolean;
-    maxBackendEventsPerMinute: string|number;
-    maxClientEventsPerMinute: string|number;
-    maxReadRequestsPerMinute: string|number;
+    maxBackendEventsPerSecond: string|number;
+    maxClientEventsPerSecond: string|number;
+    maxReadRequestsPerSecond: string|number;
 }
 
 export class App implements AppInterface {
@@ -43,17 +43,17 @@ export class App implements AppInterface {
     /**
      * @type {number}
      */
-    public maxBackendEventsPerMinute: string|number;
+    public maxBackendEventsPerSecond: string|number;
 
     /**
      * @type {number}
      */
-    public maxClientEventsPerMinute: string|number;
+    public maxClientEventsPerSecond: string|number;
 
     /**
      * @type {number}
      */
-    public maxReadRequestsPerMinute: string|number;
+    public maxReadRequestsPerSecond: string|number;
 
     /**
      * Create a new app from object.
@@ -64,9 +64,9 @@ export class App implements AppInterface {
         this.secret = app.secret;
         this.maxConnections = parseInt(app.maxConnections || app.max_connections || -1);
         this.enableClientMessages = app.enableClientMessages || app.enable_client_messages || false;
-        this.maxBackendEventsPerMinute = parseInt(app.maxBackendEventsPerMinute || app.max_backend_events_per_min || -1);
-        this.maxClientEventsPerMinute = parseInt(app.maxClientEventsPerMinute || app.max_client_events_per_min || -1);
-        this.maxReadRequestsPerMinute = parseInt(app.maxReadRequestsPerMinute || app.max_read_req_per_min || -1);
+        this.maxBackendEventsPerSecond = parseInt(app.maxBackendEventsPerSecond || app.max_backend_events_per_sec || -1);
+        this.maxClientEventsPerSecond = parseInt(app.maxClientEventsPerSecond || app.max_client_events_per_sec || -1);
+        this.maxReadRequestsPerSecond = parseInt(app.maxReadRequestsPerSecond || app.max_read_req_per_sec || -1);
 
         // TODO: Implement webhooks
         // TODO: Implement app deactivation

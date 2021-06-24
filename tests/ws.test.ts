@@ -2,14 +2,12 @@ import { assert } from 'console';
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
-jest.retryTimes(2);
-
 describe('ws test', () => {
     afterEach(done => {
         Utils.flushServers().then(() => done());
     });
 
-    test('client events', done => {
+    Utils.shouldRun(process.env.TEST_APP_MANAGER === 'array')('client events', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
             let channelName = `private-${Utils.randomChannelName()}`;
@@ -41,7 +39,7 @@ describe('ws test', () => {
         });
     });
 
-    test('client events dont get emitted when client messaging is disabled', done => {
+    Utils.shouldRun(process.env.TEST_APP_MANAGER === 'array')('client events dont get emitted when client messaging is disabled', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': false }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
             let channelName = `private-${Utils.randomChannelName()}`;
@@ -77,7 +75,7 @@ describe('ws test', () => {
         });
     });
 
-    test('client events dont get emitted when event name is big', done => {
+    Utils.shouldRun(process.env.TEST_APP_MANAGER === 'array')('client events dont get emitted when event name is big', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxNameLength': 25 }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
             let channelName = `private-${Utils.randomChannelName()}`;
@@ -114,7 +112,7 @@ describe('ws test', () => {
         });
     });
 
-    test('client events dont get emitted when event payload is big', done => {
+    Utils.shouldRun(process.env.TEST_APP_MANAGER === 'array')('client events dont get emitted when event payload is big', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxPayloadInKb': 1/1024/1024 }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
             let channelName = `private-${Utils.randomChannelName()}`;
@@ -155,14 +153,16 @@ describe('ws test', () => {
             let client = Utils.newClient({}, 6001, 'invalid-key', false);
 
             client.connection.bind('state_change', ({ current }) => {
-                if (current === 'unavailable' || current === 'failed') {
+                if (['unavailable', 'failed', 'disconnected'].includes(current)) {
                     done();
+                } else {
+                    throw new Error(`${current} is not an expected state.`);
                 }
             });
         });
     });
 
-    test('throw over quota error if reached connection limit', done => {
+    Utils.shouldRun(process.env.TEST_APP_MANAGER === 'array')('throw over quota error if reached connection limit', done => {
         Utils.newServer({ 'appManager.array.apps.0.maxConnections': 1 }, (server: Server) => {
             let client1 = Utils.newClient({}, 6001, 'app-key', false);
 
@@ -170,8 +170,10 @@ describe('ws test', () => {
                 let client2 = Utils.newClient({}, 6001, 'app-key', false);
 
                 client2.connection.bind('state_change', ({ current }) => {
-                    if (current === 'unavailable' || current === 'failed') {
+                    if (['unavailable', 'failed', 'disconnected'].includes(current)) {
                         done();
+                    } else {
+                        throw new Error(`${current} is not an expected state.`);
                     }
                 });
             });

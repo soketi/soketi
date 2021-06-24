@@ -1,8 +1,6 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
-jest.retryTimes(2);
-
 describe('presence channel test', () => {
     afterEach(done => {
         Utils.flushServers().then(() => done());
@@ -37,7 +35,10 @@ describe('presence channel test', () => {
                     expect(data.members['1'].id).toBe(1);
                     expect(data.me.info.name).toBe('John');
 
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' })
+                        .catch(error => {
+                            throw new Error(error);
+                        });
                 });
             });
         });

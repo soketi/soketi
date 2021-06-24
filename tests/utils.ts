@@ -13,7 +13,7 @@ export class Utils {
             'adapter.redis.prefix': uuidv4(),
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
-            'appManager.driver': process.env.TEST_APPS_MANAGER || 'array',
+            'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
             'metrics.enabled': true,
         };
 

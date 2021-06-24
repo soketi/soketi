@@ -10,4 +10,10 @@ export interface AppManagerInterface {
      * Find an app by given key.
      */
     findByKey(key: string): Promise<App|null>;
+
+    /**
+     * Run a set of instructions after the server closes.
+     * This can be used to disconnect from the drivers, to unset variables, etc.
+     */
+    disconnect(): Promise<void>;
 }

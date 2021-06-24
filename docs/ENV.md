@@ -13,7 +13,10 @@
   - [Presence Channel Limits](#presence-channel-limits)
   - [Channels Soft Limits](#channels-soft-limits)
 - [Databases](#databases)
+  - [MySQL Configuration](#mysql-configuration)
+  - [PostgreSQL Configuration](#postgresql-configuration)
   - [Redis Configuration](#redis-configuration)
+- [Database Pooling](#database-pooling)
 - [Debugging](#debugging)
   - [Node Metadata](#node-metadata)
 
@@ -75,9 +78,9 @@ For the rate limiting and max connections options, setting limits to `-1` will d
 | `DEFAULT_APP_SECRET` | `app-secret` | - | The default app secret for the array driver. |
 | `DEFAULT_APP_MAX_CONNS` | `-1` | - | The default app's limit of concurrent connections. |
 | `DEFAULT_APP_ENABLE_CLIENT_MESSAGES` | `false` | `true`, `false` | Wether client messages should be enabled for the app. |
-| `DEFAULT_APP_MAX_BACKEND_EVENTS_PER_MIN` | `-1` | - | The default app's limit of `/events` endpoint events broadcasted per minute. You can [configure rate limiting database store](#rate-limiting) |
-| `DEFAULT_APP_MAX_CLIENT_EVENTS_PER_MIN` | `-1` | - | The default app's limit of client events broadcasted per minute, by a single socket. You can [configure rate limiting database store](#rate-limiting) |
-| `DEFAULT_APP_MAX_READ_REQ_PER_MIN` | `-1` | - | The default app's limit of read endpoint calls per minute. You can [configure rate limiting database store](#rate-limiting) |
+| `DEFAULT_APP_MAX_BACKEND_EVENTS_PER_SEC` | `-1` | - | The default app's limit of `/events` endpoint events broadcasted per second. You can [configure rate limiting database store](#rate-limiting) |
+| `DEFAULT_APP_MAX_CLIENT_EVENTS_PER_SEC` | `-1` | - | The default app's limit of client events broadcasted per second, by a single socket. You can [configure rate limiting database store](#rate-limiting) |
+| `DEFAULT_APP_MAX_READ_REQ_PER_SEC` | `-1` | - | The default app's limit of read endpoint calls per second. You can [configure rate limiting database store](#rate-limiting) |
 
 ### Apps Manager
 
@@ -85,7 +88,7 @@ The apps manager manages the allowed apps to connect to the WS and the API. Defa
 
 | Environment variable | Default | Available values | Description |
 | - | - | - | - |
-| `APP_MANAGER_DRIVER` | `array` | `array` | The driver used to retrieve the app. |
+| `APP_MANAGER_DRIVER` | `array` | `array`, `mysql`, `postgres` | The driver used to retrieve the app. |
 
 ### Metrics
 
@@ -140,6 +143,34 @@ Beside the rate limiting, you can set soft limits for the incoming data, such as
 
 ## Databases
 
+### MySQL Configuration
+
+Configuration needed to connect to a MySQL server.
+
+| Environment variable | Default | Available values | Description |
+| - | - | - | - |
+| `DB_MYSQL_HOST` | `127.0.0.1` | - | The MySQL host used for `mysql` driver. |
+| `DB_MYSQL_PORT` | `3306` | - | The MySQL port used for `mysql` driver. |
+| `DB_MYSQL_USERNAME` | `root` | - | The MySQL username used for `mysql` driver. |
+| `DB_MYSQL_PASSWORD` | `password` | - | The MySQL password used for `mysql` driver. |
+| `DB_MYSQL_DATABASE` | `main` | - | The MySQL database used for `mysql` driver. |
+
+This database supports [Database Pooling](#database-pooling).
+
+### PostgreSQL Configuration
+
+Configuration needed to connect to a PostgreSQL server.
+
+| Environment variable | Default | Available values | Description |
+| - | - | - | - |
+| `DB_POSTGRES_HOST` | `127.0.0.1` | - | The PostgreSQL host used for `postgres` driver. |
+| `DB_POSTGRES_PORT` | `3306` | - | The PostgreSQL port used for `postgres` driver. |
+| `DB_POSTGRES_USERNAME` | `root` | - | The PostgreSQL username used for `postgres` driver. |
+| `DB_POSTGRES_PASSWORD` | `password` | - | The PostgreSQL password used for `postgres` driver. |
+| `DB_POSTGRES_DATABASE` | `main` | - | The PostgreSQL database used for `postgres` driver. |
+
+This database supports [Database Pooling](#database-pooling).
+
 ### Redis Configuration
 
 Configuration needed to connect to a Redis server.
@@ -149,7 +180,18 @@ Configuration needed to connect to a Redis server.
 | `DB_REDIS_HOST` | `127.0.0.1` | - | The Redis host used for `redis` driver. |
 | `DB_REDIS_PORT` | `6379` | - | The Redis port used for `redis` driver. |
 | `DB_REDIS_PASSWORD` | `null` | - | The Redis password used for `redis` driver. |
-| `DB_REDIS_PREFIX` | `echo-server` | - | The key prefix for Redis. Only for `redis` driver. |
+| `DB_REDIS_PREFIX` | `pws` | - | The key prefix for Redis. Only for `redis` driver. |
+
+## Database Pooling
+
+Behind the scenes, the connections to the relational databases are made using [Knex](https://knexjs.org/). In case you are using Connection Pooling in your database,
+you can instruct Knex to connect to them via pooling instead of a regular one connection per statement.
+
+| Environment variable | Object dot-path | Default | Available values | Description |
+| - | - | - | - | - |
+| `DB_POOLING_ENABLED` | `false` | `true`, `false` | Wether to enable the database pooling. The pooling will be truly enable only if the database suppport pooling in Knex. |
+| `DB_POOLING_MIN` | `0` | - | The minimum amount of connections. |
+| `DB_POOLING_MAX` | `7` | - | The maximum amount of connections. |
 
 ## Debugging
 

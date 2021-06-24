@@ -1,8 +1,6 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
-jest.retryTimes(2);
-
 describe('public channel test', () => {
     afterEach(done => {
         Utils.flushServers().then(() => done());
@@ -24,7 +22,10 @@ describe('public channel test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' })
+                        .catch(error => {
+                            throw new Error(error);
+                        });
                 });
             });
         });
