@@ -7,7 +7,7 @@ describe('ws test for redis adapter', () => {
         Utils.flushServers().then(() => done());
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('client events with redis adapter', done => {
+    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis' && process.env.TEST_APP_MANAGER === 'array')('client events with redis adapter', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.enableClientMessages': true, port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel();
@@ -41,7 +41,7 @@ describe('ws test for redis adapter', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('client events dont get emitted when client messaging is disabled with redis adapter', done => {
+    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis' && process.env.TEST_APP_MANAGER === 'array')('client events dont get emitted when client messaging is disabled with redis adapter', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': false }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.enableClientMessages': false, port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel();
@@ -79,7 +79,7 @@ describe('ws test for redis adapter', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('client events dont get emitted when event name is big with redis adapter', done => {
+    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis' && process.env.TEST_APP_MANAGER === 'array')('client events dont get emitted when event name is big with redis adapter', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxNameLength': 25 }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxNameLength': 25, port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel();
@@ -118,7 +118,7 @@ describe('ws test for redis adapter', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('client events dont get emitted when event payload is big with redis adapter', done => {
+    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis' && process.env.TEST_APP_MANAGER === 'array')('client events dont get emitted when event payload is big with redis adapter', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxPayloadInKb': 1/1024/1024 }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxPayloadInKb': 1/1024/1024, port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel();
@@ -156,7 +156,7 @@ describe('ws test for redis adapter', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('throw over quota error if reached connection limit for redis adapter', done => {
+    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis' && process.env.TEST_APP_MANAGER === 'array')('throw over quota error if reached connection limit for redis adapter', done => {
         Utils.newServer({ 'appManager.array.apps.0.maxConnections': 1, port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.maxConnections': 1, port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient({}, 6001, 'app-key', false);
@@ -167,6 +167,8 @@ describe('ws test for redis adapter', () => {
                     client2.connection.bind('state_change', ({ current }) => {
                         if (current === 'failed') {
                             done();
+                        } else {
+                            throw new Error(`${current} is not an expected state.`);
                         }
                     });
                 });

@@ -81,7 +81,7 @@ export abstract class SqlAppManager implements AppManagerInterface {
      * This can be used to disconnect from the drivers, to unset variables, etc.
      */
     disconnect(): Promise<void> {
-        return this.connection.destroy();
+        return Promise.resolve();
     }
 
     /**
