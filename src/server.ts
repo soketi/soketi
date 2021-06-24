@@ -268,7 +268,7 @@ export class Server {
             server = server.ws('/app/:id', {
                 idleTimeout: 120, // According to protocol
                 maxBackpressure: 1024 * 1024,
-                maxPayloadLength: 25 * 1024 * 1024,
+                maxPayloadLength: parseFloat(this.options.httpApi.requestLimitInMb as string) * 2 * 1024 * 1024, // 2x the allocated maximum limit
                 message: (ws: WebSocket, message: any, isBinary: boolean) => this.wsHandler.onMessage(ws, message, isBinary),
                 open: (ws: WebSocket) => this.wsHandler.onOpen(ws),
                 close: (ws: WebSocket, code: number, message: any) => this.wsHandler.onClose(ws, code, message),
