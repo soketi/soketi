@@ -140,4 +140,97 @@ describe('presence channel test', () => {
             });
         });
     });
+
+    test('connects and disconnects to presence channel and does not leak memory', done => {
+        Utils.newServer({}, (server: Server) => {
+            let user = {
+                user_id: 1,
+                user_info: {
+                    id: 1,
+                    name: 'John',
+                },
+            };
+
+            let client = Utils.newClientForPresenceUser(user);
+            let backend = Utils.newBackend();
+            let channelName = `presence-${Utils.randomChannelName()}`;
+
+            client.connection.bind('disconnected', () => {
+                Utils.wait(3000).then(() => {
+                    let namespace = server.adapter.getNamespace('app-id');
+
+                    expect(namespace.sockets.size).toBe(0);
+                    expect(namespace.channels.size).toBe(0);
+
+                    done();
+                });
+            });
+
+            client.connection.bind('connected', () => {
+                let channel = client.subscribe(channelName);
+
+                channel.bind('greeting', (e) => {
+                    expect(e.message).toBe('hello');
+
+                    client.unsubscribe(channelName);
+
+                    Utils.wait(3000).then(() => {
+                        let namespace = server.adapter.getNamespace('app-id');
+                        let socket = namespace.sockets.get(namespace.sockets.keys().next().value);
+
+                        expect(namespace.channels.size).toBe(0);
+                        expect(namespace.sockets.size).toBe(1);
+                        expect(socket.subscribedChannels.size).toBe(0);
+                        expect(socket.presence.size).toBe(0);
+
+                        client.disconnect();
+                    });
+                });
+
+                channel.bind('pusher:subscription_succeeded', (data) => {
+                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                });
+            });
+        });
+    });
+
+    test('sudden close connection in presence channel and does not leak memory', done => {
+        Utils.newServer({}, (server: Server) => {
+            let user = {
+                user_id: 1,
+                user_info: {
+                    id: 1,
+                    name: 'John',
+                },
+            };
+
+            let client = Utils.newClientForPresenceUser(user);
+            let backend = Utils.newBackend();
+            let channelName = `presence-${Utils.randomChannelName()}`;
+
+            client.connection.bind('disconnected', () => {
+                Utils.wait(3000).then(() => {
+                    let namespace = server.adapter.getNamespace('app-id');
+
+                    expect(namespace.sockets.size).toBe(0);
+                    expect(namespace.channels.size).toBe(0);
+
+                    done();
+                });
+            });
+
+            client.connection.bind('connected', () => {
+                let channel = client.subscribe(channelName);
+
+                channel.bind('greeting', (e) => {
+                    expect(e.message).toBe('hello');
+                    client.disconnect();
+                });
+
+                channel.bind('pusher:subscription_succeeded', (data) => {
+                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                });
+            });
+        });
+    });
 });

@@ -67,6 +67,10 @@ export class Namespace {
                 this.channels.get(channel).delete(wsId);
             }
 
+            if (this.channels.has(channel) && this.channels.get(channel).size === 0) {
+                this.channels.delete(channel);
+            }
+
             resolve(true);
         });
     }
