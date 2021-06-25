@@ -29,8 +29,11 @@ jobs:
           - array
           - mysql
           - postgres
+        rate_limiter:
+          - local
+          - redis
 
-    name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }})
+    name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }})
 
     steps:
       - uses: actions/checkout@v2
@@ -88,6 +91,7 @@ jobs:
         env:
           TEST_ADAPTER: ${{ matrix.adapter }}
           TEST_APP_MANAGER: ${{ matrix.app_manager }}
+          TEST_RATE_LIMITER: ${{ matrix.rate_limiter }}
 
       - uses: codecov/codecov-action@v1
         with:

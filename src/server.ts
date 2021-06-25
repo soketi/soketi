@@ -6,6 +6,8 @@ import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js';
 import { Log } from './log';
 import { Metrics, MetricsInterface } from './metrics';
 import { Options } from './options';
+import { RateLimiter } from './rate-limiters/rate-limiter';
+import { RateLimiterInterface } from './rate-limiters/rate-limiter-interface';
 import { v4 as uuidv4 } from 'uuid';
 import { WsHandler } from './ws-handler';
 import { WebSocket } from 'uWebSockets.js';
@@ -167,6 +169,11 @@ export class Server {
     public adapter: AdapterInterface;
 
     /**
+     * The rate limiter handler for the server.
+     */
+    public rateLimiter: RateLimiterInterface;
+
+    /**
      * Start the server statically.
      */
     static async start(options: any = {}, callback?: CallableFunction) {
@@ -188,6 +195,7 @@ export class Server {
         this.appManager = new AppManager(this);
         this.adapter = new Adapter(this);
         this.metricsManager = new Metrics(this);
+        this.rateLimiter = new RateLimiter(this);
         this.wsHandler = new WsHandler(this);
         this.httpHandler = new HttpHandler(this);
 

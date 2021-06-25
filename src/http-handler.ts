@@ -74,6 +74,7 @@ export class HttpHandler {
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
+            this.readRateLimitingMiddleware,
         ]).then(res => {
             this.server.adapter.getChannels(res.params.appId).then(channels => {
                 let response: { [channel: string]: ChannelResponse } = [...channels].reduce((channels, [channel, connections]) => {
@@ -108,6 +109,7 @@ export class HttpHandler {
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
+            this.readRateLimitingMiddleware,
         ]).then(res => {
             let response: ChannelResponse;
 
@@ -158,6 +160,7 @@ export class HttpHandler {
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
+            this.readRateLimitingMiddleware,
         ]).then(res => {
             if (! res.params.channel.startsWith('presence-')) {
                 return this.badResponse(res, 'The channel must be a presence channel.');
@@ -181,6 +184,7 @@ export class HttpHandler {
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
+            this.broadcastEventRateLimitingMiddleware,
         ]).then(res => {
             let message = res.body;
 
@@ -257,6 +261,13 @@ export class HttpHandler {
         }));
     }
 
+    protected tooManyRequestsResponse(res: HttpResponse) {
+        return res.writeStatus('429 Too Many Requests').end(JSON.stringify({
+            error: 'Too many requests.',
+            code: 429,
+        }));
+    }
+
     protected serverErrorResponse(res: HttpResponse, message: string) {
         return res.writeStatus('500 Internal Server Error').end(JSON.stringify({
             error: message,
@@ -307,6 +318,36 @@ export class HttpHandler {
             }
 
             return this.unauthorizedResponse(res, 'The secret authentication failed');
+        });
+    }
+
+    protected readRateLimitingMiddleware(res: HttpResponse, next: CallableFunction): any {
+        this.server.rateLimiter.consumeReadRequestsPoints(1, res.app).then(response => {
+            if (response.canContinue) {
+                for (let header in response.headers) {
+                    res.writeHeader(header, response.headers[header]);
+                }
+
+                next();
+            }
+
+            this.tooManyRequestsResponse(res);
+        });
+    }
+
+    protected broadcastEventRateLimitingMiddleware(res: HttpResponse, next: CallableFunction): any {
+        let channels = res.body.channels || [res.body.channel];
+
+        this.server.rateLimiter.consumeBackendEventPoints(Math.max(channels.length, 1), res.app).then(response => {
+            if (response.canContinue) {
+                for (let header in response.headers) {
+                    res.writeHeader(header, response.headers[header]);
+                }
+
+                next();
+            }
+
+            this.tooManyRequestsResponse(res);
         });
     }
 

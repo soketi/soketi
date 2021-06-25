@@ -129,7 +129,6 @@ export class WsHandler {
                 this.handleClientEvent(ws, message);
             } else {
                 // TODO: Add encrypted private channels support.
-                // TODO: Add unsubscribe support
                 Log.info(message);
             }
         }
@@ -483,14 +482,25 @@ export class WsHandler {
             return;
         }
 
-        // TODO: Rate limit the frontend event points (code 4301)
-
         this.server.adapter.isInChannel(ws.app.id, channel, ws.id).then(canBroadcast => {
             if (! canBroadcast) {
                 return;
             }
 
-            this.server.adapter.send(ws.app.id, channel, JSON.stringify({ event, channel, data }), ws.id);
+            this.server.rateLimiter.consumeFrontendEventPoints(1, ws.app, ws).then(response => {
+                if (response.canContinue) {
+                    return this.server.adapter.send(ws.app.id, channel, JSON.stringify({ event, channel, data }), ws.id);
+                }
+
+                ws.send(JSON.stringify({
+                    event: 'pusher:error',
+                    channel,
+                    data: {
+                        code: 4301,
+                        message: 'The rate limit for sending client events exceeded the quota.',
+                    },
+                }))
+            });
         });
     }
 
