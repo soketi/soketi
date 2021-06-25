@@ -33,18 +33,22 @@ export class Utils {
     }
 
     static flushServers(): Promise<void> {
-        if (this.currentServers.length === 0) {
-            return Promise.resolve();
-        }
+        return new Promise(resolve => {
+            if (this.currentServers.length === 0) {
+                return resolve();
+            }
 
-        return async.each(this.currentServers, (server: Server, serverCallback) => {
-            server.stop().then(() => {
-                if (serverCallback) {
+            async.each(this.currentServers, (server: Server, serverCallback) => {
+                server.stop().then(() => {
                     serverCallback();
-                }
+                });
+            }).then(() => {
+                this.currentServers = [];
+
+                Utils.wait(3000).then(() => {
+                    resolve();
+                });
             });
-        }).then(() => {
-            this.currentServers = [];
         });
     }
 
