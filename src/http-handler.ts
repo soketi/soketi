@@ -61,10 +61,20 @@ export class HttpHandler {
                 res.writeStatus('200 OK').end(res.query.json ? JSON.stringify(metrics) : metrics);
             };
 
+            let handleError = err => {
+                this.serverErrorResponse(res, 'A server error has occured.');
+            }
+
             if (res.query.json) {
-                this.server.metricsManager.getMetricsAsJson().then(metricsResponse);
+                this.server.metricsManager
+                    .getMetricsAsJson()
+                    .then(metricsResponse)
+                    .catch(handleError);
             } else {
-                this.server.metricsManager.getMetricsAsPlaintext().then(metricsResponse);
+                this.server.metricsManager
+                    .getMetricsAsPlaintext()
+                    .then(metricsResponse)
+                    .catch(handleError);
             }
         });
     }
@@ -93,6 +103,7 @@ export class HttpHandler {
                 return response;
             }).catch(err => {
                 Log.error(err);
+
                 return this.serverErrorResponse(res, 'A server error has occured.');
             }).then(channels => {
                 let broadcastMessage = { channels };
@@ -138,6 +149,7 @@ export class HttpHandler {
                             res.writeStatus('200 OK').end(JSON.stringify(broadcastMessage));
                         }).catch(err => {
                             Log.error(err);
+
                             return this.serverErrorResponse(res, 'A server error has occured.');
                         });
 
@@ -150,6 +162,7 @@ export class HttpHandler {
                 return res.writeStatus('200 OK').end(JSON.stringify(response));
             }).catch(err => {
                 Log.error(err);
+
                 return this.serverErrorResponse(res, 'A server error has occured.');
             });
         });
@@ -215,21 +228,19 @@ export class HttpHandler {
                 return this.badResponse(res, `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`);
             }
 
-            async.each(channels, (channel, callback) => {
+            channels.forEach(channel => {
                 this.server.adapter.send(res.params.appId, channel, JSON.stringify({
                     event: message.name,
                     channel,
                     data: message.data,
                 }), message.socket_id);
-
-                callback();
-            }).then(() => {
-                this.server.metricsManager.markApiMessage(res.params.appId, message, { ok: true });
-
-                res.writeStatus('200 OK').end(JSON.stringify({
-                    ok: true,
-                }));
             });
+
+            this.server.metricsManager.markApiMessage(res.params.appId, message, { ok: true });
+
+            res.writeStatus('200 OK').end(JSON.stringify({
+                ok: true,
+            }));
         });
     }
 
@@ -352,7 +363,7 @@ export class HttpHandler {
     }
 
     protected attachMiddleware(res: HttpResponse, functions: any[]): Promise<HttpResponse> {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             let waterfallInit = callback => callback(null, res);
 
             let abortHandlerMiddleware = (res, callback) => {
@@ -365,14 +376,15 @@ export class HttpHandler {
             };
 
             async.waterfall([
-                ...[
-                    waterfallInit.bind(this),
-                    abortHandlerMiddleware.bind(this),
-                ],
+                waterfallInit.bind(this),
+                abortHandlerMiddleware.bind(this),
                 ...functions.map(fn => fn.bind(this)),
             ], (err, res) => {
                 if (err) {
-                    this.serverErrorResponse(res, err);
+                    this.serverErrorResponse(res, 'A server error has occured.');
+                    Log.error(err);
+
+                    return reject({ res, err });
                 }
 
                 resolve(res);
