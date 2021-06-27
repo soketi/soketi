@@ -336,7 +336,7 @@ export class HttpHandler {
         this.server.rateLimiter.consumeReadRequestsPoints(1, res.app).then(response => {
             if (response.canContinue) {
                 for (let header in response.headers) {
-                    res.writeHeader(header, response.headers[header]);
+                    res.writeHeader(header, '' + response.headers[header]);
                 }
 
                 return next(null, res);
@@ -352,7 +352,7 @@ export class HttpHandler {
         this.server.rateLimiter.consumeBackendEventPoints(Math.max(channels.length, 1), res.app).then(response => {
             if (response.canContinue) {
                 for (let header in response.headers) {
-                    res.writeHeader(header, response.headers[header]);
+                    res.writeHeader(header, '' + response.headers[header]);
                 }
 
                 return next(null, res);
