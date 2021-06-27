@@ -12,9 +12,6 @@ export interface ChannelResponse {
     occupied: boolean;
 }
 
-// TODO: Mark API message in Prometheus
-// TODO: Create middleware for the rate limiting.
-
 export class HttpHandler {
     /**
      * Initialize the HTTP handler.
