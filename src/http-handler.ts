@@ -61,10 +61,20 @@ export class HttpHandler {
                 res.writeStatus('200 OK').end(res.query.json ? JSON.stringify(metrics) : metrics);
             };
 
+            let handleError = err => {
+                this.serverErrorResponse(res, 'A server error has occured.');
+            }
+
             if (res.query.json) {
-                this.server.metricsManager.getMetricsAsJson().then(metricsResponse);
+                this.server.metricsManager
+                    .getMetricsAsJson()
+                    .then(metricsResponse)
+                    .catch(handleError);
             } else {
-                this.server.metricsManager.getMetricsAsPlaintext().then(metricsResponse);
+                this.server.metricsManager
+                    .getMetricsAsPlaintext()
+                    .then(metricsResponse)
+                    .catch(handleError);
             }
         });
     }
@@ -74,6 +84,7 @@ export class HttpHandler {
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
+            this.readRateLimitingMiddleware,
         ]).then(res => {
             this.server.adapter.getChannels(res.params.appId).then(channels => {
                 let response: { [channel: string]: ChannelResponse } = [...channels].reduce((channels, [channel, connections]) => {
@@ -92,6 +103,7 @@ export class HttpHandler {
                 return response;
             }).catch(err => {
                 Log.error(err);
+
                 return this.serverErrorResponse(res, 'A server error has occured.');
             }).then(channels => {
                 let broadcastMessage = { channels };
@@ -108,6 +120,7 @@ export class HttpHandler {
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
+            this.readRateLimitingMiddleware,
         ]).then(res => {
             let response: ChannelResponse;
 
@@ -136,6 +149,7 @@ export class HttpHandler {
                             res.writeStatus('200 OK').end(JSON.stringify(broadcastMessage));
                         }).catch(err => {
                             Log.error(err);
+
                             return this.serverErrorResponse(res, 'A server error has occured.');
                         });
 
@@ -148,6 +162,7 @@ export class HttpHandler {
                 return res.writeStatus('200 OK').end(JSON.stringify(response));
             }).catch(err => {
                 Log.error(err);
+
                 return this.serverErrorResponse(res, 'A server error has occured.');
             });
         });
@@ -158,6 +173,7 @@ export class HttpHandler {
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
+            this.readRateLimitingMiddleware,
         ]).then(res => {
             if (! res.params.channel.startsWith('presence-')) {
                 return this.badResponse(res, 'The channel must be a presence channel.');
@@ -181,6 +197,7 @@ export class HttpHandler {
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
+            this.broadcastEventRateLimitingMiddleware,
         ]).then(res => {
             let message = res.body;
 
@@ -211,21 +228,19 @@ export class HttpHandler {
                 return this.badResponse(res, `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`);
             }
 
-            async.each(channels, (channel, callback) => {
+            channels.forEach(channel => {
                 this.server.adapter.send(res.params.appId, channel, JSON.stringify({
                     event: message.name,
                     channel,
                     data: message.data,
                 }), message.socket_id);
-
-                callback();
-            }).then(() => {
-                this.server.metricsManager.markApiMessage(res.params.appId, message, { ok: true });
-
-                res.writeStatus('200 OK').end(JSON.stringify({
-                    ok: true,
-                }));
             });
+
+            this.server.metricsManager.markApiMessage(res.params.appId, message, { ok: true });
+
+            res.writeStatus('200 OK').end(JSON.stringify({
+                ok: true,
+            }));
         });
     }
 
@@ -254,6 +269,13 @@ export class HttpHandler {
         return res.writeStatus('413 Payload Too Large').end(JSON.stringify({
             error: message,
             code: 413,
+        }));
+    }
+
+    protected tooManyRequestsResponse(res: HttpResponse) {
+        return res.writeStatus('429 Too Many Requests').end(JSON.stringify({
+            error: 'Too many requests.',
+            code: 429,
         }));
     }
 
@@ -310,8 +332,38 @@ export class HttpHandler {
         });
     }
 
+    protected readRateLimitingMiddleware(res: HttpResponse, next: CallableFunction): any {
+        this.server.rateLimiter.consumeReadRequestsPoints(1, res.app).then(response => {
+            if (response.canContinue) {
+                for (let header in response.headers) {
+                    res.writeHeader(header, '' + response.headers[header]);
+                }
+
+                return next(null, res);
+            }
+
+            this.tooManyRequestsResponse(res);
+        });
+    }
+
+    protected broadcastEventRateLimitingMiddleware(res: HttpResponse, next: CallableFunction): any {
+        let channels = res.body.channels || [res.body.channel];
+
+        this.server.rateLimiter.consumeBackendEventPoints(Math.max(channels.length, 1), res.app).then(response => {
+            if (response.canContinue) {
+                for (let header in response.headers) {
+                    res.writeHeader(header, '' + response.headers[header]);
+                }
+
+                return next(null, res);
+            }
+
+            this.tooManyRequestsResponse(res);
+        });
+    }
+
     protected attachMiddleware(res: HttpResponse, functions: any[]): Promise<HttpResponse> {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             let waterfallInit = callback => callback(null, res);
 
             let abortHandlerMiddleware = (res, callback) => {
@@ -324,12 +376,17 @@ export class HttpHandler {
             };
 
             async.waterfall([
-                ...[
-                    waterfallInit.bind(this),
-                    abortHandlerMiddleware.bind(this),
-                ],
+                waterfallInit.bind(this),
+                abortHandlerMiddleware.bind(this),
                 ...functions.map(fn => fn.bind(this)),
             ], (err, res) => {
+                if (err) {
+                    this.serverErrorResponse(res, 'A server error has occured.');
+                    Log.error(err);
+
+                    return reject({ res, err });
+                }
+
                 resolve(res);
             });
         });
