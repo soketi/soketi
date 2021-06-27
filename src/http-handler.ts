@@ -328,7 +328,7 @@ export class HttpHandler {
                     res.writeHeader(header, response.headers[header]);
                 }
 
-                next();
+                return next(null, res);
             }
 
             this.tooManyRequestsResponse(res);
@@ -344,7 +344,7 @@ export class HttpHandler {
                     res.writeHeader(header, response.headers[header]);
                 }
 
-                next();
+                return next(null, res);
             }
 
             this.tooManyRequestsResponse(res);
@@ -371,6 +371,10 @@ export class HttpHandler {
                 ],
                 ...functions.map(fn => fn.bind(this)),
             ], (err, res) => {
+                if (err) {
+                    this.serverErrorResponse(res, err);
+                }
+
                 resolve(res);
             });
         });
