@@ -27,6 +27,7 @@ export class RedisRateLimiter extends LocalRateLimiter {
             points: maxPoints,
             duration: 1,
             storeClient: this.redisConnection,
+            keyPrefix: `app:${appId}`,
         }));
     }
 }

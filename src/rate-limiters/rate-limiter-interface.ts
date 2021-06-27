@@ -21,7 +21,7 @@ export interface RateLimiterInterface {
     /**
      * Create a new rate limiter instance.
      */
-    createNewRateLimiter(maxPoints: number): RateLimiterAbstract;
+    createNewRateLimiter(appId: string, maxPoints: number): RateLimiterAbstract;
 }
 
 export interface ConsumptionResponse {

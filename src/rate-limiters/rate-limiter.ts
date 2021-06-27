@@ -52,7 +52,7 @@ export class RateLimiter implements RateLimiterInterface {
     /**
      * Create a new rate limiter instance.
      */
-    createNewRateLimiter(maxPoints: number): RateLimiterAbstract {
-        return this.driver.createNewRateLimiter(maxPoints);
+    createNewRateLimiter(appId: string, maxPoints: number): RateLimiterAbstract {
+        return this.driver.createNewRateLimiter(appId, maxPoints);
     }
 }

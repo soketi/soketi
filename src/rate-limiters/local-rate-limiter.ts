@@ -55,10 +55,11 @@ export class LocalRateLimiter implements RateLimiterInterface {
     /**
      * Create a new rate limiter instance.
      */
-    createNewRateLimiter(maxPoints: number): RateLimiterAbstract {
+    createNewRateLimiter(appId: string, maxPoints: number): RateLimiterAbstract {
         return new RateLimiterMemory({
             points: maxPoints,
             duration: 1,
+            keyPrefix: `app:${appId}`,
         });
     }
 
@@ -74,7 +75,7 @@ export class LocalRateLimiter implements RateLimiterInterface {
             });
         }
 
-        this.rateLimiters[`${appId}:${eventKey}`] = this.createNewRateLimiter(maxPoints);
+        this.rateLimiters[`${appId}:${eventKey}`] = this.createNewRateLimiter(appId, maxPoints);
 
         return Promise.resolve(this.rateLimiters[`${appId}:${eventKey}`]);
     }
