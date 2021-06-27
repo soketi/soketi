@@ -65,6 +65,10 @@ export class Namespace {
         return new Promise(resolve => {
             if (this.channels.has(channel)) {
                 this.channels.get(channel).delete(wsId);
+
+                if (this.channels.get(channel).size === 0) {
+                    this.channels.delete(channel);
+                }
             }
 
             resolve(true);
