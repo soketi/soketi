@@ -61,10 +61,11 @@ export class Utils {
             httpPort: port,
             httpsPort: port,
             forceTLS: false,
-            encrypted: false,
+            encrypted: true,
             disableStats: true,
             enabledTransports: ['ws'],
             ignoreNullOrigin: true,
+            encryptionMasterKeyBase64: 'nxzvbGF+f8FGhk/jOaZvgMle1tqxzF/VfUZLBLhhaH0=',
             ...options,
         });
 
@@ -86,7 +87,7 @@ export class Utils {
             secret,
             host: '127.0.0.1',
             port,
-            encryptionMasterKeyBase64: 'vwTqW/UBENYBOySubUo8fldlMFvCzOY8BFO5xAgnOus=',
+            encryptionMasterKeyBase64: 'nxzvbGF+f8FGhk/jOaZvgMle1tqxzF/VfUZLBLhhaH0=',
         });
     }
 
