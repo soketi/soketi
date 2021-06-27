@@ -128,8 +128,10 @@ export class WsHandler {
             } else if (Utils.isClientEvent(message.event)) {
                 this.handleClientEvent(ws, message);
             } else {
-                // TODO: Add encrypted private channels support.
-                Log.info(message);
+                Log.info({
+                    info: 'Message event handler not implemented.',
+                    message,
+                });
             }
         }
 
