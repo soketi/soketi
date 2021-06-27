@@ -11,9 +11,9 @@ export class Utils {
     static newServer(options = {}, callback): any {
         options = {
             'adapter.redis.prefix': uuidv4(),
-            'appManager.array.apps.0.maxBackendEventsPerSecond': 200,
-            'appManager.array.apps.0.maxClientEventsPerSecond': 200,
-            'appManager.array.apps.0.maxReadRequestsPerSecond': 200,
+            'appManager.array.apps.0.maxBackendEventsPerSecond': '200',
+            'appManager.array.apps.0.maxClientEventsPerSecond': '200',
+            'appManager.array.apps.0.maxReadRequestsPerSecond': '200',
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
