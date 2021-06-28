@@ -127,11 +127,13 @@ Automatically after each release, a Docker tag is created with the application r
 
 ### ⚓ Deploy with Helm
 
-Coming soon.
+pWS can also be deployed as Helm v3 chart. pWS has an official Helm chart at [charts/pws](https://github.com/soketi/charts/tree/master/charts/pws). You will find complete installation steps to configure and run the app on any Kubernetes cluster.
 
 ### 🌍 Running at scale
 
-Coming soon.
+If you run pWS standalone in a cluster, at scale, you might run into capacity issues: RAM usage might be near the limit and even if you decide to horizontally scale the pods, new connections might still come to pods that are near-limit and run into OOM at some point.
+
+Running [Network Watcher 4.0+](https://github.com/soketi/network-watcher) inside the same pod will solve the issues by continuously checking the current pod using the Prometheus client (**Prometheus Server is not needed!**), labeling the pods that get over a specified threshold.
 
 ## 🤝 Contributing
 
