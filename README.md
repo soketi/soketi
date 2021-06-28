@@ -22,7 +22,6 @@ The list may be incomplete. To address any problem that is **NOT known** (aka fr
 - HTTP Keep-Alive
 - POST Batch Events endpoint
 - POST Events and Batch Events does not return channel data in return
-- Encrypted Private Channels are not **yet** supported
 - Webhooks are not **yet** supported
 
 #### `/apps/[app_id]/channels/[channel_name]`
