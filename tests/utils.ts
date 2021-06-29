@@ -2,11 +2,22 @@ import async from 'async';
 import { Server } from './../src/server';
 import { v4 as uuidv4 } from 'uuid';
 
+const bodyParser = require('body-parser');
+const express = require('express');
 const Pusher = require('pusher');
 const PusherJS = require('pusher-js');
+const webhooksApp = express();
 
 export class Utils {
     public static currentServers: Server[] = [];
+
+    static appManagerIs(manager: string): boolean {
+        return (process.env.TEST_APP_MANAGER || 'array') === manager;
+    }
+
+    static adapterIs(adapter: string) {
+        return (process.env.TEST_ADAPTER || 'local') === adapter;
+    }
 
     static newServer(options = {}, callback): any {
         options = {
@@ -35,6 +46,21 @@ export class Utils {
             'adapter.redis.prefix': server.options.adapter.redis.prefix,
             ...options,
         }, callback);
+    }
+
+    static newWebhookServer(requestHandler: CallableFunction, onReadyCallback: CallableFunction): any {
+        webhooksApp.use(bodyParser.json());
+
+        webhooksApp.use((req, res, next) => {
+            res.header('Access-Control-Allow-Origin', '*');
+            res.header('Access-Control-Allow-Methods', '*');
+            res.header('Access-Control-Allow-Headers', '*');
+            next();
+        });
+
+        webhooksApp.post('/webhook', requestHandler);
+
+        onReadyCallback(webhooksApp.listen(3001));
     }
 
     static flushServers(): Promise<void> {

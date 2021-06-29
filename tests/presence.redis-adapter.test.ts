@@ -6,7 +6,7 @@ describe('presence channel test for redis adapter', () => {
         Utils.flushServers().then(() => done());
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('handles joins and leaves for redis adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('redis'))('handles joins and leaves for redis adapter', done => {
         Utils.newServer({ port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let john = {

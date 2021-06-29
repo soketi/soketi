@@ -45,8 +45,9 @@ export class Namespace {
 
     /**
      * Add a socket ID to the channel identifier.
+     * Return the total number of connections after the connection.
      */
-    addToChannel(ws: WebSocket, channel: string): Promise<void> {
+    addToChannel(ws: WebSocket, channel: string): Promise<number> {
         return new Promise(resolve => {
             if (! this.channels.has(channel)) {
                 this.channels.set(channel, new Set);
@@ -54,14 +55,15 @@ export class Namespace {
 
             this.channels.get(channel).add(ws.id);
 
-            resolve();
+            resolve(this.channels.get(channel).size);
         });
     }
 
     /**
      * Remove a socket ID from the channel identifier.
+     * Return the total number of connections remaining to the channel.
      */
-    removeFromChannel(wsId: string, channel: string): Promise<boolean> {
+    removeFromChannel(wsId: string, channel: string): Promise<number> {
         return new Promise(resolve => {
             if (this.channels.has(channel)) {
                 this.channels.get(channel).delete(wsId);
@@ -71,7 +73,7 @@ export class Namespace {
                 }
             }
 
-            resolve(true);
+            resolve(this.channels.has(channel) ? this.channels.get(channel).size : 0);
         });
     }
 

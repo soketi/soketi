@@ -6,7 +6,7 @@ describe('http api test for redis adapter', () => {
         Utils.flushServers().then(() => done());
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('get api channels with redis adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('redis'))('get api channels with redis adapter', done => {
         Utils.newServer({ port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();
@@ -57,7 +57,7 @@ describe('http api test for redis adapter', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('get api channel with redis adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('redis'))('get api channel with redis adapter', done => {
         Utils.newServer({ port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();
@@ -106,7 +106,7 @@ describe('http api test for redis adapter', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('get api presence channel with redis adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('redis'))('get api presence channel with redis adapter', done => {
         let user1 = {
             user_id: 1,
             user_info: {
@@ -173,7 +173,7 @@ describe('http api test for redis adapter', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('get api presence users with redis adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('redis'))('get api presence users with redis adapter', done => {
         let user1 = {
             user_id: 1,
             user_info: {
@@ -235,7 +235,7 @@ describe('http api test for redis adapter', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('presence channel users should count only once for same-user multiple connections with redis adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('redis'))('presence channel users should count only once for same-user multiple connections with redis adapter', done => {
         let user = {
             user_id: 1,
             user_info: {

@@ -7,7 +7,7 @@ describe('ws test', () => {
         Utils.flushServers().then(() => done());
     });
 
-    Utils.shouldRun(process.env.TEST_APP_MANAGER === 'array')('client events', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('client events', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
             let channelName = `private-${Utils.randomChannelName()}`;
@@ -39,7 +39,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_APP_MANAGER === 'array')('client events dont get emitted when client messaging is disabled', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('client events dont get emitted when client messaging is disabled', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': false }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
             let channelName = `private-${Utils.randomChannelName()}`;
@@ -75,7 +75,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_APP_MANAGER === 'array')('client events dont get emitted when event name is big', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('client events dont get emitted when event name is big', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxNameLength': 25 }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
             let channelName = `private-${Utils.randomChannelName()}`;
@@ -112,7 +112,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_APP_MANAGER === 'array')('client events dont get emitted when event payload is big', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('client events dont get emitted when event payload is big', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxPayloadInKb': 1/1024/1024 }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
             let channelName = `private-${Utils.randomChannelName()}`;
@@ -162,7 +162,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(process.env.TEST_APP_MANAGER === 'array')('throw over quota error if reached connection limit', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('throw over quota error if reached connection limit', done => {
         Utils.newServer({ 'appManager.array.apps.0.maxConnections': 1 }, (server: Server) => {
             let client1 = Utils.newClient({}, 6001, 'app-key', false);
 

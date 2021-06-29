@@ -84,8 +84,18 @@ export class DynamoDbAppManager implements AppManagerInterface {
     protected unmarshallItem(item: AttributeMap): { [key: string]: any; } {
         let appObject = DynamoDB.Converter.unmarshall(item);
 
+        // Making sure EnableClientMessages is boolean.
         if (appObject.EnableClientMessages instanceof Buffer) {
             appObject.EnableClientMessages = boolean(appObject.EnableClientMessages.toString());
+        }
+
+        // JSON-decoding the Webhooks field.
+        if (typeof appObject.Webhooks === 'string') {
+            try {
+                appObject.Webhooks = JSON.parse(appObject.Webhooks);
+            } catch (e) {
+                appObject.Webhooks = [];
+            }
         }
 
         return appObject;

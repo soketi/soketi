@@ -296,6 +296,11 @@ export class WsHandler {
 
             this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
+            // If the connection freshly joined, send the webhook:
+            if (response.channelConnections === 1) {
+                this.server.webhookSender.sendChannelOccupied(ws.app, channel);
+            }
+
             // For non-presence channels, end with subscription succeeded.
             if (! (channelManager instanceof PresenceChannelManager)) {
                 let broadcastMessage = {
@@ -357,6 +362,8 @@ export class WsHandler {
 
                 this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
 
+                this.server.webhookSender.sendMemberAdded(ws.app, channel, member.user_id as string);
+
                 this.server.adapter.send(ws.app.id, channel, JSON.stringify({
                     event: 'pusher_internal:member_added',
                     channel,
@@ -392,11 +399,15 @@ export class WsHandler {
                 // Send presence channel-speific events and delete specific data.
                 // This can happen only if the user is connected to the presence channel.
                 if (channelManager instanceof PresenceChannelManager && ws.presence.has(channel)) {
+                    let member = ws.presence.get(channel);
+
+                    this.server.webhookSender.sendMemberRemoved(ws.app, channel, member.user_id);
+
                     this.server.adapter.send(ws.app.id, channel, JSON.stringify({
                         event: 'pusher_internal:member_removed',
                         channel,
                         data: JSON.stringify({
-                            user_id: ws.presence.get(channel).user_id,
+                            user_id: member.user_id,
                         }),
                     }), ws.id);
 
@@ -406,7 +417,11 @@ export class WsHandler {
 
             ws.subscribedChannels.delete(channel);
 
-            this.server.adapter.getNamespace(ws.app.id).removeFromChannel(ws.id, channel);
+            this.server.adapter.getNamespace(ws.app.id).removeFromChannel(ws.id, channel).then(remainingConnections => {
+                if (remainingConnections === 0) {
+                    this.server.webhookSender.sendChannelVacated(ws.app, channel);
+                }
+            });
 
             // ws.send(JSON.stringify({
             //     event: 'pusher_internal:unsubscribed',
@@ -491,7 +506,18 @@ export class WsHandler {
 
             this.server.rateLimiter.consumeFrontendEventPoints(1, ws.app, ws).then(response => {
                 if (response.canContinue) {
-                    return this.server.adapter.send(ws.app.id, channel, JSON.stringify({ event, channel, data }), ws.id);
+                    this.server.adapter.send(ws.app.id, channel, JSON.stringify({ event, channel, data }), ws.id);
+
+                    this.server.webhookSender.sendClientEvent(
+                        ws.app,
+                        channel,
+                        event,
+                        data,
+                        ws.id,
+                        ws.presence.has(channel) ? ws.presence.get(channel).user_id : null,
+                    );
+
+                    return;
                 }
 
                 ws.send(JSON.stringify({

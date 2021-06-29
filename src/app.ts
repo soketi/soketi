@@ -1,5 +1,6 @@
 import { HttpResponse } from 'uWebSockets.js';
 
+const { createHmac } = require('crypto');
 const Pusher = require('pusher');
 const pusherUtil = require('pusher/lib/util');
 
@@ -12,6 +13,12 @@ export interface AppInterface {
     maxBackendEventsPerSecond: string|number;
     maxClientEventsPerSecond: string|number;
     maxReadRequestsPerSecond: string|number;
+    webhooks: WebhookInterface[];
+}
+
+export interface WebhookInterface {
+    url: string;
+    event_types: string[];
 }
 
 export class App implements AppInterface {
@@ -56,6 +63,17 @@ export class App implements AppInterface {
     public maxReadRequestsPerSecond: string|number;
 
     /**
+     * The list of webhooks.
+     */
+    public webhooks: WebhookInterface[];
+
+    static readonly CLIENT_EVENT_WEBHOOK = 'client_event';
+    static readonly CHANNEL_OCCUPIED_WEBHOOK = 'channel_occupied';
+    static readonly CHANNEL_VACATED_WEBHOOK = 'channel_vacated';
+    static readonly MEMBER_ADDED_WEBHOOK = 'member_added';
+    static readonly MEMBER_REMOVED_WEBHOOK = 'member_removed';
+
+    /**
      * Create a new app from object.
      */
     constructor(app: { [key: string]: any; }) {
@@ -67,9 +85,22 @@ export class App implements AppInterface {
         this.maxBackendEventsPerSecond = parseInt(app.maxBackendEventsPerSecond || app.MaxBackendEventsPerSecond || app.max_backend_events_per_sec || -1);
         this.maxClientEventsPerSecond = parseInt(app.maxClientEventsPerSecond || app.MaxClientEventsPerSecond || app.max_client_events_per_sec || -1);
         this.maxReadRequestsPerSecond = parseInt(app.maxReadRequestsPerSecond || app.MaxReadRequestsPerSecond || app.max_read_req_per_sec || -1);
+        this.webhooks = app.webhooks || app.Webhooks || [];
 
-        // TODO: Implement webhooks
+        if (! (this.webhooks instanceof Array)) {
+            this.webhooks = [];
+        }
+
         // TODO: Implement app deactivation
+    }
+
+    /**
+     * Create the HMAC for the given data.
+     */
+    createWebhookHmac(data: string): string {
+        return createHmac('sha256', this.secret)
+            .update(data)
+            .digest('hex');
     }
 
     /**

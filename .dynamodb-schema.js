@@ -1,4 +1,5 @@
 const AWS = require('aws-sdk');
+const { encode } = require('node:punycode');
 
 let ddb = new AWS.DynamoDB({
     apiVersion: '2012-08-10',
@@ -18,6 +19,7 @@ let createRecord = () => {
             MaxBackendEventsPerSecond: { N: '-1' },
             MaxClientEventsPerSecond: { N: '-1' },
             MaxReadRequestsPerSecond: { N: '-1' },
+            Webhooks: { S: '[]', },
         },
     };
 
