@@ -13,6 +13,30 @@ The server is built on top of [uWebSockets.js](https://github.com/uNetworking/uW
 
 This project nor the owner is NOT affiliated with Pusher and it's strictly an open-source project that makes use of the [Pusher Protocol](https://pusher.com/docs/channels/library_auth_reference/pusher-websockets-protocol).
 
+- [pWS - Pusher (over) uWS](#pws---pusher-over-uws)
+  - [What pWS does not implemented (yet) from the Pusher Protocol?](#what-pws-does-not-implemented-yet-from-the-pusher-protocol)
+    - [REST API](#rest-api)
+      - [`/apps/[app_id]/channels/[channel_name]`](#appsapp_idchannelschannel_name)
+      - [`/apps/[app_id]/channels`](#appsapp_idchannels)
+  - [🤝 Supporting](#-supporting)
+  - [System Requirements](#system-requirements)
+  - [🚀 Installation](#-installation)
+  - [🙌 Usage](#-usage)
+  - [⚙ Configuration](#-configuration)
+    - [📀 Environment Variables](#-environment-variables)
+    - [📡 Pusher Compatibility](#-pusher-compatibility)
+    - [🎨 Client Configuration](#-client-configuration)
+    - [👓 App Management](#-app-management)
+    - [↔ Horizontal Scaling](#-horizontal-scaling)
+  - [📦 Deploying](#-deploying)
+    - [🚢 Deploying with PM2](#-deploying-with-pm2)
+    - [🐳 Deploying with Docker](#-deploying-with-docker)
+    - [⚓ Deploy with Helm](#-deploy-with-helm)
+    - [🌍 Running at scale](#-running-at-scale)
+  - [🤝 Contributing](#-contributing)
+  - [🔒  Security](#--security)
+  - [🎉 Credits](#-credits)
+
 ## What pWS does not implemented (yet) from the Pusher Protocol?
 
 The list may be incomplete. To address any problem that is **NOT known** (aka from the list below), please open an issue from the issue board.
@@ -96,6 +120,28 @@ Read the extensive [environment variables documentation](docs/ENV.md) and learn 
 ### 📡 Pusher Compatibility
 
 The server is entirely compatible with the [Pusher Protocol v7](https://pusher.com/docs/channels/library_auth_reference/pusher-websockets-protocol#version-7-2017-11) and tries to keep up with the [HTTP REST API reference](https://pusher.com/docs/channels/library_auth_reference/rest-api/) as fast as possible.
+
+### 🎨 Client Configuration
+
+Pusher clients are fully compatible with the WebSocket protocol implemented in this project. You just have to point the client to the server address:
+
+```js
+const PusherJS = require('pusher-js');
+
+let client = new PusherJS(key, {
+    wsHost: '127.0.0.1',
+    wsPort: 6001,
+    // wssPort: 6001,
+    forceTLS: false, // unless SSL is enabled
+    encrypted: true,
+    disableStats: true,
+    enabledTransports: ['ws', 'wss],
+});
+
+client.subscribe('chat-room').bind('message', (message) => {
+    //
+});
+```
 
 ### 👓 App Management
 
