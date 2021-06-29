@@ -88,7 +88,7 @@ PWS_DEBUG=1
 
 ```bash
 # you no longer need to specify the `DEBUG` variable
-$ pws-server-start
+$ pws-server start
 ```
 
 Read the extensive [environment variables documentation](docs/ENV.md) and learn how to configure the entire pWS Server application to suit your needs.
