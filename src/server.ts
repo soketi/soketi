@@ -225,12 +225,11 @@ export class Server {
                 server.listen('0.0.0.0', this.options.port, serverProcess => {
                     this.serverProcess = serverProcess;
 
-                    if (this.options.debug) {
-                        Log.success('🎉 Server is up and running!\n');
+                    Log.success('🎉 Server is up and running!\n');
 
+                    if (this.options.debug) {
                         Log.success(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
                         Log.success(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
-                        Log.info('👂 The server is now listening for events and managing the channels.\n');
                     }
 
                     if (callback) {
