@@ -41,7 +41,7 @@ This project nor the owner is NOT affiliated with Pusher and it's strictly an op
 
 The list may be incomplete. To address any problem that is **NOT known** (aka from the list below), please open an issue from the issue board.
 
-[Please consider looking after the project's feature progress on this board](https://github.com/soketi/pws/projects/1).
+[Please consider checking the project's feature progress on this board](https://github.com/soketi/pws/projects/1).
 
 ### REST API
 
