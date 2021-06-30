@@ -135,7 +135,7 @@ let client = new PusherJS(key, {
     forceTLS: false, // unless SSL is enabled
     encrypted: true,
     disableStats: true,
-    enabledTransports: ['ws', 'wss],
+    enabledTransports: ['ws', 'wss'],
 });
 
 client.subscribe('chat-room').bind('message', (message) => {
