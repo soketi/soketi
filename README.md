@@ -41,6 +41,8 @@ This project nor the owner is NOT affiliated with Pusher and it's strictly an op
 
 The list may be incomplete. To address any problem that is **NOT known** (aka from the list below), please open an issue from the issue board.
 
+[Please consider checking the project's feature progress on this board](https://github.com/soketi/pws/projects/1).
+
 ### REST API
 
 - HTTP Keep-Alive
@@ -135,7 +137,7 @@ let client = new PusherJS(key, {
     forceTLS: false, // unless SSL is enabled
     encrypted: true,
     disableStats: true,
-    enabledTransports: ['ws', 'wss],
+    enabledTransports: ['ws', 'wss'],
 });
 
 client.subscribe('chat-room').bind('message', (message) => {
