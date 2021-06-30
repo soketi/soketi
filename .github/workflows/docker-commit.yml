@@ -48,7 +48,7 @@ jobs:
 
       - name: Test
         run: |
-          docker run -d -p 6001:6001 localhost:5000/soketi/pws:${{ github.sha }}-${{ matrix.node }}
+          docker run -d -p 6001:6001 -e DEBUG=1 localhost:5000/soketi/pws:${{ github.sha }}-${{ matrix.node }}
           sleep 5
           curl --silent -XGET --fail http://127.0.0.1:6001
 
