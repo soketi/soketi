@@ -8,7 +8,7 @@ ENV PYTHONUNBUFFERED=1
 
 COPY . /app
 
-RUN apk add --no-cache --update git python3 gcompat && \
+RUN apk add --no-cache --update git python3 && \
     apk add --virtual build-dependencies build-base gcc wget && \
     ln -sf python3 /usr/bin/python && \
     python3 -m ensurepip && \
