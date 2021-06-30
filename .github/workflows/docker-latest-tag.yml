@@ -47,6 +47,8 @@ jobs:
         with:
           push: true
           tags: localhost:5000/soketi/pws:latest-${{ matrix.node }}
+          build-args: |
+            VERSION=${{ matrix.node }}
 
       - name: Test
         run: |
