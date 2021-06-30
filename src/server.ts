@@ -88,6 +88,8 @@ export class Server {
             redis: {
                 host: '127.0.0.1',
                 port: 6379,
+                db: 0,
+                username: null,
                 password: null,
                 keyPrefix: '',
             },

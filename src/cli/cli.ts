@@ -46,6 +46,8 @@ export class Cli {
         DB_POSTGRES_DATABASE: 'database.postgres.database',
         DB_REDIS_HOST: 'database.redis.host',
         DB_REDIS_PORT: 'database.redis.port',
+        DB_REDIS_DB: 'database.redis.db',
+        DB_REDIS_USERNAME: 'database.redis.username',
         DB_REDIS_PASSWORD: 'database.redis.password',
         DB_REDIS_KEY_PREFIX: 'database.redis.keyPrefix',
         EVENT_MAX_CHANNELS_AT_ONCE: 'eventLimits.maxChannelsAtOnce',
