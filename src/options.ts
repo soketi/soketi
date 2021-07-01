@@ -3,6 +3,8 @@ import { AppInterface } from './app';
 interface Redis {
     host: string;
     port: number;
+    db: number;
+    username: string|null;
     password: string|null;
     keyPrefix: string;
 }

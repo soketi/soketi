@@ -179,7 +179,9 @@ Configuration needed to connect to a Redis server.
 | - | - | - | - |
 | `DB_REDIS_HOST` | `127.0.0.1` | - | The Redis host used for `redis` driver. |
 | `DB_REDIS_PORT` | `6379` | - | The Redis port used for `redis` driver. |
-| `DB_REDIS_PASSWORD` | `null` | - | The Redis password used for `redis` driver. |
+| `DB_REDIS_DB` | `0` | - | The Redis database used for `redis` driver. |
+| `DB_REDIS_USERNAME` | `null` | - | The Redis username used for authentication for `redis` driver. |
+| `DB_REDIS_PASSWORD` | `null` | - | The Redis password used for authentication for `redis` driver. |
 | `DB_REDIS_PREFIX` | `pws` | - | The key prefix for Redis. Only for `redis` driver. |
 
 ## Database Pooling
