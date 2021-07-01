@@ -192,7 +192,7 @@ The following options are available when connecting to Redis through one or more
 | - | - | - | - |
 | `DB_REDIS_SENTINELS` | `null` | - | A json encoded array of objects with `host` and `port` of Sentinels to connect to. Only for `redis` driver. |
 | `DB_REDIS_SENTINEL_PASSWORD` | `null` | - | An optional password used for authentication to the Sentinels. Only for `redis` driver. |
-| `DB_REDIS_NAME` | `mymaster` | - | The name of the Redis instance to which a connection should be established through the configured Sentinel(s). Only for `redis` driver. |
+| `DB_REDIS_INSTANCE_NAME` | `mymaster` | - | The name of the Redis instance to which a connection should be established through the configured Sentinel(s). Only for `redis` driver. |
 
 Please be aware that configuring the Sentinel options will override some of the other options like `DB_REDIS_HOST` and `DB_REDIS_PORT`,
 but not `DB_REDIS_DB` or `DB_REDIS_PASSWORD` for example. More details can be found in the [`ioredis` documentation for Redis Sentinel](https://github.com/luin/ioredis#sentinel).
