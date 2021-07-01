@@ -92,6 +92,9 @@ export class Server {
                 username: null,
                 password: null,
                 keyPrefix: '',
+                sentinels: null,
+                sentinelPassword: null,
+                name: 'mymaster',
             },
         },
         databasePooling: {

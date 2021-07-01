@@ -7,6 +7,14 @@ interface Redis {
     username: string|null;
     password: string|null;
     keyPrefix: string;
+    sentinels: RedisSentinel[];
+    sentinelPassword: string|null;
+    name: string;
+}
+
+interface RedisSentinel {
+    host: string;
+    port: number;
 }
 
 interface KnexConnection {
