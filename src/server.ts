@@ -94,7 +94,7 @@ export class Server {
                 keyPrefix: '',
                 sentinels: null,
                 sentinelPassword: null,
-                name: 'mymaster'
+                name: 'mymaster',
             },
         },
         databasePooling: {
