@@ -173,7 +173,9 @@ This database supports [Database Pooling](#database-pooling).
 
 ### Redis Configuration
 
-Configuration needed to connect to a Redis server.
+Configuration needed to connect to a Redis server. The configuration is heavily based on [`ioredis`](https://github.com/luin/ioredis).
+It is therefore recommended to checkout [their documentation regarding the options](https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options).
+Not all options offered by `ioredis` have been implemented. The following is a list of options made available so far:
 
 | Environment variable | Default | Available values | Description |
 | - | - | - | - |
@@ -183,6 +185,17 @@ Configuration needed to connect to a Redis server.
 | `DB_REDIS_USERNAME` | `null` | - | The Redis username used for authentication for `redis` driver. |
 | `DB_REDIS_PASSWORD` | `null` | - | The Redis password used for authentication for `redis` driver. |
 | `DB_REDIS_PREFIX` | `pws` | - | The key prefix for Redis. Only for `redis` driver. |
+
+The following options are available when connecting to Redis through one or more Sentinels:
+
+| Environment variable | Default | Available values | Description |
+| - | - | - | - |
+| `DB_REDIS_SENTINELS` | `null` | - | A json encoded array of objects with `host` and `port` of Sentinels to connect to. Only for `redis` driver. |
+| `DB_REDIS_SENTINEL_PASSWORD` | `null` | - | An optional password used for authentication to the Sentinels. Only for `redis` driver. |
+| `DB_REDIS_NAME` | `mymaster` | - | The name of the Redis instance to which a connection should be established through the configured Sentinel(s). Only for `redis` driver. |
+
+Please be aware that configuring the Sentinel options will override some of the other options like `DB_REDIS_HOST` and `DB_REDIS_PORT`,
+but not `DB_REDIS_DB` or `DB_REDIS_PASSWORD` for example. More details can be found in the [`ioredis` documentation for Redis Sentinel](https://github.com/luin/ioredis#sentinel).
 
 ## Database Pooling
 
