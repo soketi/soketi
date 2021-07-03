@@ -1,4 +1,5 @@
 import async from 'async';
+import { DynamoDB } from 'aws-sdk';
 import { Server } from './../src/server';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,6 +19,7 @@ export class Utils {
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
+            'server.options.appManager.dynamodb.endpoint': 'http://localhost:8000',
             'metrics.enabled': true,
         };
 
@@ -159,6 +161,77 @@ export class Utils {
         let token = new Pusher.Token(key, secret);
 
         return key + ':' + token.sign(`${socketId}:${channel.name}:${JSON.stringify(channelData)}`);
+    }
+
+    static createDynamoDbTable(): Promise<any> {
+        let ddb = new DynamoDB({
+            apiVersion: '2012-08-10',
+            region: 'us-east-1',
+            endpoint: 'http://localhost:8000',
+        });
+
+        let createRecord = () => {
+            const params = {
+                TableName: 'apps',
+                Item: {
+                    AppId: { S: 'app-id' },
+                    AppKey: { S: 'app-key' },
+                    AppSecret: { S: 'app-secret' },
+                    MaxConnections: { N: '-1' },
+                    EnableClientMessages: { B: 'false' },
+                    MaxBackendEventsPerSecond: { N: '-1' },
+                    MaxClientEventsPerSecond: { N: '-1' },
+                    MaxReadRequestsPerSecond: { N: '-1' },
+                },
+            };
+
+            return ddb.putItem(params).promise();
+        };
+
+        return ddb.describeTable({ TableName: 'apps' }).promise().then((result) => {
+            return createRecord();
+        }).catch(err => {
+            return ddb.createTable({
+                TableName: 'apps',
+                AttributeDefinitions: [
+                    {
+                        AttributeName: 'AppId',
+                        AttributeType: 'S',
+                    },
+                    {
+                        AttributeName: 'AppKey',
+                        AttributeType: 'S',
+                    },
+                ],
+                KeySchema: [{
+                    AttributeName: 'AppId',
+                    KeyType: 'HASH',
+                }],
+                GlobalSecondaryIndexes: [{
+                    IndexName: 'AppKeyIndex',
+                    KeySchema: [{
+                        AttributeName: 'AppKey',
+                        KeyType: 'HASH',
+                    }],
+                    Projection: {
+                        ProjectionType: 'ALL',
+                    },
+                    ProvisionedThroughput: {
+                        ReadCapacityUnits: 100,
+                        WriteCapacityUnits: 100,
+                    },
+                }],
+                StreamSpecification: {
+                    StreamEnabled: false,
+                },
+                ProvisionedThroughput: {
+                    ReadCapacityUnits: 100,
+                    WriteCapacityUnits: 100,
+                },
+            }).promise().then(createRecord).catch((err) => {
+                return Promise.resolve();
+            });
+        });
     }
 
     static wait(ms): Promise<void> {

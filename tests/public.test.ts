@@ -2,6 +2,10 @@ import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('public channel test', () => {
+    beforeAll(done => {
+        Utils.createDynamoDbTable().then(() => done());
+    });
+
     afterEach(done => {
         Utils.flushServers().then(() => done());
     });

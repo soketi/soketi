@@ -1,5 +1,4 @@
 import * as dot from 'dot-wild';
-import { Options } from './../options';
 import { Server } from './../server';
 
 export class Cli {
@@ -17,6 +16,9 @@ export class Cli {
         ADAPTER_DRIVER: 'adapter.driver',
         ADAPTER_REDIS_PREFIX: 'adapter.redis.prefix',
         APP_MANAGER_DRIVER: 'appManager.driver',
+        APP_MANAGER_DYNAMODB_TABLE: 'appManager.dynamodb.table',
+        APP_MANAGER_DYNAMODB_REGION: 'appManager.dynamodb.region',
+        APP_MANAGER_DYNAMODB_ENDPOINT: 'appManager.dynamodb.endpoint',
         APP_MANAGER_MYSQL_TABLE: 'appManager.mysql.table',
         APP_MANAGER_MYSQL_VERSION: 'appManager.mysql.version',
         APP_MANAGER_POSTGRES_TABLE: 'appManager.postgres.table',

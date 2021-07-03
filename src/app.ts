@@ -59,14 +59,14 @@ export class App implements AppInterface {
      * Create a new app from object.
      */
     constructor(app: { [key: string]: any; }) {
-        this.id = app.id;
-        this.key = app.key;
-        this.secret = app.secret;
-        this.maxConnections = parseInt(app.maxConnections || app.max_connections || -1);
-        this.enableClientMessages = app.enableClientMessages || app.enable_client_messages || false;
-        this.maxBackendEventsPerSecond = parseInt(app.maxBackendEventsPerSecond || app.max_backend_events_per_sec || -1);
-        this.maxClientEventsPerSecond = parseInt(app.maxClientEventsPerSecond || app.max_client_events_per_sec || -1);
-        this.maxReadRequestsPerSecond = parseInt(app.maxReadRequestsPerSecond || app.max_read_req_per_sec || -1);
+        this.id = app.id || app.AppId;
+        this.key = app.key || app.AppKey;
+        this.secret = app.secret || app.AppSecret;
+        this.maxConnections = parseInt(app.maxConnections || app.MaxConnections || app.max_connections || -1);
+        this.enableClientMessages = app.enableClientMessages || app.EnableClientMessages || app.enable_client_messages || false;
+        this.maxBackendEventsPerSecond = parseInt(app.maxBackendEventsPerSecond || app.MaxBackendEventsPerSecond || app.max_backend_events_per_sec || -1);
+        this.maxClientEventsPerSecond = parseInt(app.maxClientEventsPerSecond || app.MaxClientEventsPerSecond || app.max_client_events_per_sec || -1);
+        this.maxReadRequestsPerSecond = parseInt(app.maxReadRequestsPerSecond || app.MaxReadRequestsPerSecond || app.max_read_req_per_sec || -1);
 
         // TODO: Implement webhooks
         // TODO: Implement app deactivation

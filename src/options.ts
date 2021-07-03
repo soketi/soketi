@@ -1,3 +1,4 @@
+import { string } from 'yargs';
 import { AppInterface } from './app';
 
 interface Redis {
@@ -36,6 +37,11 @@ export interface Options {
         driver: string;
         array: {
             apps: AppInterface[];
+        };
+        dynamodb: {
+            table: string;
+            region: string;
+            endpoint: string;
         };
         mysql: {
             table: string;

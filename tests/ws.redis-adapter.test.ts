@@ -3,6 +3,10 @@ import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('ws test for redis adapter', () => {
+    beforeAll(done => {
+        Utils.createDynamoDbTable().then(() => done());
+    });
+
     afterEach(done => {
         Utils.flushServers().then(() => done());
     });

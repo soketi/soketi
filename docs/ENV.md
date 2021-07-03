@@ -20,7 +20,6 @@
 - [Debugging](#debugging)
   - [Node Metadata](#node-metadata)
 
-
 ## WebSocket Settings
 
 ### Server
@@ -88,7 +87,19 @@ The apps manager manages the allowed apps to connect to the WS and the API. Defa
 
 | Environment variable | Default | Available values | Description |
 | - | - | - | - |
-| `APP_MANAGER_DRIVER` | `array` | `array`, `mysql`, `postgres` | The driver used to retrieve the app. |
+| `APP_MANAGER_DRIVER` | `array` | `array`, `dynamodb`, `mysql`, `postgres` | The driver used to retrieve the app. |
+
+Additionally, the following settings apply for further configurations of the app manager that was selected:
+
+| Environment variable | Default | Available values | Description |
+| - | - | - | - |
+| `APP_MANAGER_DYNAMODB_TABLE` | `apps` | - | The table name to pull the data from. Only for `dynamodb`. |
+| `APP_MANAGER_DYNAMODB_REGION` | `us-east-1` | - | The DynamoDB region the table was deployed in. For global tables, pick any region. Only for `dynamodb`. |
+| `APP_MANAGER_DYNAMODB_ENDPOINT` | `''` | - | The endpoint to connect to DynamoDB. Optional, used for testing or for local DynamoDB configurations. Only for `dynamodb`. |
+| `APP_MANAGER_MYSQL_TABLE` | `apps` | - | The table name to pull the data from. Only for `mysql`. |
+| `APP_MANAGER_MYSQL_VERSION` | `8.0` | - | The MySQL version so that the Knex connector know how to connect. Only for `mysql`. |
+| `APP_MANAGER_POSTGRES_TABLE` | `apps` | - | The table name to pull the data from. Only for `postgres`. |
+| `APP_MANAGER_POSTGRES_VERSION` | `13.3` | - | The PostgreSQL version so that the Knex connector know how to connect. Only for `postgres`. |
 
 ### Metrics
 

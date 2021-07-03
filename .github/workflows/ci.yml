@@ -27,6 +27,7 @@ jobs:
           - redis
         app_manager:
           - array
+          - dynamodb
           - mysql
           - postgres
         rate_limiter:
@@ -48,6 +49,13 @@ jobs:
         with:
           redis version: 6
           number of databases: 100
+
+      - uses: rrainn/dynamodb-action@v2.0.0
+        name: Setup DynamoDB
+        with:
+          sharedDb: true
+          port: 8000
+          cors: '*'
 
       - name: Setup MySQL
         uses: haltuf/mysql-action@master

@@ -1,0 +1,91 @@
+import { App } from '../app';
+import { AppManagerInterface } from './app-manager-interface';
+import { AttributeMap } from 'aws-sdk/clients/dynamodb';
+import { boolean } from 'boolean';
+import { DynamoDB } from 'aws-sdk';
+import { Server } from '../server';
+
+export class DynamoDbAppManager implements AppManagerInterface {
+    /**
+     * The DynamoDB client.
+     */
+    protected dynamodb: DynamoDB;
+
+    /**
+     * Create a new app manager instance.
+     */
+    constructor(protected server: Server) {
+        this.dynamodb = new DynamoDB({
+            apiVersion: '2012-08-10',
+            region: server.options.appManager.dynamodb.region,
+            endpoint: server.options.appManager.dynamodb.endpoint,
+        });
+    }
+
+    /**
+     * Find an app by given ID.
+     */
+    findById(id: string): Promise<App|null> {
+        return new Promise(resolve => {
+            this.dynamodb.getItem({
+                TableName: this.server.options.appManager.dynamodb.table,
+                Key: {
+                    AppId: { S: id },
+                },
+            }).promise().then((response) => {
+                resolve(new App(this.unmarshallItems(response.Item)));
+            }).catch(err => {
+                return resolve(null);
+            });
+        });
+    }
+
+    /**
+     * Find an app by given key.
+     */
+    findByKey(key: string): Promise<App|null> {
+        return new Promise(resolve => {
+            this.dynamodb.query({
+                TableName: this.server.options.appManager.dynamodb.table,
+                IndexName: 'AppKeyIndex',
+                ScanIndexForward: false,
+                Limit: 1,
+                KeyConditionExpression: 'AppKey = :seekingKey',
+                ExpressionAttributeValues: {
+                    ':seekingKey': { S: key },
+                },
+            }).promise().then((response) => {
+                let item = response.Items[0] || null;
+
+                if (! item) {
+                    return resolve(null);
+                }
+
+                resolve(new App(this.unmarshallItems(item)));
+            }).catch(err => {
+                return resolve(null);
+            });
+        });
+    }
+
+    /**
+     * Run a set of instructions after the server closes.
+     * This can be used to disconnect from the drivers, to unset variables, etc.
+     */
+    disconnect(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    /**
+     * Transform the marshalled item to a key-value pair.
+     */
+    protected unmarshallItems(item: AttributeMap): any {
+        let appObject = DynamoDB.Converter.unmarshall(item);
+
+        if (appObject.EnableClientMessages instanceof Buffer) {
+            appObject.EnableClientMessages = boolean(appObject.EnableClientMessages.toString());
+        }
+
+        return appObject;
+    }
+}
