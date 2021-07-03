@@ -26,17 +26,15 @@ export class DynamoDbAppManager implements AppManagerInterface {
      * Find an app by given ID.
      */
     findById(id: string): Promise<App|null> {
-        return new Promise(resolve => {
-            this.dynamodb.getItem({
-                TableName: this.server.options.appManager.dynamodb.table,
-                Key: {
-                    AppId: { S: id },
-                },
-            }).promise().then((response) => {
-                resolve(new App(this.unmarshallItems(response.Item)));
-            }).catch(err => {
-                return resolve(null);
-            });
+        return this.dynamodb.getItem({
+            TableName: this.server.options.appManager.dynamodb.table,
+            Key: {
+                AppId: { S: id },
+            },
+        }).promise().then((response) => {
+            return new App(this.unmarshallItems(response.Item));
+        }).catch(err => {
+            return null;
         });
     }
 
@@ -44,27 +42,25 @@ export class DynamoDbAppManager implements AppManagerInterface {
      * Find an app by given key.
      */
     findByKey(key: string): Promise<App|null> {
-        return new Promise(resolve => {
-            this.dynamodb.query({
-                TableName: this.server.options.appManager.dynamodb.table,
-                IndexName: 'AppKeyIndex',
-                ScanIndexForward: false,
-                Limit: 1,
-                KeyConditionExpression: 'AppKey = :seekingKey',
-                ExpressionAttributeValues: {
-                    ':seekingKey': { S: key },
-                },
-            }).promise().then((response) => {
-                let item = response.Items[0] || null;
+        return this.dynamodb.query({
+            TableName: this.server.options.appManager.dynamodb.table,
+            IndexName: 'AppKeyIndex',
+            ScanIndexForward: false,
+            Limit: 1,
+            KeyConditionExpression: 'AppKey = :app_key',
+            ExpressionAttributeValues: {
+                ':app_key': { S: key },
+            },
+        }).promise().then((response) => {
+            let item = response.Items[0] || null;
 
-                if (! item) {
-                    return resolve(null);
-                }
+            if (! item) {
+                return null;
+            }
 
-                resolve(new App(this.unmarshallItems(item)));
-            }).catch(err => {
-                return resolve(null);
-            });
+            return new App(this.unmarshallItems(item));
+        }).catch(err => {
+            return null;
         });
     }
 
@@ -79,7 +75,7 @@ export class DynamoDbAppManager implements AppManagerInterface {
     /**
      * Transform the marshalled item to a key-value pair.
      */
-    protected unmarshallItems(item: AttributeMap): any {
+    protected unmarshallItems(item: AttributeMap): { [key: string]: any; } {
         let appObject = DynamoDB.Converter.unmarshall(item);
 
         if (appObject.EnableClientMessages instanceof Buffer) {

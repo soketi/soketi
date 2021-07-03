@@ -101,6 +101,12 @@ Additionally, the following settings apply for further configurations of the app
 | `APP_MANAGER_POSTGRES_TABLE` | `apps` | - | The table name to pull the data from. Only for `postgres`. |
 | `APP_MANAGER_POSTGRES_VERSION` | `13.3` | - | The PostgreSQL version so that the Knex connector know how to connect. Only for `postgres`. |
 
+To learn more about app managers for third-party databases, please consider:
+
+- [DynamoDB](APP_MANAGERS.md#aws-dynamodb)
+- [MySQL](APP_MANAGERS.md#mysql-driver)
+- [PostgreSQL](APP_MANAGERS.md#postgresql-driver)
+
 ### Metrics
 
 The metrics feature allows you to store metrics at the node level. This can easily be done under the hood with Prometheus. All you need to do is to set up your own Prometheus server and make it scrap the HTTP REST API of the each node that pWS runs on, on the `/metrics` endpoint.
