@@ -3,10 +3,6 @@ import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('http api test', () => {
-    beforeAll(done => {
-        Utils.createDynamoDbTable().then(() => done());
-    });
-
     afterEach(done => {
         Utils.flushServers().then(() => done());
     });

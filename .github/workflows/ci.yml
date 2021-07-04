@@ -54,6 +54,7 @@ jobs:
         run: |
           java -Djava.library.path=./DynamoDBLocal_lib -jar tests/fixtures/DynamoDBLocal.jar --port 8000 &
           sleep 5
+          node .dynamodb-schema.js
 
       - name: Setup MySQL
         uses: haltuf/mysql-action@master

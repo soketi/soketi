@@ -2,10 +2,6 @@ import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('presence channel test for redis adapter', () => {
-    beforeAll(done => {
-        Utils.createDynamoDbTable().then(() => done());
-    });
-
     afterEach(done => {
         Utils.flushServers().then(() => done());
     });
