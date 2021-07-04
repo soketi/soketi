@@ -19,7 +19,7 @@ export class Utils {
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
-            'appManager.dynamodb.endpoint': 'http://localhost:8000',
+            'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
             'metrics.enabled': true,
         };
 
@@ -167,7 +167,7 @@ export class Utils {
         let ddb = new DynamoDB({
             apiVersion: '2012-08-10',
             region: 'us-east-1',
-            endpoint: 'http://localhost:8000',
+            endpoint: 'http://127.0.0.1:8000',
         });
 
         let createRecord = () => {
