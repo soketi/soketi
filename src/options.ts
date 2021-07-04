@@ -1,4 +1,3 @@
-import { string } from 'yargs';
 import { AppInterface } from './app';
 
 interface Redis {
