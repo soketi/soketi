@@ -32,7 +32,13 @@ export class DynamoDbAppManager implements AppManagerInterface {
                 AppId: { S: id },
             },
         }).promise().then((response) => {
-            return new App(this.unmarshallItems(response.Item));
+            let item = response.Item;
+
+            if (! item) {
+                return null;
+            }
+
+            return new App(this.unmarshallItem(item));
         }).catch(err => {
             return null;
         });
@@ -58,7 +64,7 @@ export class DynamoDbAppManager implements AppManagerInterface {
                 return null;
             }
 
-            return new App(this.unmarshallItems(item));
+            return new App(this.unmarshallItem(item));
         }).catch(err => {
             return null;
         });
@@ -75,7 +81,7 @@ export class DynamoDbAppManager implements AppManagerInterface {
     /**
      * Transform the marshalled item to a key-value pair.
      */
-    protected unmarshallItems(item: AttributeMap): { [key: string]: any; } {
+    protected unmarshallItem(item: AttributeMap): { [key: string]: any; } {
         let appObject = DynamoDB.Converter.unmarshall(item);
 
         if (appObject.EnableClientMessages instanceof Buffer) {
