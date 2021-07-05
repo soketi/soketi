@@ -24,6 +24,7 @@ let createRecord = () => {
     return ddb.putItem(params).promise().then(() => {
         console.log('Record created.');
     }).catch(err => {
+        console.error(err);
         console.log('Record already existent.');
     });
 };
@@ -31,6 +32,8 @@ let createRecord = () => {
 ddb.describeTable({ TableName: 'apps' }).promise().then((result) => {
     createRecord();
 }).catch(err => {
+    console.error(err);
+
     ddb.createTable({
         TableName: 'apps',
         AttributeDefinitions: [
@@ -71,6 +74,7 @@ ddb.describeTable({ TableName: 'apps' }).promise().then((result) => {
     }).promise().then(() => {
         console.log('Table created.');
     }).then(createRecord).catch((err) => {
+        console.error(err);
         console.log('Table already existent.');
     });
 });
