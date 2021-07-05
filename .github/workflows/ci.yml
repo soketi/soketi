@@ -95,8 +95,8 @@ jobs:
         run: |
           node .dynamodb-schema.js
         env:
-          AWS_ACCESS_KEY_ID=fake-id
-          AWS_SECRET_ACCESS_KEY=fake-secret
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
 
       - name: Execute tests
         run: |
@@ -105,8 +105,8 @@ jobs:
           TEST_ADAPTER: ${{ matrix.adapter }}
           TEST_APP_MANAGER: ${{ matrix.app_manager }}
           TEST_RATE_LIMITER: ${{ matrix.rate_limiter }}
-          AWS_ACCESS_KEY_ID=fake-id
-          AWS_SECRET_ACCESS_KEY=fake-secret
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
 
       - uses: codecov/codecov-action@v1
         with:
