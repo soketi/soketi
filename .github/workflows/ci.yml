@@ -52,7 +52,7 @@ jobs:
 
       - name: Setup DynamoDB
         run: |
-          java -Djava.library.path=./DynamoDBLocal_lib -jar tests/fixtures/DynamoDBLocal.jar --port 8000 &
+          java -Djava.library.path=./DynamoDBLocal_lib -jar tests/fixtures/dynamodb/DynamoDBLocal.jar --port 8000 &
           sleep 5
 
       - name: Setup MySQL
