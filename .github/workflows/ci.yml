@@ -27,6 +27,7 @@ jobs:
           - redis
         app_manager:
           - array
+          - dynamodb
           - mysql
           - postgres
         rate_limiter:
@@ -48,6 +49,11 @@ jobs:
         with:
           redis version: 6
           number of databases: 100
+
+      - name: Setup DynamoDB
+        run: |
+          java -Djava.library.path=./DynamoDBLocal_lib -jar tests/fixtures/dynamodb/DynamoDBLocal.jar --port 8000 &
+          sleep 5
 
       - name: Setup MySQL
         uses: haltuf/mysql-action@master
@@ -85,6 +91,13 @@ jobs:
           npm run lint
           npm run build
 
+      - name: Running DynamoDB schema
+        run: |
+          node .dynamodb-schema.js
+        env:
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
+
       - name: Execute tests
         run: |
           npm run test
@@ -92,6 +105,8 @@ jobs:
           TEST_ADAPTER: ${{ matrix.adapter }}
           TEST_APP_MANAGER: ${{ matrix.app_manager }}
           TEST_RATE_LIMITER: ${{ matrix.rate_limiter }}
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
 
       - uses: codecov/codecov-action@v1
         with:

@@ -37,6 +37,11 @@ export interface Options {
         array: {
             apps: AppInterface[];
         };
+        dynamodb: {
+            table: string;
+            region: string;
+            endpoint: string;
+        };
         mysql: {
             table: string;
             version: string|number;

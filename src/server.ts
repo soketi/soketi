@@ -42,6 +42,11 @@ export class Server {
                     },
                 ],
             },
+            dynamodb: {
+                table: 'apps',
+                region: 'us-east-1',
+                endpoint: '',
+            },
             mysql: {
                 table: 'apps',
                 version: '8.0',

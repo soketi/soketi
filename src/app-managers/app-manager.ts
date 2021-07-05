@@ -1,6 +1,7 @@
 import { App } from './../app';
 import { AppManagerInterface } from './app-manager-interface';
 import { ArrayAppManager } from './array-app-manager';
+import { DynamoDbAppManager } from './dynamodb-app-manager';
 import { Log } from '../log';
 import { MysqlAppManager } from './mysql-app-manager';
 import { PostgresAppManager } from './postgres-app-manager';
@@ -25,6 +26,8 @@ export class AppManager implements AppManagerInterface {
             this.driver = new MysqlAppManager(server);
         } else if (server.options.appManager.driver === 'postgres') {
             this.driver = new PostgresAppManager(server);
+        } else if (server.options.appManager.driver === 'dynamodb') {
+            this.driver = new DynamoDbAppManager(server);
         } else {
             Log.error('Clients driver not set.');
         }
