@@ -1,5 +1,4 @@
 const AWS = require('aws-sdk');
-const { encode } = require('node:punycode');
 
 let ddb = new AWS.DynamoDB({
     apiVersion: '2012-08-10',
