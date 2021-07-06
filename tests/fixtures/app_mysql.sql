@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `apps` (
     `max_backend_events_per_sec` integer(10) NOT NULL,
     `max_client_events_per_sec` integer(10) NOT NULL,
     `max_read_req_per_sec` integer(10) NOT NULL,
-    `webhooks` JSON NOT NULL,
+    `webhooks` json DEFAULT "[]",
     PRIMARY KEY (`id`)
 );
 
