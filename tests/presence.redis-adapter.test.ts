@@ -2,11 +2,15 @@ import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('presence channel test for redis adapter', () => {
-    afterEach(done => {
-        Utils.flushServers().then(() => done());
+    beforeEach(() => {
+        return Utils.waitForPortsToFreeUp();
     });
 
-    Utils.shouldRun(process.env.TEST_ADAPTER === 'redis')('handles joins and leaves for redis adapter', done => {
+    afterEach(() => {
+        return Utils.flushServers();
+    });
+
+    Utils.shouldRun(Utils.adapterIs('redis'))('handles joins and leaves for redis adapter', done => {
         Utils.newServer({ port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let john = {
