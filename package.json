@@ -75,7 +75,7 @@
     "build-watch": "./node_modules/.bin/tsc -W",
     "lint": "eslint --ext .js,.ts ./src",
     "prepublish": "npm run build",
-    "test": "jest --forceExit --runInBand",
+    "test": "jest --detectOpenHandles --runInBand --forceExit",
     "test:watch": "npm test -- --watch"
   },
   "bin": {
