@@ -2,8 +2,12 @@ import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('presence channel test', () => {
-    afterEach(done => {
-        Utils.flushServers().then(() => done());
+    beforeEach(() => {
+        return Utils.waitForPortsToFreeUp();
+    });
+
+    afterEach(() => {
+        return Utils.flushServers();
     });
 
     test('connects to presence channel', done => {

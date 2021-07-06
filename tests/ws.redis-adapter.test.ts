@@ -2,8 +2,12 @@ import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('ws test for redis adapter', () => {
-    afterEach(done => {
-        Utils.flushServers().then(() => done());
+    beforeEach(() => {
+        return Utils.waitForPortsToFreeUp();
+    });
+
+    afterEach(() => {
+        return Utils.flushServers();
     });
 
     Utils.shouldRun(Utils.adapterIs('redis') && Utils.appManagerIs('array'))('client events with redis adapter', done => {
@@ -270,8 +274,7 @@ describe('ws test for redis adapter', () => {
                                             client2.unsubscribe(channelName);
 
                                             server1.adapter.getChannelSockets('app-id', channelName).then(sockets =>{
-                                                // TODO: Expect
-                                                // expect(sockets.size).toBe(1);
+                                                expect(sockets.size).toBe(1);
                                                 done();
                                             });
                                         });

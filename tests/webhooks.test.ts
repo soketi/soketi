@@ -3,8 +3,12 @@ import { Server } from '../src/server';
 import { Utils } from './utils';
 
 describe('webhooks test', () => {
-    afterEach(done => {
-        Utils.flushServers().then(() => done());
+    beforeEach(() => {
+        return Utils.waitForPortsToFreeUp();
+    });
+
+    afterEach(() => {
+        return Utils.flushServers();
     });
 
     Utils.shouldRun(Utils.appManagerIs('array'))('webhooks from client events', done => {

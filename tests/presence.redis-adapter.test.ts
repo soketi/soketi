@@ -2,8 +2,12 @@ import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('presence channel test for redis adapter', () => {
-    afterEach(done => {
-        Utils.flushServers().then(() => done());
+    beforeEach(() => {
+        return Utils.waitForPortsToFreeUp();
+    });
+
+    afterEach(() => {
+        return Utils.flushServers();
     });
 
     Utils.shouldRun(Utils.adapterIs('redis'))('handles joins and leaves for redis adapter', done => {

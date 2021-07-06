@@ -2,8 +2,12 @@ import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('http api test for redis adapter', () => {
-    afterEach(done => {
-        Utils.flushServers().then(() => done());
+    beforeEach(() => {
+        return Utils.waitForPortsToFreeUp();
+    });
+
+    afterEach(() => {
+        return Utils.flushServers();
     });
 
     Utils.shouldRun(Utils.adapterIs('redis'))('get api channels with redis adapter', done => {

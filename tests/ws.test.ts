@@ -1,10 +1,13 @@
-import { assert } from 'console';
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('ws test', () => {
-    afterEach(done => {
-        Utils.flushServers().then(() => done());
+    beforeEach(() => {
+        return Utils.waitForPortsToFreeUp();
+    });
+
+    afterEach(() => {
+        return Utils.flushServers();
     });
 
     Utils.shouldRun(Utils.appManagerIs('array'))('client events', done => {
@@ -319,8 +322,7 @@ describe('ws test', () => {
                                         client2.unsubscribe(channelName);
 
                                         server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
-                                            // TODO: Expect
-                                            // expect(sockets.size).toBe(1);
+                                            expect(sockets.size).toBe(1);
                                             done();
                                         });
                                     });

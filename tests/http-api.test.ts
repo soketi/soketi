@@ -3,8 +3,12 @@ import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('http api test', () => {
-    afterEach(done => {
-        Utils.flushServers().then(() => done());
+    beforeEach(() => {
+        return Utils.waitForPortsToFreeUp();
+    });
+
+    afterEach(() => {
+        return Utils.flushServers();
     });
 
     test('health checks', done => {

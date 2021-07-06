@@ -2,8 +2,12 @@ import { Server } from './../src/server';
 import { Utils } from './utils';
 
 describe('private channel test', () => {
-    afterEach(done => {
-        Utils.flushServers().then(() => done());
+    beforeEach(() => {
+        return Utils.waitForPortsToFreeUp();
+    });
+
+    afterEach(() => {
+        return Utils.flushServers();
     });
 
     test('connects to private channel', done => {
