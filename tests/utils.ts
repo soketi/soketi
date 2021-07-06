@@ -4,9 +4,22 @@ import { v4 as uuidv4 } from 'uuid';
 
 const Pusher = require('pusher');
 const PusherJS = require('pusher-js');
+// const tcpPortUsed = require('tcp-port-used');
 
 export class Utils {
-    public static currentServers: Server[] = [];
+    public static wsServers: Server[] = [];
+
+    static appManagerIs(manager: string): boolean {
+        return (process.env.TEST_APP_MANAGER || 'array') === manager;
+    }
+
+    static adapterIs(adapter: string) {
+        return (process.env.TEST_ADAPTER || 'local') === adapter;
+    }
+
+    static waitForPortsToFreeUp(): Promise<any> {
+        return Promise.resolve();
+    }
 
     static newServer(options = {}, callback): any {
         options = {
@@ -23,7 +36,7 @@ export class Utils {
         };
 
         return Server.start(options, (server: Server) => {
-            Utils.currentServers.push(server);
+            Utils.wsServers.push(server);
 
             callback(server);
         });
@@ -37,20 +50,26 @@ export class Utils {
         }, callback);
     }
 
-    static flushServers(): Promise<void> {
-        if (this.currentServers.length === 0) {
+    static flushWsServers(): Promise<void> {
+        if (this.wsServers.length === 0) {
             return Promise.resolve();
         }
 
-        return async.each(this.currentServers, (server: Server, serverCallback) => {
+        return async.each(this.wsServers, (server: Server, serverCallback) => {
             server.stop().then(() => {
                 if (serverCallback) {
                     serverCallback();
                 }
             });
         }).then(() => {
-            this.currentServers = [];
+            this.wsServers = [];
         });
+    }
+
+    static flushServers(): Promise<any> {
+        return Promise.all([
+            this.flushWsServers(),
+        ]);
     }
 
     static newClient(options = {}, port = 6001, key = 'app-key', withStateChange = true): any {
@@ -73,7 +92,7 @@ export class Utils {
         if (withStateChange) {
             client.connection.bind('state_change', ({ current }) => {
                 if (current === 'unavailable') {
-                    throw new Error('The connection could not be made. Status: ' + current);
+                    console.log('The connection could not be made. Status: ' + current);
                 }
             });
         }
