@@ -1,6 +1,8 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
+jest.retryTimes(2);
+
 describe('private channel test', () => {
     beforeEach(() => {
         return Utils.waitForPortsToFreeUp();
