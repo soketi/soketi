@@ -46,12 +46,4 @@ export class AppManager implements AppManagerInterface {
     findByKey(key: string): Promise<App|null> {
         return this.driver.findByKey(key);
     }
-
-    /**
-     * Run a set of instructions after the server closes.
-     * This can be used to disconnect from the drivers, to unset variables, etc.
-     */
-    disconnect(): Promise<void> {
-        return this.driver.disconnect();
-    }
 }

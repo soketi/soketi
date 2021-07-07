@@ -122,12 +122,4 @@ export class LocalAdapter implements AdapterInterface {
             });
         });
     }
-
-    /**
-     * Run a set of instructions after the server closes.
-     * This can be used to disconnect from the drivers, to unset variables, etc.
-     */
-    disconnect(): Promise<void> {
-        return Promise.resolve();
-    }
 }
