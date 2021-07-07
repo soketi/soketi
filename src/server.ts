@@ -283,12 +283,10 @@ export class Server {
 
         return this.wsHandler.closeAllLocalSockets().then(() => {
             return Promise.all([
-                this.adapter.disconnect(),
-                this.appManager.disconnect(),
                 this.metricsManager.clear(),
             ]).then(() => {
                 if (this.options.debug) {
-                    Log.warning('⚡ All sockets were closed. Now closing the adapters & the server.');
+                    Log.warning('⚡ All sockets were closed. Now closing the server.');
                 }
 
                 uWS.us_listen_socket_close(this.serverProcess);
