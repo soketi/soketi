@@ -1,4 +1,5 @@
 import async from 'async';
+import axios from 'axios';
 import { Log } from '../src/log';
 import { Server } from './../src/server';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,8 +24,8 @@ export class Utils {
 
     static waitForPortsToFreeUp(): Promise<any> {
         return Promise.all([
-            // tcpPortUsed.waitUntilFree(6001, 500, 5 * 1000),
-            // tcpPortUsed.waitUntilFree(6002, 500, 5 * 1000),
+            tcpPortUsed.waitUntilFree(6001, 500, 5 * 1000),
+            tcpPortUsed.waitUntilFree(6002, 500, 5 * 1000),
             tcpPortUsed.waitUntilFree(3001, 500, 5 * 1000),
         ]);
     }

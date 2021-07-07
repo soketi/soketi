@@ -440,7 +440,7 @@ describe('http api test', () => {
                     done();
                 })
                 .then(res => {
-                    if (res.json()) {
+                    if (res && res.json()) {
                         throw new Error('The request limit did not work.');
                     }
                 });
