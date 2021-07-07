@@ -13,7 +13,7 @@ describe('webhooks test', () => {
         return Utils.flushServers();
     });
 
-    test('webhooks from client events', done => {
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from client events', done => {
         let webhooks = [{
             event_types: ['client_event'],
             url: 'http://127.0.0.1:3001/webhook',
@@ -64,7 +64,7 @@ describe('webhooks test', () => {
         });
     });
 
-    test('webhooks from channel_occupied and channel_vacated', done => {
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from channel_occupied and channel_vacated', done => {
         let webhooks = [{
             event_types: ['channel_occupied', 'channel_vacated'],
             url: 'http://127.0.0.1:3001/webhook',
@@ -109,7 +109,7 @@ describe('webhooks test', () => {
         });
     });
 
-    test('webhooks from member_added and member_removed', done => {
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from member_added and member_removed', done => {
         let webhooks = [{
             event_types: ['member_added', 'member_removed'],
             url: 'http://127.0.0.1:3001/webhook',
