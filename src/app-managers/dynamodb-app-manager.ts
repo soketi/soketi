@@ -71,21 +71,23 @@ export class DynamoDbAppManager implements AppManagerInterface {
     }
 
     /**
-     * Run a set of instructions after the server closes.
-     * This can be used to disconnect from the drivers, to unset variables, etc.
-     */
-    disconnect(): Promise<void> {
-        return Promise.resolve();
-    }
-
-    /**
      * Transform the marshalled item to a key-value pair.
      */
     protected unmarshallItem(item: AttributeMap): { [key: string]: any; } {
         let appObject = DynamoDB.Converter.unmarshall(item);
 
+        // Making sure EnableClientMessages is boolean.
         if (appObject.EnableClientMessages instanceof Buffer) {
             appObject.EnableClientMessages = boolean(appObject.EnableClientMessages.toString());
+        }
+
+        // JSON-decoding the Webhooks field.
+        if (typeof appObject.Webhooks === 'string') {
+            try {
+                appObject.Webhooks = JSON.parse(appObject.Webhooks);
+            } catch (e) {
+                appObject.Webhooks = [];
+            }
         }
 
         return appObject;

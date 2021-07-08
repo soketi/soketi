@@ -96,6 +96,9 @@ export interface Options {
         maxMembersPerChannel: string|number;
         maxMemberSizeInKb: string|number;
     };
+    queue: {
+        driver: string;
+    };
     rateLimiter: {
         driver: string;
     };

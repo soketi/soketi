@@ -9,6 +9,7 @@
   - [Metrics](#metrics)
 - [Rate Limiting](#rate-limiting)
   - [Events Soft Limits](#events-soft-limits)
+- [Queues](#queues)
 - [Channels](#channels)
   - [Presence Channel Limits](#presence-channel-limits)
   - [Channels Soft Limits](#channels-soft-limits)
@@ -80,6 +81,15 @@ For the rate limiting and max connections options, setting limits to `-1` will d
 | `DEFAULT_APP_MAX_BACKEND_EVENTS_PER_SEC` | `-1` | - | The default app's limit of `/events` endpoint events broadcasted per second. You can [configure rate limiting database store](#rate-limiting) |
 | `DEFAULT_APP_MAX_CLIENT_EVENTS_PER_SEC` | `-1` | - | The default app's limit of client events broadcasted per second, by a single socket. You can [configure rate limiting database store](#rate-limiting) |
 | `DEFAULT_APP_MAX_READ_REQ_PER_SEC` | `-1` | - | The default app's limit of read endpoint calls per second. You can [configure rate limiting database store](#rate-limiting) |
+| `DEFAULT_APP_WEBHOOKS` | `[]` | `[{"url": "string", "event_types": ["string", ...]}, ...]` | The webhooks list for the app. |
+
+For Webhooks, the available `event_types` values you can set are:
+
+- `client_event`
+- `channel_occupied`
+- `channel_vacated`
+- `member_added`
+- `member_removed`
 
 ### Apps Manager
 
@@ -138,6 +148,16 @@ Beside the rate limiting, you can set soft limits for the incoming data, such as
 | `EVENT_MAX_NAME_LENGTH` | `200` | - | The maximum length of the event name that is allowed. |
 | `EVENT_MAX_SIZE_IN_KB` | `100` | - | The maximum size, in KB, for the broadcasted payloads incoming from the clients. |
 
+
+## Queues
+
+Queues can be used to defer some code from running in the current WebSocket server.
+This feature is useful for queuing Webhook's HTTP requests in a different process so that it won't interfere with the WebSockets server.
+The default queue driver is `sync` and it will run in the same process. Consider using other drivers in case the WebSocket is heavily used.
+
+| Environment variable | Default | Available values | Description |
+| - | - | - | - |
+| `QUEUE_DRIVER` | `sync` | `sync` | The driver used for the queues. |
 
 ## Channels
 

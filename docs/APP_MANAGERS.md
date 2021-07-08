@@ -4,6 +4,8 @@
     - [MySQL Driver](#mysql-driver)
     - [PostgreSQL Driver](#postgresql-driver)
   - [AWS DynamoDB](#aws-dynamodb)
+  - [Caveats](#caveats)
+    - [Webhooks Structure](#webhooks-structure)
 
 # Implementing App Managers
 
@@ -40,6 +42,7 @@ CREATE TABLE IF NOT EXISTS `apps` (
     `max_backend_events_per_sec` integer(10) NOT NULL,
     `max_client_events_per_sec` integer(10) NOT NULL,
     `max_read_req_per_sec` integer(10) NOT NULL,
+    `webhooks` json,
     PRIMARY KEY (`id`)
 );
 ```
@@ -60,7 +63,8 @@ CREATE TABLE IF NOT EXISTS apps (
     enable_client_messages smallint NOT NULL,
     max_backend_events_per_sec integer NOT NULL,
     max_client_events_per_sec integer NOT NULL,
-    max_read_req_per_sec integer NOT NULL
+    max_read_req_per_sec integer NOT NULL,
+    webhooks json
 );
 ```
 
@@ -121,8 +125,32 @@ const params = {
         MaxBackendEventsPerSecond: { N: '-1' },
         MaxClientEventsPerSecond: { N: '-1' },
         MaxReadRequestsPerSecond: { N: '-1' },
+        Webhooks: { S: '[]' },
     },
 };
 
 ddb.putItem(params);
 ```
+
+**It's worth to note that the Webhooks are being stored as JSON-encoded string.**
+
+## Caveats
+
+### Webhooks Structure
+
+When declaring Webhooks for each app, each element from the `Webhooks` key is looking like this:
+
+```js
+{
+    event_types: ['string', ...],
+    url: 'string',
+}
+```
+
+In the structure, `event_types` can be one of the following:
+
+- `client_event`
+- `channel_occupied`
+- `channel_vacated`
+- `member_added`
+- `member_removed`

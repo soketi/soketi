@@ -1,13 +1,18 @@
 import async from 'async';
+import axios from 'axios';
+import { Log } from '../src/log';
 import { Server } from './../src/server';
 import { v4 as uuidv4 } from 'uuid';
 
+const bodyParser = require('body-parser');
+const express = require('express');
 const Pusher = require('pusher');
 const PusherJS = require('pusher-js');
-// const tcpPortUsed = require('tcp-port-used');
+const tcpPortUsed = require('tcp-port-used');
 
 export class Utils {
     public static wsServers: Server[] = [];
+    public static httpServers: any[] = [];
 
     static appManagerIs(manager: string): boolean {
         return (process.env.TEST_APP_MANAGER || 'array') === manager;
@@ -18,7 +23,11 @@ export class Utils {
     }
 
     static waitForPortsToFreeUp(): Promise<any> {
-        return Promise.resolve();
+        return Promise.all([
+            tcpPortUsed.waitUntilFree(6001, 500, 5 * 1000),
+            tcpPortUsed.waitUntilFree(6002, 500, 5 * 1000),
+            tcpPortUsed.waitUntilFree(3001, 500, 5 * 1000),
+        ]);
     }
 
     static newServer(options = {}, callback): any {
@@ -36,7 +45,7 @@ export class Utils {
         };
 
         return Server.start(options, (server: Server) => {
-            Utils.wsServers.push(server);
+            this.wsServers.push(server);
 
             callback(server);
         });
@@ -50,6 +59,33 @@ export class Utils {
         }, callback);
     }
 
+    static newWebhookServer(requestHandler: CallableFunction, onReadyCallback: CallableFunction): any {
+        let webhooksApp = express();
+
+        webhooksApp.use(bodyParser.json());
+
+        webhooksApp.use((req, res, next) => {
+            res.header('Access-Control-Allow-Origin', '*');
+            res.header('Access-Control-Allow-Methods', '*');
+            res.header('Access-Control-Allow-Headers', '*');
+            next();
+        });
+
+        webhooksApp.post('/webhook', requestHandler);
+
+        let server = webhooksApp.listen(3001, () => {
+            Log.success('🎉 Webhook Server is up and running!');
+        });
+
+        server.on('error', err => {
+            console.log('Websocket server error', err);
+        });
+
+        this.httpServers.push(server);
+
+        onReadyCallback(server);
+    }
+
     static flushWsServers(): Promise<void> {
         if (this.wsServers.length === 0) {
             return Promise.resolve();
@@ -57,18 +93,31 @@ export class Utils {
 
         return async.each(this.wsServers, (server: Server, serverCallback) => {
             server.stop().then(() => {
-                if (serverCallback) {
-                    serverCallback();
-                }
+                serverCallback();
             });
         }).then(() => {
             this.wsServers = [];
         });
     }
 
+    static flushHttpServers(): Promise<void> {
+        if (this.httpServers.length === 0) {
+            return Promise.resolve();
+        }
+
+        return async.each(this.httpServers, (server: any, serverCallback) => {
+            server.close(() => {
+                serverCallback();
+            });
+        }).then(() => {
+            this.httpServers = [];
+        });
+    }
+
     static flushServers(): Promise<any> {
         return Promise.all([
             this.flushWsServers(),
+            this.flushHttpServers(),
         ]);
     }
 

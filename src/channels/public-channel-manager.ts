@@ -5,6 +5,7 @@ import { Server } from '../server';
 export interface JoinResponse {
     ws: WebSocket;
     success: boolean;
+    channelConnections?: number;
     authError?: boolean;
     member?: PresenceMember;
     errorMessage?: string;
@@ -26,10 +27,11 @@ export class PublicChannelManager {
      * Join the connection to the channel.
      */
     join(ws: WebSocket, channel: string, message?: any): Promise<JoinResponse> {
-        return this.server.adapter.getNamespace(ws.app.id).addToChannel(ws, channel).then(() => {
+        return this.server.adapter.getNamespace(ws.app.id).addToChannel(ws, channel).then(connections => {
             return {
                 ws,
                 success: true,
+                channelConnections: connections,
             };
         });
     }
@@ -38,8 +40,8 @@ export class PublicChannelManager {
      * Mark the connection as closed and unsubscribe it.
      */
     leave(ws: WebSocket, channel: string): Promise<LeaveResponse> {
-        return this.server.adapter.getNamespace(ws.app.id).removeFromChannel(ws.id, channel).then(left => {
-            return { left };
+        return this.server.adapter.getNamespace(ws.app.id).removeFromChannel(ws.id, channel).then(() => {
+            return { left: true };
         });
     }
 }

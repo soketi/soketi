@@ -57,10 +57,4 @@ export interface AdapterInterface {
      * Check if a given connection ID exists in a channel.
      */
     isInChannel(appId: string, channel: string, wsId: string, onlyLocal?: boolean): Promise<boolean>;
-
-    /**
-     * Run a set of instructions after the server closes.
-     * This can be used to disconnect from the drivers, to unset variables, etc.
-     */
-    disconnect(): Promise<void>;
 }

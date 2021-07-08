@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS `apps` (
     `max_backend_events_per_sec` integer(10) NOT NULL,
     `max_client_events_per_sec` integer(10) NOT NULL,
     `max_read_req_per_sec` integer(10) NOT NULL,
+    `webhooks` json,
     PRIMARY KEY (`id`)
 );
 
@@ -20,7 +21,8 @@ INSERT INTO apps (
     enable_client_messages,
     max_backend_events_per_sec,
     max_client_events_per_sec,
-    max_read_req_per_sec
+    max_read_req_per_sec,
+    webhooks
 ) VALUES (
     'app-id',
     'app-key',
@@ -30,5 +32,6 @@ INSERT INTO apps (
     1,
     -1,
     -1,
-    -1
+    -1,
+    '[]'
 );

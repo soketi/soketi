@@ -6,11 +6,14 @@ import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js';
 import { Log } from './log';
 import { Metrics, MetricsInterface } from './metrics';
 import { Options } from './options';
+import { Queue } from './queues/queue';
+import { QueueInterface } from './queues/queue-interface';
 import { RateLimiter } from './rate-limiters/rate-limiter';
 import { RateLimiterInterface } from './rate-limiters/rate-limiter-interface';
 import { v4 as uuidv4 } from 'uuid';
-import { WsHandler } from './ws-handler';
+import { WebhookSender } from './webhook-sender';
 import { WebSocket } from 'uWebSockets.js';
+import { WsHandler } from './ws-handler';
 
 const queryString = require('query-string');
 const uWS = require('uWebSockets.js');
@@ -39,6 +42,7 @@ export class Server {
                         maxBackendEventsPerSecond: -1,
                         maxClientEventsPerSecond: -1,
                         maxReadRequestsPerSecond: -1,
+                        webhooks: [],
                     },
                 ],
             },
@@ -133,6 +137,9 @@ export class Server {
             maxMembersPerChannel: 100,
             maxMemberSizeInKb: 2,
         },
+        queue: {
+            driver: 'sync',
+        },
         rateLimiter: {
             driver: 'local',
         },
@@ -184,6 +191,16 @@ export class Server {
     public rateLimiter: RateLimiterInterface;
 
     /**
+     * The queue manager.
+     */
+    public queueManager: QueueInterface;
+
+    /**
+     * The sender for webhooks.
+     */
+    public webhookSender: WebhookSender;
+
+    /**
      * Start the server statically.
      */
     static async start(options: any = {}, callback?: CallableFunction) {
@@ -208,6 +225,8 @@ export class Server {
         this.rateLimiter = new RateLimiter(this);
         this.wsHandler = new WsHandler(this);
         this.httpHandler = new HttpHandler(this);
+        this.queueManager = new Queue(this);
+        this.webhookSender = new WebhookSender(this);
 
         if (this.options.debug) {
             Log.title('\n📡 pWS Server initialization started.\n');
@@ -264,12 +283,10 @@ export class Server {
 
         return this.wsHandler.closeAllLocalSockets().then(() => {
             return Promise.all([
-                this.adapter.disconnect(),
-                this.appManager.disconnect(),
                 this.metricsManager.clear(),
             ]).then(() => {
                 if (this.options.debug) {
-                    Log.warning('⚡ All sockets were closed. Now closing the adapters & the server.');
+                    Log.warning('⚡ All sockets were closed. Now closing the server.');
                 }
 
                 uWS.us_listen_socket_close(this.serverProcess);

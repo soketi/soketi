@@ -18,6 +18,7 @@ let createRecord = () => {
             MaxBackendEventsPerSecond: { N: '-1' },
             MaxClientEventsPerSecond: { N: '-1' },
             MaxReadRequestsPerSecond: { N: '-1' },
+            Webhooks: { S: '[]', },
         },
     };
 
