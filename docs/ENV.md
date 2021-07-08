@@ -157,7 +157,9 @@ The default queue driver is `sync` and it will run in the same process. Consider
 
 | Environment variable | Default | Available values | Description |
 | - | - | - | - |
-| `QUEUE_DRIVER` | `sync` | `sync` | The driver used for the queues. |
+| `QUEUE_DRIVER` | `sync` | `sync`, `redis` | The driver used for the queues. |
+
+For the `redis` driver, set up the [Redis Configuration](#redis-configuration).
 
 ## Channels
 

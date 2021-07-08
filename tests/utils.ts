@@ -39,6 +39,7 @@ export class Utils {
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
+            'queue.driver': process.env.TEST_QUEUE_DRIVER || 'sync',
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
             'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
             'metrics.enabled': true,

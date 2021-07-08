@@ -33,6 +33,9 @@ jobs:
         rate_limiter:
           - local
           - redis
+        queue_driver:
+          - sync
+          - redis
 
     name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }})
 
@@ -104,6 +107,7 @@ jobs:
         env:
           TEST_ADAPTER: ${{ matrix.adapter }}
           TEST_APP_MANAGER: ${{ matrix.app_manager }}
+          TEST_QUEUE_DRIVER: ${{ matrix.queue_driver }}
           TEST_RATE_LIMITER: ${{ matrix.rate_limiter }}
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
