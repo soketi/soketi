@@ -62,7 +62,7 @@ describe('webhooks test', () => {
                 });
             });
         });
-    });
+    }, 60 * 1000);
 
     Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from channel_occupied and channel_vacated', done => {
         let webhooks = [{
@@ -107,7 +107,7 @@ describe('webhooks test', () => {
                 });
             });
         });
-    });
+    }, 60 * 1000);
 
     Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from member_added and member_removed', done => {
         let webhooks = [{
@@ -198,5 +198,5 @@ describe('webhooks test', () => {
                 });
             });
         });
-    });
+    }, 60 * 1000);
 });
