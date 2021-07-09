@@ -1,12 +1,13 @@
-import Queue from 'bull';
 import { QueueInterface } from './queue-interface';
 import { Server } from '../server';
+
+const Queue = require('bull');
 
 export class RedisQueueDriver implements QueueInterface {
     /**
      * The queues list.
      */
-    protected queues: Map<string, Queue.Queue> = new Map();
+    protected queues: Map<string, typeof Queue> = new Map();
 
     /**
      * Initialize the Prometheus exporter.
