@@ -29,7 +29,7 @@ export class SyncQueueDriver implements QueueInterface {
 
             let jobId = uuidv4();
 
-            jobCallback(new Job(jobId, data), resolve);
+            jobCallback(new Job(jobId, { data }), resolve);
         });
     }
 
