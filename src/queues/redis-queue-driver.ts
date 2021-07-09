@@ -6,7 +6,7 @@ export class RedisQueueDriver implements QueueInterface {
     /**
      * The queues list.
      */
-    protected queues: Map<string, Queue.Queue>;
+    protected queues: Map<string, Queue.Queue> = new Map();
 
     /**
      * Initialize the Prometheus exporter.
@@ -26,7 +26,7 @@ export class RedisQueueDriver implements QueueInterface {
                 return resolve();
             }
 
-            queue.add({ data });
+            queue.add({ data }).then(() => resolve());
         });
     }
 
