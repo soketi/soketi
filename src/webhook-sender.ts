@@ -12,6 +12,7 @@ export interface ClientEventData {
     };
     socket_id?: string;
     user_id?: string;
+    time_ms?: number;
 }
 
 export class WebhookSender {
@@ -20,9 +21,13 @@ export class WebhookSender {
      */
     constructor(protected server: Server) {
         server.queueManager.processQueue('webhooks', (job, done) => {
-            let webhook: WebhookInterface = job.data.webhook;
-            let headers: { [key: string]: string; } = job.data.headers;
-            let data: { [key: string]: any; } = job.data.data;
+            let rawData: {
+                webhook: WebhookInterface;
+                headers: { [key: string]: string; };
+                data: ClientEventData;
+            } = job.data.data;
+
+            let { webhook, headers, data } = rawData;
 
             axios.post(webhook.url, data, { headers }).then((res) => {
                 done();
