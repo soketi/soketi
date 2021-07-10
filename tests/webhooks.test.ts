@@ -24,6 +24,7 @@ describe('webhooks test', () => {
         Utils.newServer({
             'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
+            'database.redis.keyPrefix': 'client-event-webhook',
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
                 let app = new App(server.options.appManager.array.apps[0]);
@@ -75,6 +76,7 @@ describe('webhooks test', () => {
         Utils.newServer({
             'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
+            'database.redis.keyPrefix': 'channel-webhooks',
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
                 let app = new App(server.options.appManager.array.apps[0]);
@@ -120,6 +122,7 @@ describe('webhooks test', () => {
         Utils.newServer({
             'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
+            'database.redis.keyPrefix': 'presence-webhooks',
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
                 let app = new App(server.options.appManager.array.apps[0]);
