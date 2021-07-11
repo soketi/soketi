@@ -45,9 +45,11 @@ describe('http api test for redis adapter', () => {
                                         });
 
                                         client2.connection.bind('disconnected', () => {
-                                            backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
-                                                expect(body.channels[channelName]).toBeUndefined();
-                                                done();
+                                            Utils.wait(3000).then(() => {
+                                                backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
+                                                    expect(body.channels[channelName]).toBeUndefined();
+                                                    done();
+                                                });
                                             });
                                         });
 
