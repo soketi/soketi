@@ -19,13 +19,6 @@ If you are using your application in your day-to-day job, on presentation demos,
 
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/R6R42U8CL)
 
-## System Requirements
-
-The following are required to function properly:
-
-- Node 14.0+
-- Redis 6+ (for running at scale)
-
 ## Documentation
 
 The entire documentation is available on [https://rennokki.gitbook.io/soketi-pws/](https://rennokki.gitbook.io/soketi-pws) 🌍
