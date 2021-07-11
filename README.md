@@ -28,7 +28,7 @@ The following are required to function properly:
 
 ## Documentation
 
-The entire documentation is available on [https://pws-docs.soketi.app](https://pws-docs.soketi.app) 🌍
+The entire documentation is available on [https://rennokki.gitbook.io/soketi-pws/](https://rennokki.gitbook.io/soketi-pws) 🌍
 
 ## 🤝 Contributing
 
