@@ -14,7 +14,7 @@ export class RedisQueueDriver implements QueueInterface {
     /**
      * The queues with workers list.
      */
-    protected queueWithWorker: Map<string, { queue: Queue, worker: Worker }> = new Map();
+    protected queueWithWorker: Map<string, QueueWithWorker> = new Map();
 
     /**
      * Initialize the Prometheus exporter.
