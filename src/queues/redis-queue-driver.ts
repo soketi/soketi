@@ -1,19 +1,26 @@
+import async from 'async';
+import { Queue, Worker } from 'bullmq'
 import { QueueInterface } from './queue-interface';
 import { Server } from '../server';
 
-const Queue = require('bull');
+const Redis = require('ioredis');
+
+interface QueueWithWorker {
+    queue: Queue;
+    worker: Worker;
+}
 
 export class RedisQueueDriver implements QueueInterface {
     /**
-     * The queues list.
+     * The queues with workers list.
      */
-    protected queues: Map<string, typeof Queue> = new Map();
+    protected queueWithWorker: Map<string, { queue: Queue, worker: Worker }> = new Map();
 
     /**
      * Initialize the Prometheus exporter.
      */
     constructor(protected server: Server) {
-        this.queues.set('webhooks', new Queue('webhooks', { redis: server.options.database.redis }));
+        //
     }
 
     /**
@@ -21,13 +28,14 @@ export class RedisQueueDriver implements QueueInterface {
      */
     addToQueue(queueName: string, data: any = {}): Promise<void> {
         return new Promise(resolve => {
-            let queue = this.queues.get(queueName);
+            let queueWithWorker = this.queueWithWorker.get(queueName);
 
-            if (! queue) {
+            if (! queueWithWorker) {
                 return resolve();
             }
 
-            queue.add({ data }).then(() => resolve());
+            // TODO: Retry policy? https://docs.bullmq.io/guide/retrying-failing-jobs
+            queueWithWorker.queue.add('webhook', data).then(() => resolve());
         });
     }
 
@@ -35,13 +43,28 @@ export class RedisQueueDriver implements QueueInterface {
      * Register the code to run when handing the queue.
      */
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
-        let queue = this.queues.get(queueName);
+        return new Promise(resolve => {
+            if (! this.queueWithWorker.has(queueName)) {
+                let connection = new Redis(this.server.options.database.redis);
 
-        if (! queue) {
-            return Promise.resolve();
-        }
+                this.queueWithWorker.set(queueName, {
+                    queue: new Queue(queueName, { connection }),
+                    // TODO: Sandbox the worker? https://docs.bullmq.io/guide/workers/sandboxed-processors
+                    // TODO: Concurrency? https://docs.bullmq.io/guide/workers/concurrency
+                    worker: new Worker(queueName, callback as any, { connection }),
+                });
+            }
 
-        // TODO: Add parallelism to the process.
-        return queue.process(callback as any);
+            resolve();
+        });
+    }
+
+    /**
+     * Clear the queues for a graceful shutdown.
+     */
+    clear(): Promise<void> {
+        return async.each([...this.queueWithWorker], ([queueName, { queue, worker }]: [string, QueueWithWorker], callback) => {
+            worker.close().then(() => callback());
+        });
     }
 }

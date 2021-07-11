@@ -29,7 +29,7 @@ export class SyncQueueDriver implements QueueInterface {
 
             let jobId = uuidv4();
 
-            jobCallback(new Job(jobId, { data }), resolve);
+            jobCallback(new Job(jobId, data), resolve);
         });
     }
 
@@ -41,5 +41,12 @@ export class SyncQueueDriver implements QueueInterface {
             this.queues.set(queueName, callback);
             resolve();
         });
+    }
+
+    /**
+     * Clear the queues for a graceful shutdown.
+     */
+    clear(): Promise<void> {
+        return Promise.resolve();
     }
 }

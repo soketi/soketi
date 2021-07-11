@@ -25,18 +25,23 @@ export class WebhookSender {
                 webhook: WebhookInterface;
                 headers: { [key: string]: string; };
                 data: ClientEventData;
-            } = job.data.data;
+            } = job.data;
 
             let { webhook, headers, data } = rawData;
 
             axios.post(webhook.url, data, { headers }).then((res) => {
-                done();
+                if (typeof done === 'function') {
+                    done();
+                }
             }).catch(err => {
                 // TODO: Maybe retry exponentially?
-                done();
+                if (typeof done === 'function') {
+                    done();
+                }
             });
         };
 
+        // TODO: Maybe have one queue per app to reserve queue thresholds?
         server.queueManager.processQueue('client_event_webhooks', queueProcessor);
         server.queueManager.processQueue('member_added_webhooks', queueProcessor);
         server.queueManager.processQueue('member_removed_webhooks', queueProcessor);

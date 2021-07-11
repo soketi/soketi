@@ -36,4 +36,11 @@ export class Queue implements QueueInterface {
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
         return this.driver.processQueue(queueName, callback);
     }
+
+    /**
+     * Clear the queues for a graceful shutdown.
+     */
+    clear(): Promise<void> {
+        return this.driver.clear();
+    }
 }
