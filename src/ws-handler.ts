@@ -338,14 +338,19 @@ export class WsHandler {
                 return;
             }
 
-            let member = { user_id, user_info };
-
-            ws.presence.set(channel, member);
-
-            // Make sure to update the socket after new data was pushed in.
-            this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
-
             this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
+                let member = { user_id, user_info };
+
+                // If the member already exists in the channel, don't reconnect him.
+                if (members.has(user_id as string)) {
+                    return;
+                }
+
+                ws.presence.set(channel, member);
+
+                // Make sure to update the socket after new data was pushed in.
+                this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+
                 let broadcastMessage = {
                     event: 'pusher_internal:subscription_succeeded',
                     channel,
