@@ -21,7 +21,7 @@ Kind words will touch our chakras and vibe, while the sponsorships will keep the
 
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/R6R42U8CL)
 
-## Documentation
+## 📃 Documentation
 
 [The entire documentation is available on Gitbook 🌍](https://rennokki.gitbook.io/soketi-pws)
 
