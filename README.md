@@ -21,7 +21,7 @@ If you are using your application in your day-to-day job, on presentation demos,
 
 ## Documentation
 
-The entire documentation is available on [https://rennokki.gitbook.io/soketi-pws/](https://rennokki.gitbook.io/soketi-pws) 🌍
+[The entire documentation is available on Gitbook 🌍](https://rennokki.gitbook.io/soketi-pws)
 
 ## 🤝 Contributing
 
