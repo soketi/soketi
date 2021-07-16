@@ -23,7 +23,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v3.3.0
+        uses: docker/metadata-action@v3.4.0
         with:
           images: soketi/pws
           tags: |
