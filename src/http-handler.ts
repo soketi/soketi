@@ -284,10 +284,11 @@ export class HttpHandler {
     }
 
     protected jsonBodyMiddleware(res: HttpResponse, next: CallableFunction): any {
-        this.readJson(res, data => {
-            res.body = data;
+        this.readJson(res, (body, rawBody) => {
+            res.body = body;
+            res.rawBody = rawBody;
 
-            let requestSizeInMb = Utils.dataToMegabytes(data);
+            let requestSizeInMb = Utils.dataToMegabytes(rawBody);
 
             if (requestSizeInMb > this.server.options.httpApi.requestLimitInMb) {
                 return this.entityTooLargeResponse(res, 'The payload size is too big.');
@@ -400,6 +401,7 @@ export class HttpHandler {
 
             if (isLast) {
                 let json;
+                let raw;
 
                 if (buffer) {
                     try {
@@ -410,17 +412,20 @@ export class HttpHandler {
                         return;
                     }
 
-                    cb(json);
+                    raw = Buffer.concat([buffer, chunk]).toString();
+
+                    cb(json, raw);
                 } else {
                     try {
                         // @ts-ignore
                         json = JSON.parse(chunk);
+                        raw = chunk;
                     } catch (e) {
                         res.close();
                         return;
                     }
 
-                    cb(json);
+                    cb(json, raw);
                 }
             } else {
                 if (buffer) {
