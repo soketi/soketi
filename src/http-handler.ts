@@ -419,7 +419,7 @@ export class HttpHandler {
                     try {
                         // @ts-ignore
                         json = JSON.parse(chunk);
-                        raw = chunk;
+                        raw = chunk.toString();
                     } catch (e) {
                         res.close();
                         return;
