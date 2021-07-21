@@ -325,6 +325,7 @@ describe('ws test', () => {
 
                                         server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
                                             // TODO: Expect
+                                            console.log({ sockets, test: 'getChannelSockets' });
                                             // expect(sockets.size).toBe(1);
                                             done();
                                         });

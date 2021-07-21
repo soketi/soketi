@@ -277,6 +277,7 @@ describe('ws test for redis adapter', () => {
 
                                             server1.adapter.getChannelSockets('app-id', channelName).then(sockets =>{
                                                 // TODO: Expect
+                                                console.log({ sockets, test: 'getChannelSockets redis' });
                                                 // expect(sockets.size).toBe(1);
                                                 done();
                                             });

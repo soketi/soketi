@@ -3,6 +3,7 @@ import async from 'async';
 import { EncryptedPrivateChannelManager } from './channels';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { Log } from './log';
+import { Namespace } from './namespace';
 import { PresenceChannelManager } from './channels';
 import { PresenceMember } from './presence-member';
 import { PrivateChannelManager } from './channels';
@@ -156,56 +157,38 @@ export class WsHandler {
      * Handle the event to close all existing sockets.
      */
     async closeAllLocalSockets(): Promise<void> {
-        return new Promise(resolve => {
-            let namespaces = this.server.adapter.getNamespaces();
-            let totalNamesapaces = namespaces.size;
-            let closedNamespaces = 0;
+        let namespaces = this.server.adapter.getNamespaces();
 
-            if (namespaces.size === 0) {
-                return resolve();
-            }
+        if (namespaces.size === 0) {
+            return Promise.resolve();
+        }
 
-            namespaces.forEach(namespace => {
-                namespace.getSockets().then(sockets => {
-                    let totalSockets = sockets.size;
+        return async.each([...namespaces], ([namespaceId, namespace]: [string, Namespace], nsCallback) => {
+            namespace.getSockets().then(sockets => {
+                async.each([...sockets], ([wsId, ws]: [string, WebSocket], wsCallback) => {
+                    try {
+                        ws.send(JSON.stringify({
+                            event: 'pusher:error',
+                            data: {
+                                code: 4200,
+                                message: 'Server closed. Please reconnect shortly.',
+                            },
+                        }));
 
-                    if (totalSockets === 0) {
-                        closedNamespaces++;
-
-                        if(closedNamespaces === totalNamesapaces) {
-                            resolve();
-                        }
+                        ws.close();
+                    } catch (e) {
+                        //
                     }
 
-                    let closedSockets = 0;
-
-                    sockets.forEach(ws => {
-                        try {
-                            ws.send(JSON.stringify({
-                                event: 'pusher:error',
-                                data: {
-                                    code: 4200,
-                                    message: 'Server closed. Please reconnect shortly.',
-                                },
-                            }));
-
-                            ws.close();
-                        } catch (e) {
-                            //
-                        }
-
-                        closedSockets++;
-
-                        if (closedSockets === totalSockets) {
-                            closedNamespaces++;
-
-                            if(closedNamespaces === totalNamesapaces) {
-                                resolve();
-                            }
-                        }
-                    });
+                    wsCallback();
+                }).then(() => {
+                    this.server.adapter.clear(namespaceId);
+                    nsCallback();
                 });
             });
+        }).then(() => {
+            // One last clear to make sure everything went away.
+            return this.server.adapter.clear();
         });
     }
 
