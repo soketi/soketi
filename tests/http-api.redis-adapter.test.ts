@@ -38,7 +38,6 @@ describe('http api test for redis adapter', () => {
                                 channel.bind('pusher:subscription_succeeded', () => {
                                     backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
                                         expect(body.channels[channelName]).toBeDefined();
-                                        done();
                                         expect(body.channels[channelName].subscription_count).toBe(2);
                                         expect(body.channels[channelName].occupied).toBe(true);
 
