@@ -120,8 +120,8 @@ export class App implements AppInterface {
         delete params['appKey'];
         delete params['channelName'];
 
-        if (res.body && Object.keys(res.body).length > 0) {
-            params['body_md5'] = pusherUtil.getMD5(JSON.stringify(res.body));
+        if (res.rawBody) {
+            params['body_md5'] = pusherUtil.getMD5(res.rawBody);
         }
 
         return this.signingToken(

@@ -21,12 +21,13 @@ describe('public channel test', () => {
 
                 channel.bind('greeting', e => {
                     expect(e.message).toBe('hello');
+                    expect(e.weirdVariable).toBe('abc/d');
                     client.disconnect();
                     done();
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' })
+                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello', weirdVariable: 'abc/d' })
                         .catch(error => {
                             throw new Error(error);
                         });
