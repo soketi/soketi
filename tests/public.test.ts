@@ -3,6 +3,8 @@ import { Utils } from './utils';
 
 describe('public channel test', () => {
     beforeEach(() => {
+        jest.resetModules();
+
         return Utils.waitForPortsToFreeUp();
     });
 

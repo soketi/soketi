@@ -5,6 +5,8 @@ jest.retryTimes(2);
 
 describe('presence channel test', () => {
     beforeEach(() => {
+        jest.resetModules();
+
         return Utils.waitForPortsToFreeUp();
     });
 

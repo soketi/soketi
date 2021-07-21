@@ -5,6 +5,8 @@ jest.retryTimes(2);
 
 describe('http api test for redis adapter', () => {
     beforeEach(() => {
+        jest.resetModules();
+
         return Utils.waitForPortsToFreeUp();
     });
 

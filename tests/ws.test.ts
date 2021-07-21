@@ -5,6 +5,8 @@ jest.retryTimes(2);
 
 describe('ws test', () => {
     beforeEach(() => {
+        jest.resetModules();
+
         return Utils.waitForPortsToFreeUp();
     });
 

@@ -6,6 +6,8 @@ jest.retryTimes(2);
 
 describe('http api test', () => {
     beforeEach(() => {
+        jest.resetModules();
+
         return Utils.waitForPortsToFreeUp();
     });
 
