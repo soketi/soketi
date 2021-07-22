@@ -290,6 +290,8 @@ export class Server {
                 }
 
                 uWS.us_listen_socket_close(this.serverProcess);
+
+                return new Promise(resolve => setTimeout(resolve, 3000));
             });
         });
     }

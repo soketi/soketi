@@ -6,6 +6,8 @@ jest.retryTimes(2);
 
 describe('webhooks test', () => {
     beforeEach(() => {
+        jest.resetModules();
+
         return Utils.waitForPortsToFreeUp();
     });
 

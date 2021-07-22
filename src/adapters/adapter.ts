@@ -102,4 +102,11 @@ export class Adapter implements AdapterInterface {
     send(appId: string, channel: string, data: string, exceptingId?: string): void {
         return this.driver.send(appId, channel, data, exceptingId);
     }
+
+    /**
+     * Clear the local namespaces.
+     */
+    clear(namespaceId?: string): void {
+        this.driver.clear(namespaceId);
+    }
 }
