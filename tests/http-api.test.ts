@@ -73,7 +73,6 @@ describe('http api test', () => {
                                     });
 
                                     client1.disconnect();
-                                    client2.disconnect();
                                 });
                             });
                         });
@@ -120,7 +119,6 @@ describe('http api test', () => {
                                     });
 
                                     client1.disconnect();
-                                    client2.disconnect();
                                 });
                             });
                         });
@@ -185,7 +183,6 @@ describe('http api test', () => {
                                     });
 
                                     client1.disconnect();
-                                    client2.disconnect();
                                 });
                             });
                         });
@@ -245,7 +242,6 @@ describe('http api test', () => {
                                     });
 
                                     client1.disconnect();
-                                    client2.disconnect();
                                 });
                             });
                         });
@@ -297,7 +293,6 @@ describe('http api test', () => {
                                     });
 
                                     client1.disconnect();
-                                    client2.disconnect();
                                 });
                             });
                         });

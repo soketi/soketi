@@ -54,7 +54,6 @@ describe('http api test for redis adapter', () => {
                                         });
 
                                         client1.disconnect();
-                                        client2.disconnect();
                                     });
                                 });
                             });
@@ -103,7 +102,6 @@ describe('http api test for redis adapter', () => {
                                         });
 
                                         client1.disconnect();
-                                        client2.disconnect();
                                     });
                                 });
                             });
@@ -170,7 +168,6 @@ describe('http api test for redis adapter', () => {
                                         });
 
                                         client1.disconnect();
-                                        client2.disconnect();
                                     });
                                 });
                             });
@@ -232,7 +229,6 @@ describe('http api test for redis adapter', () => {
                                         });
 
                                         client1.disconnect();
-                                        client2.disconnect();
                                     });
                                 });
                             });
@@ -286,7 +282,6 @@ describe('http api test for redis adapter', () => {
                                         });
 
                                         client1.disconnect();
-                                        client2.disconnect();
                                     });
                                 });
                             });
