@@ -5,6 +5,8 @@ jest.retryTimes(2);
 
 describe('ws test', () => {
     beforeEach(() => {
+        jest.resetModules();
+
         return Utils.waitForPortsToFreeUp();
     });
 
@@ -323,10 +325,11 @@ describe('ws test', () => {
 
                                         client2.unsubscribe(channelName);
 
-                                        server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
-                                            // TODO: Expect
-                                            // expect(sockets.size).toBe(1);
-                                            done();
+                                        Utils.wait(3000).then(() => {
+                                            server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                                expect(sockets.size).toBe(1);
+                                                done();
+                                            });
                                         });
                                     });
                                 });

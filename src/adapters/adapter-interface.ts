@@ -4,6 +4,11 @@ import { WebSocket } from 'uWebSockets.js';
 
 export interface AdapterInterface {
     /**
+     * The app connections storage class to manage connections.
+     */
+    namespaces?: Map<string, Namespace>;
+
+    /**
      * Get the app namespace.
      */
     getNamespace(appId: string): Namespace;
@@ -17,6 +22,11 @@ export interface AdapterInterface {
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string): any;
+
+    /**
+     * Clear the local namespaces.
+     */
+    clear(namespaceId?: string): void;
 
     /**
      * Get all sockets from the namespace.

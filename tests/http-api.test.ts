@@ -6,6 +6,8 @@ jest.retryTimes(2);
 
 describe('http api test', () => {
     beforeEach(() => {
+        jest.resetModules();
+
         return Utils.waitForPortsToFreeUp();
     });
 
@@ -71,7 +73,6 @@ describe('http api test', () => {
                                     });
 
                                     client1.disconnect();
-                                    client2.disconnect();
                                 });
                             });
                         });
@@ -118,7 +119,6 @@ describe('http api test', () => {
                                     });
 
                                     client1.disconnect();
-                                    client2.disconnect();
                                 });
                             });
                         });
@@ -183,7 +183,6 @@ describe('http api test', () => {
                                     });
 
                                     client1.disconnect();
-                                    client2.disconnect();
                                 });
                             });
                         });
@@ -243,7 +242,6 @@ describe('http api test', () => {
                                     });
 
                                     client1.disconnect();
-                                    client2.disconnect();
                                 });
                             });
                         });
@@ -295,7 +293,6 @@ describe('http api test', () => {
                                     });
 
                                     client1.disconnect();
-                                    client2.disconnect();
                                 });
                             });
                         });
