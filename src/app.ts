@@ -10,6 +10,7 @@ export interface AppInterface {
     secret: string;
     maxConnections: string|number;
     enableClientMessages: boolean;
+    enabled: boolean;
     maxBackendEventsPerSecond: string|number;
     maxClientEventsPerSecond: string|number;
     maxReadRequestsPerSecond: string|number;
@@ -48,6 +49,11 @@ export class App implements AppInterface {
     public enableClientMessages: boolean;
 
     /**
+     * @type {boolean}
+     */
+    public enabled: boolean;
+
+    /**
      * @type {number}
      */
     public maxBackendEventsPerSecond: string|number;
@@ -82,6 +88,7 @@ export class App implements AppInterface {
         this.secret = app.secret || app.AppSecret;
         this.maxConnections = parseInt(app.maxConnections || app.MaxConnections || app.max_connections || -1);
         this.enableClientMessages = app.enableClientMessages || app.EnableClientMessages || app.enable_client_messages || false;
+        this.enabled = app.enabled || app.Enabled || true;
         this.maxBackendEventsPerSecond = parseInt(app.maxBackendEventsPerSecond || app.MaxBackendEventsPerSecond || app.max_backend_events_per_sec || -1);
         this.maxClientEventsPerSecond = parseInt(app.maxClientEventsPerSecond || app.MaxClientEventsPerSecond || app.max_client_events_per_sec || -1);
         this.maxReadRequestsPerSecond = parseInt(app.maxReadRequestsPerSecond || app.MaxReadRequestsPerSecond || app.max_read_req_per_sec || -1);
