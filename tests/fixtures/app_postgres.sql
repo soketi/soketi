@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS apps (
     id varchar(255) PRIMARY KEY,
     "key" varchar(255) NOT NULL,
     secret varchar(255) NOT NULL,
+    "enabled" smallint NOT NULL,
     max_connections integer NOT NULL,
     enable_client_messages smallint NOT NULL,
     max_backend_events_per_sec integer NOT NULL,
