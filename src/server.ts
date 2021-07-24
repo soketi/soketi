@@ -39,6 +39,7 @@ export class Server {
                         secret: 'app-secret',
                         maxConnections: -1,
                         enableClientMessages: false,
+                        enabled: true,
                         maxBackendEventsPerSecond: -1,
                         maxClientEventsPerSecond: -1,
                         maxReadRequestsPerSecond: -1,

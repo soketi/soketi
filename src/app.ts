@@ -10,6 +10,7 @@ export interface AppInterface {
     secret: string;
     maxConnections: string|number;
     enableClientMessages: boolean;
+    enabled: boolean;
     maxBackendEventsPerSecond: string|number;
     maxClientEventsPerSecond: string|number;
     maxReadRequestsPerSecond: string|number;
@@ -48,6 +49,11 @@ export class App implements AppInterface {
     public enableClientMessages: boolean;
 
     /**
+     * @type {boolean}
+     */
+    public enabled: boolean;
+
+    /**
      * @type {number}
      */
     public maxBackendEventsPerSecond: string|number;
@@ -77,21 +83,20 @@ export class App implements AppInterface {
      * Create a new app from object.
      */
     constructor(app: { [key: string]: any; }) {
-        this.id = app.id || app.AppId;
-        this.key = app.key || app.AppKey;
-        this.secret = app.secret || app.AppSecret;
-        this.maxConnections = parseInt(app.maxConnections || app.MaxConnections || app.max_connections || -1);
-        this.enableClientMessages = app.enableClientMessages || app.EnableClientMessages || app.enable_client_messages || false;
-        this.maxBackendEventsPerSecond = parseInt(app.maxBackendEventsPerSecond || app.MaxBackendEventsPerSecond || app.max_backend_events_per_sec || -1);
-        this.maxClientEventsPerSecond = parseInt(app.maxClientEventsPerSecond || app.MaxClientEventsPerSecond || app.max_client_events_per_sec || -1);
-        this.maxReadRequestsPerSecond = parseInt(app.maxReadRequestsPerSecond || app.MaxReadRequestsPerSecond || app.max_read_req_per_sec || -1);
-        this.webhooks = app.webhooks || app.Webhooks || [];
+        this.id = this.extractFromPassedKeys(app, ['id', 'AppId'], 'app-id');
+        this.key = this.extractFromPassedKeys(app, ['key', 'AppKey'], 'app-key');
+        this.secret = this.extractFromPassedKeys(app, ['secret', 'AppSecret'], 'app-secret');
+        this.maxConnections = this.extractFromPassedKeys(app, ['maxConnections', 'MaxConnections', 'max_connections'], -1);
+        this.enableClientMessages = this.extractFromPassedKeys(app, ['enableClientMessages', 'EnableClientMessages', 'enable_client_messages'], false);
+        this.enabled = this.extractFromPassedKeys(app, ['enabled', 'Enabled'], true);
+        this.maxBackendEventsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxBackendEventsPerSecond', 'MaxBackendEventsPerSecond', 'max_backend_events_per_sec'], -1));
+        this.maxClientEventsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxClientEventsPerSecond', 'MaxClientEventsPerSecond', 'max_client_events_per_sec'], -1));
+        this.maxReadRequestsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxReadRequestsPerSecond', 'MaxReadRequestsPerSecond', 'max_read_req_per_sec'], -1));
+        this.webhooks = this.extractFromPassedKeys(app, ['webhooks', 'Webhooks'], []);
 
         if (! (this.webhooks instanceof Array)) {
             this.webhooks = [];
         }
-
-        // TODO: Implement app deactivation
     }
 
     /**
@@ -138,5 +143,25 @@ export class App implements AppInterface {
         let token = new Pusher.Token(this.key, this.secret);
 
         return token.sign([method, path, params].join("\n"));
+    }
+
+    /**
+     * Due to cross-database schema, it's worth to search multiple fields in the app in order to assign it
+     * to the local App object. For example, the local `enableClientMessages` attribute can exist as
+     * enableClientMessages, enable_client_messages, or EnableClientMessages. With this function, we pass
+     * the app, the list of all field posibilities, and a default value.
+     * This check is done with a typeof check over undefined, to make sure that false booleans or 0 values
+     * are being parsed properly and are not being ignored.
+     */
+    protected extractFromPassedKeys(app: { [key: string]: any; }, parameters: string[], defaultValue): any {
+        let extractedValue = defaultValue;
+
+        parameters.forEach(param => {
+            if (typeof app[param] !== 'undefined') {
+                extractedValue = app[param];
+            }
+        });
+
+        return extractedValue;
     }
 }

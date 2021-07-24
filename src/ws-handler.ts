@@ -80,33 +80,47 @@ export class WsHandler {
 
             ws.app = validApp;
 
-            this.checkAppConnectionLimit(ws).then(canConnect => {
-                if (! canConnect) {
+            this.checkIfAppIsEnabled(ws).then(enabled => {
+                if (! enabled) {
                     ws.send(JSON.stringify({
                         event: 'pusher:error',
                         data: {
-                            code: 4100,
-                            message: 'The current concurrent connections quota has been reached.',
+                            code: 4003,
+                            message: 'The app is not enabled.',
                         },
                     }));
 
-                    ws.close();
-                } else {
-                    this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
-
-                    let broadcastMessage = {
-                        event: 'pusher:connection_established',
-                        data: JSON.stringify({
-                            socket_id: ws.id,
-                            activity_timeout: 30,
-                        }),
-                    };
-
-                    ws.send(JSON.stringify(broadcastMessage));
-
-                    this.server.metricsManager.markNewConnection(ws);
-                    this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
+                    return ws.close();
                 }
+
+                this.checkAppConnectionLimit(ws).then(canConnect => {
+                    if (! canConnect) {
+                        ws.send(JSON.stringify({
+                            event: 'pusher:error',
+                            data: {
+                                code: 4100,
+                                message: 'The current concurrent connections quota has been reached.',
+                            },
+                        }));
+
+                        ws.close();
+                    } else {
+                        this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+
+                        let broadcastMessage = {
+                            event: 'pusher:connection_established',
+                            data: JSON.stringify({
+                                socket_id: ws.id,
+                                activity_timeout: 30,
+                            }),
+                        };
+
+                        ws.send(JSON.stringify(broadcastMessage));
+
+                        this.server.metricsManager.markNewConnection(ws);
+                        this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
+                    }
+                });
             });
         });
     }
@@ -536,6 +550,13 @@ export class WsHandler {
      */
     protected checkForValidApp(ws: WebSocket): Promise<App|null> {
         return this.server.appManager.findByKey(ws.appKey);
+    }
+
+    /**
+     * Make sure that the app is enabled.
+     */
+    protected checkIfAppIsEnabled(ws: WebSocket): Promise<boolean> {
+        return Promise.resolve(ws.app.enabled);
     }
 
     /**
