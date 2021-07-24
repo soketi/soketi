@@ -1,5 +1,4 @@
 import async from 'async';
-import axios from 'axios';
 import { Log } from '../src/log';
 import { Server } from './../src/server';
 import { v4 as uuidv4 } from 'uuid';

@@ -3,6 +3,7 @@ import async from 'async';
 import { EncryptedPrivateChannelManager } from './channels';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { Log } from './log';
+import { Namespace } from './namespace';
 import { PresenceChannelManager } from './channels';
 import { PresenceMember } from './presence-member';
 import { PrivateChannelManager } from './channels';
@@ -79,33 +80,47 @@ export class WsHandler {
 
             ws.app = validApp;
 
-            this.checkAppConnectionLimit(ws).then(canConnect => {
-                if (! canConnect) {
+            this.checkIfAppIsEnabled(ws).then(enabled => {
+                if (! enabled) {
                     ws.send(JSON.stringify({
                         event: 'pusher:error',
                         data: {
-                            code: 4100,
-                            message: 'The current concurrent connections quota has been reached.',
+                            code: 4003,
+                            message: 'The app is not enabled.',
                         },
                     }));
 
-                    ws.close();
-                } else {
-                    this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
-
-                    let broadcastMessage = {
-                        event: 'pusher:connection_established',
-                        data: JSON.stringify({
-                            socket_id: ws.id,
-                            activity_timeout: 30,
-                        }),
-                    };
-
-                    ws.send(JSON.stringify(broadcastMessage));
-
-                    this.server.metricsManager.markNewConnection(ws);
-                    this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
+                    return ws.close();
                 }
+
+                this.checkAppConnectionLimit(ws).then(canConnect => {
+                    if (! canConnect) {
+                        ws.send(JSON.stringify({
+                            event: 'pusher:error',
+                            data: {
+                                code: 4100,
+                                message: 'The current concurrent connections quota has been reached.',
+                            },
+                        }));
+
+                        ws.close();
+                    } else {
+                        this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+
+                        let broadcastMessage = {
+                            event: 'pusher:connection_established',
+                            data: JSON.stringify({
+                                socket_id: ws.id,
+                                activity_timeout: 30,
+                            }),
+                        };
+
+                        ws.send(JSON.stringify(broadcastMessage));
+
+                        this.server.metricsManager.markNewConnection(ws);
+                        this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
+                    }
+                });
             });
         });
     }
@@ -156,56 +171,38 @@ export class WsHandler {
      * Handle the event to close all existing sockets.
      */
     async closeAllLocalSockets(): Promise<void> {
-        return new Promise(resolve => {
-            let namespaces = this.server.adapter.getNamespaces();
-            let totalNamesapaces = namespaces.size;
-            let closedNamespaces = 0;
+        let namespaces = this.server.adapter.getNamespaces();
 
-            if (namespaces.size === 0) {
-                return resolve();
-            }
+        if (namespaces.size === 0) {
+            return Promise.resolve();
+        }
 
-            namespaces.forEach(namespace => {
-                namespace.getSockets().then(sockets => {
-                    let totalSockets = sockets.size;
+        return async.each([...namespaces], ([namespaceId, namespace]: [string, Namespace], nsCallback) => {
+            namespace.getSockets().then(sockets => {
+                async.each([...sockets], ([wsId, ws]: [string, WebSocket], wsCallback) => {
+                    try {
+                        ws.send(JSON.stringify({
+                            event: 'pusher:error',
+                            data: {
+                                code: 4200,
+                                message: 'Server closed. Please reconnect shortly.',
+                            },
+                        }));
 
-                    if (totalSockets === 0) {
-                        closedNamespaces++;
-
-                        if(closedNamespaces === totalNamesapaces) {
-                            resolve();
-                        }
+                        ws.close();
+                    } catch (e) {
+                        //
                     }
 
-                    let closedSockets = 0;
-
-                    sockets.forEach(ws => {
-                        try {
-                            ws.send(JSON.stringify({
-                                event: 'pusher:error',
-                                data: {
-                                    code: 4200,
-                                    message: 'Server closed. Please reconnect shortly.',
-                                },
-                            }));
-
-                            ws.close();
-                        } catch (e) {
-                            //
-                        }
-
-                        closedSockets++;
-
-                        if (closedSockets === totalSockets) {
-                            closedNamespaces++;
-
-                            if(closedNamespaces === totalNamesapaces) {
-                                resolve();
-                            }
-                        }
-                    });
+                    wsCallback();
+                }).then(() => {
+                    this.server.adapter.clear(namespaceId);
+                    nsCallback();
                 });
             });
+        }).then(() => {
+            // One last clear to make sure everything went away.
+            return this.server.adapter.clear();
         });
     }
 
@@ -553,6 +550,13 @@ export class WsHandler {
      */
     protected checkForValidApp(ws: WebSocket): Promise<App|null> {
         return this.server.appManager.findByKey(ws.appKey);
+    }
+
+    /**
+     * Make sure that the app is enabled.
+     */
+    protected checkIfAppIsEnabled(ws: WebSocket): Promise<boolean> {
+        return Promise.resolve(ws.app.enabled);
     }
 
     /**

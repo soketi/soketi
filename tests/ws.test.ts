@@ -5,6 +5,8 @@ jest.retryTimes(2);
 
 describe('ws test', () => {
     beforeEach(() => {
+        jest.resetModules();
+
         return Utils.waitForPortsToFreeUp();
     });
 
@@ -185,6 +187,20 @@ describe('ws test', () => {
         });
     });
 
+    Utils.shouldRun(Utils.appManagerIs('array'))('throw invalid app error if app is deactivated', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enabled': false }, (server: Server) => {
+            let client = Utils.newClient();
+
+            client.connection.bind('state_change', ({ current }) => {
+                if (['unavailable', 'failed', 'disconnected'].includes(current)) {
+                    done();
+                } else {
+                    throw new Error(`${current} is not an expected state.`);
+                }
+            });
+        });
+    });
+
     test('should check for channelLimits.maxNameLength', done => {
         Utils.newServer({ 'channelLimits.maxNameLength': 25 }, (server: Server) => {
             let client = Utils.newClient();
@@ -323,10 +339,11 @@ describe('ws test', () => {
 
                                         client2.unsubscribe(channelName);
 
-                                        server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
-                                            // TODO: Expect
-                                            // expect(sockets.size).toBe(1);
-                                            done();
+                                        Utils.wait(3000).then(() => {
+                                            server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                                expect(sockets.size).toBe(1);
+                                                done();
+                                            });
                                         });
                                     });
                                 });

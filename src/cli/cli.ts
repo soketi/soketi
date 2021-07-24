@@ -30,6 +30,7 @@ export class Cli {
         DEFAULT_APP_SECRET: 'appManager.array.apps.0.secret',
         DEFAULT_APP_MAX_CONNS: 'appManager.array.apps.0.maxConnections',
         DEFAULT_APP_ENABLE_CLIENT_MESSAGES: 'appManager.array.apps.0.enableClientMessages',
+        DEFAULT_APP_ENABLED: 'appManager.array.apps.0.enabled',
         DEFAULT_APP_MAX_BACKEND_EVENTS_PER_SEC: 'appManager.array.apps.0.maxBackendEventsPerSecond',
         DEFAULT_APP_MAX_CLIENT_EVENTS_PER_SEC: 'appManager.array.apps.0.maxClientEventsPerSecond',
         DEFAULT_APP_MAX_READ_REQ_PER_SEC: 'appManager.array.apps.0.maxReadRequestsPerSecond',

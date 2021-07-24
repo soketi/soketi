@@ -39,6 +39,7 @@ export class Server {
                         secret: 'app-secret',
                         maxConnections: -1,
                         enableClientMessages: false,
+                        enabled: true,
                         maxBackendEventsPerSecond: -1,
                         maxClientEventsPerSecond: -1,
                         maxReadRequestsPerSecond: -1,
@@ -290,6 +291,8 @@ export class Server {
                 }
 
                 uWS.us_listen_socket_close(this.serverProcess);
+
+                return new Promise(resolve => setTimeout(resolve, 3000));
             });
         });
     }
