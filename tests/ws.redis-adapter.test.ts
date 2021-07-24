@@ -277,11 +277,10 @@ describe('ws test for redis adapter', () => {
 
                                             client2.unsubscribe(channelName);
 
-                                                Utils.wait(3000).then(() => {
-                                                    server1.adapter.getChannelSockets('app-id', channelName).then(sockets =>{
-                                                        expect(sockets.size).toBe(1);
-                                                        done();
-                                                    });
+                                            Utils.wait(3000).then(() => {
+                                                server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                                    expect(sockets.size).toBe(1);
+                                                    done();
                                                 });
                                             });
                                         });
