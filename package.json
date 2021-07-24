@@ -1,7 +1,7 @@
 {
   "name": "@soketi/pws",
   "version": "0.0.0-dev",
-  "description": "P(usher)WS is a Pusher Protocol-compatible Websockets server, written on top of uWS.",
+  "description": "pWS is an open-source alternative for the Pusher service.",
   "repository": {
     "type": "git",
     "url": "https://github.com/soketi/pws.git"
