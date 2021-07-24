@@ -7,7 +7,7 @@ pWS - Pusher (over) [uWS](https://github.com/uNetworking/uWebSockets.js)
 [![Total Downloads](https://img.shields.io/npm/dt/@soketi/pws)](https://www.npmjs.com/package/@soketi/pws)
 [![License](https://img.shields.io/npm/l/@soketi/pws)](https://www.npmjs.com/package/@soketi/pws)
 
-pWS is an open-source alternative for the Pusher service. 📡
+pWS is a free, open-source alternative for the Pusher service. 📡
 
 The server is built on top of [uWebSockets.js](https://github.com/uNetworking/uWebSockets.js), a (ported to Node.js) C application that claims to be running _[8.5x that of Fastify](https://alexhultman.medium.com/serving-100k-requests-second-from-a-fanless-raspberry-pi-4-over-ethernet-fdd2c2e05a1e) and at least [10x that of Socket.IO](https://medium.com/swlh/100k-secure-websockets-with-raspberry-pi-4-1ba5d2127a23). ([source](https://github.com/uNetworking/uWebSockets.js))_
 
