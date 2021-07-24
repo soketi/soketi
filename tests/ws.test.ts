@@ -187,6 +187,20 @@ describe('ws test', () => {
         });
     });
 
+    Utils.shouldRun(Utils.appManagerIs('array'))('throw invalid app error if app is deactivated', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enabled': false }, (server: Server) => {
+            let client = Utils.newClient();
+
+            client.connection.bind('state_change', ({ current }) => {
+                if (['unavailable', 'failed', 'disconnected'].includes(current)) {
+                    done();
+                } else {
+                    throw new Error(`${current} is not an expected state.`);
+                }
+            });
+        });
+    });
+
     test('should check for channelLimits.maxNameLength', done => {
         Utils.newServer({ 'channelLimits.maxNameLength': 25 }, (server: Server) => {
             let client = Utils.newClient();
