@@ -263,21 +263,19 @@ describe('ws test for redis adapter', () => {
                         let channel1 = client1.subscribe(channelName);
 
                         channel1.bind('pusher:subscription_succeeded', () => {
-                            Utils.wait(3000).then(() => {
-                                server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
-                                    expect(sockets.size).toBe(1);
+                            server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                expect(sockets.size).toBe(1);
 
-                                    let client2 = Utils.newClient({}, 6002);
+                                let client2 = Utils.newClient({}, 6002);
 
-                                    client2.connection.bind('connected', () => {
-                                        let channel2 = client2.subscribe(channelName);
+                                client2.connection.bind('connected', () => {
+                                    let channel2 = client2.subscribe(channelName);
 
-                                        channel2.bind('pusher:subscription_succeeded', () => {
-                                            Utils.wait(3000).then(() => {
-                                                server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
-                                                    expect(sockets.size).toBe(2);
+                                    channel2.bind('pusher:subscription_succeeded', () => {
+                                        server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                            expect(sockets.size).toBe(2);
 
-                                                    client2.unsubscribe(channelName);
+                                            client2.unsubscribe(channelName);
 
                                                 Utils.wait(3000).then(() => {
                                                     server1.adapter.getChannelSockets('app-id', channelName).then(sockets =>{
