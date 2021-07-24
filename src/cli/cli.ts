@@ -69,6 +69,7 @@ export class Cli {
         PRESENCE_MAX_MEMBER_SIZE: 'presence.maxMemberSizeInKb',
         PRESENCE_MAX_MEMBERS: 'presence.maxMembersPerChannel',
         QUEUE_DRIVER: 'queue.driver',
+        QUEUE_REDIS_CONCURRENCY: 'queue.redis.concurrency',
         RATE_LIMITER_DRIVER: 'rateLimiter.driver',
         SSL_CERT: 'ssl.certPath',
         SSL_KEY: 'ssl.keyPath',

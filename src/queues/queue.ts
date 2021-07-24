@@ -1,5 +1,6 @@
 import { Log } from './../log';
 import { QueueInterface } from './queue-interface';
+import { RedisQueueDriver } from './redis-queue-driver';
 import { SyncQueueDriver } from './sync-queue-driver';
 import { Server } from '../server';
 
@@ -15,6 +16,8 @@ export class Queue implements QueueInterface {
     constructor(protected server: Server) {
         if (server.options.queue.driver === 'sync') {
             this.driver = new SyncQueueDriver(server);
+        } else if (server.options.queue.driver === 'redis') {
+            this.driver = new RedisQueueDriver(server);
         } else {
             Log.error('No queue driver specified.');
         }
@@ -32,5 +35,12 @@ export class Queue implements QueueInterface {
       */
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
         return this.driver.processQueue(queueName, callback);
+    }
+
+    /**
+     * Clear the queues for a graceful shutdown.
+     */
+    clear(): Promise<void> {
+        return this.driver.clear();
     }
 }

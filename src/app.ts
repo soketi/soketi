@@ -69,7 +69,7 @@ export class App implements AppInterface {
     public maxReadRequestsPerSecond: string|number;
 
     /**
-     * The list of webhooks.
+     * @type {WebhookInterface[]}
      */
     public webhooks: WebhookInterface[];
 

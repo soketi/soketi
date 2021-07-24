@@ -98,6 +98,9 @@ export interface Options {
     };
     queue: {
         driver: string;
+        redis: {
+            concurrency: number;
+        };
     };
     rateLimiter: {
         driver: string;

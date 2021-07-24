@@ -12,6 +12,7 @@ export interface ClientEventData {
     };
     socket_id?: string;
     user_id?: string;
+    time_ms?: number;
 }
 
 export class WebhookSender {
@@ -19,18 +20,33 @@ export class WebhookSender {
      * Initialize the Webhook sender.
      */
     constructor(protected server: Server) {
-        server.queueManager.processQueue('webhooks', (job, done) => {
-            let webhook: WebhookInterface = job.data.webhook;
-            let headers: { [key: string]: string; } = job.data.headers;
-            let data: { [key: string]: any; } = job.data.data;
+        let queueProcessor = (job, done) => {
+            let rawData: {
+                webhook: WebhookInterface;
+                headers: { [key: string]: string; };
+                data: ClientEventData;
+            } = job.data;
+
+            let { webhook, headers, data } = rawData;
 
             axios.post(webhook.url, data, { headers }).then((res) => {
-                done();
+                if (typeof done === 'function') {
+                    done();
+                }
             }).catch(err => {
                 // TODO: Maybe retry exponentially?
-                done();
+                if (typeof done === 'function') {
+                    done();
+                }
             });
-        });
+        };
+
+        // TODO: Maybe have one queue per app to reserve queue thresholds?
+        server.queueManager.processQueue('client_event_webhooks', queueProcessor);
+        server.queueManager.processQueue('member_added_webhooks', queueProcessor);
+        server.queueManager.processQueue('member_removed_webhooks', queueProcessor);
+        server.queueManager.processQueue('channel_vacated_webhooks', queueProcessor);
+        server.queueManager.processQueue('channel_occupied_webhooks', queueProcessor);
     }
 
     /**
@@ -52,7 +68,7 @@ export class WebhookSender {
             formattedData.user_id = userId;
         }
 
-        this.send(app, formattedData);
+        this.send(app, formattedData, 'client_event_webhooks');
     }
 
     /**
@@ -63,7 +79,7 @@ export class WebhookSender {
             name: App.MEMBER_ADDED_WEBHOOK,
             channel,
             user_id: userId,
-        });
+        }, 'member_added_webhooks');
     }
 
     /**
@@ -74,7 +90,7 @@ export class WebhookSender {
             name: App.MEMBER_REMOVED_WEBHOOK,
             channel,
             user_id: userId,
-        });
+        }, 'member_removed_webhooks');
     }
 
     /**
@@ -84,7 +100,7 @@ export class WebhookSender {
         this.send(app, {
             name: App.CHANNEL_VACATED_WEBHOOK,
             channel,
-        });
+        }, 'channel_vacated_webhooks');
     }
 
     /**
@@ -94,13 +110,13 @@ export class WebhookSender {
         this.send(app, {
             name: App.CHANNEL_OCCUPIED_WEBHOOK,
             channel,
-        });
+        }, 'channel_occupied_webhooks');
     }
 
     /**
      * Send a webhook for the app with the given data.
      */
-    protected send(app: App, data: ClientEventData): void {
+    protected send(app: App, data: ClientEventData, queueName: string): void {
         let dataToSend = {
             ...data,
             ...{ time_ms: (new Date).getTime() },
@@ -116,7 +132,7 @@ export class WebhookSender {
 
         app.webhooks.forEach((webhook: WebhookInterface) => {
             if (webhook.event_types.includes(data.name)) {
-                this.server.queueManager.addToQueue('webhooks', {
+                this.server.queueManager.addToQueue(queueName, {
                     webhook,
                     headers,
                     data: dataToSend,
