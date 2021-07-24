@@ -50,8 +50,10 @@ export class RedisQueueDriver implements QueueInterface {
                 this.queueWithWorker.set(queueName, {
                     queue: new Queue(queueName, { connection }),
                     // TODO: Sandbox the worker? https://docs.bullmq.io/guide/workers/sandboxed-processors
-                    // TODO: Concurrency? https://docs.bullmq.io/guide/workers/concurrency
-                    worker: new Worker(queueName, callback as any, { connection }),
+                    worker: new Worker(queueName, callback as any, {
+                        connection,
+                        concurrency: this.server.options.queue.redis.concurrency,
+                    }),
                 });
             }
 

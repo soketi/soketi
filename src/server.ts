@@ -140,6 +140,9 @@ export class Server {
         },
         queue: {
             driver: 'sync',
+            redis: {
+                concurrency: 1,
+            },
         },
         rateLimiter: {
             driver: 'local',
