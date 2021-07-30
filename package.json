@@ -22,7 +22,6 @@
     "esversion": 9
   },
   "dependencies": {
-    "@msgpack/msgpack": "^2.7.0",
     "arraybuffer-to-string": "^1.0.2",
     "async": "^3.2.0",
     "aws-sdk": "^2.937.0",
