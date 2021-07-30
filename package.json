@@ -24,6 +24,7 @@
   "dependencies": {
     "arraybuffer-to-string": "^1.0.2",
     "async": "^3.2.0",
+    "avsc": "^5.7.1",
     "aws-sdk": "^2.937.0",
     "axios": "^0.21.1",
     "body-parser": "^1.19.0",
@@ -35,7 +36,6 @@
     "express": "^4.17.1",
     "ioredis": "^4.19.0",
     "knex": "^0.95.2",
-    "msgpack": "^1.0.3",
     "mysql": "^2.18.1",
     "pg": "^8.6.0",
     "prom-client": "^13.1.0",
