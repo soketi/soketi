@@ -1,3 +1,4 @@
+import { encode, decode } from '@msgpack/msgpack';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { PresenceMember } from '../presence-member';
@@ -6,7 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'uWebSockets.js';
 
 const Redis = require('ioredis');
-const msgpack = require('msgpack');
 
 /**
  *                                       |-----> NODE1 ----> SEEKS DATA (ONREQUEST) ----> SEND TO THE NODE0 ---> NODE0 (ONRESPONSE) APPENDS DATA TO REQUEST OBJECT
@@ -25,6 +25,14 @@ enum RequestType {
     CHANNEL_MEMBERS_COUNT = 5,
     CHANNEL_SOCKETS_COUNT = 6,
     SOCKET_EXISTS_IN_CHANNEL = 7,
+}
+
+interface PubsubBroadcastedMessage {
+    uuid: string;
+    appId: string;
+    channel: string;
+    data: any;
+    exceptingId?: string;
 }
 
 interface Request {
@@ -499,7 +507,7 @@ export class RedisAdapter extends LocalAdapter {
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string): any {
-        let msg = msgpack.pack({
+        let msg = encode({
             uuid: this.uuid,
             appId,
             channel,
@@ -523,13 +531,13 @@ export class RedisAdapter extends LocalAdapter {
             return;
         }
 
-        const decodedMessage = msgpack.unpack(msg);
+        const decodedMessage = decode(msg);
 
         if (typeof decodedMessage !== 'object') {
             return;
         }
 
-        const { uuid, appId, channel, data, exceptingId } = decodedMessage;
+        const { uuid, appId, channel, data, exceptingId } = decodedMessage as PubsubBroadcastedMessage;
 
         if (uuid === this.uuid || ! appId || ! channel || ! data) {
             return;
