@@ -151,8 +151,6 @@ export class WsHandler {
             }
         }
 
-        this.updateTimeout(ws);
-
         if (ws.app) {
             this.server.metricsManager.markWsMessageReceived(ws.app.id, message);
         }
@@ -167,8 +165,9 @@ export class WsHandler {
                 this.server.adapter.getNamespace(ws.app.id).removeSocket(ws.id);
                 this.server.metricsManager.markDisconnection(ws);
             }
+
+            this.clearTimeout(ws);
         });
-        this.clearTimeout(ws);
     }
 
     /**
@@ -235,6 +234,8 @@ export class WsHandler {
             event: 'pusher:pong',
             data: {},
         }));
+
+        this.updateTimeout(ws);
     }
 
     /**
