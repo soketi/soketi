@@ -1,7 +1,7 @@
 {
   "name": "@soketi/pws",
   "version": "0.0.0-dev",
-  "description": "pWS is an open-source alternative for the Pusher service.",
+  "description": "pWS is a free, open-source Pusher drop-in alterantive.",
   "repository": {
     "type": "git",
     "url": "https://github.com/soketi/pws.git"
