@@ -116,7 +116,8 @@ export class WsHandler {
                         };
 
                         ws.send(JSON.stringify(broadcastMessage));
-                        this.updateTimeout(ws)
+
+                        this.updateTimeout(ws);
 
                         this.server.metricsManager.markNewConnection(ws);
                         this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
@@ -230,12 +231,12 @@ export class WsHandler {
      * Send back the pong response.
      */
     handlePong(ws: WebSocket): any {
+        this.updateTimeout(ws);
+
         ws.send(JSON.stringify({
             event: 'pusher:pong',
             data: {},
         }));
-
-        this.updateTimeout(ws);
     }
 
     /**
@@ -600,7 +601,7 @@ export class WsHandler {
      */
     protected clearTimeout(ws: WebSocket) {
         if(ws.timeout) {
-            clearTimeout(ws.timeout)
+            clearTimeout(ws.timeout);
         }
     }
 
@@ -609,8 +610,9 @@ export class WsHandler {
      */
     protected updateTimeout(ws: WebSocket) {
         this.clearTimeout(ws);
+
         ws.timeout = setTimeout(() => {
-            ws.close()
-        }, 120_000)
+            ws.close();
+        }, 120_000);
     }
 }
