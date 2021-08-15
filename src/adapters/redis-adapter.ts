@@ -5,7 +5,6 @@ import { Server } from '../server';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'uWebSockets.js';
 
-const avsc = require('avsc');
 const Redis = require('ioredis');
 
 /**
@@ -97,20 +96,6 @@ export class RedisAdapter extends LocalAdapter {
      * The time (in ms) for the request to be fulfilled.
      */
     public readonly requestsTimeout: number;
-
-    /**
-     * The Avro schema for pubsub broadcasted message.
-     */
-    public broadcastedMessageSchema = avsc.Type.forSchema({
-        type: 'record',
-        fields: [
-            { name: 'uuid', type: 'string' },
-            { name: 'appId', type: 'string' },
-            { name: 'channel', type: 'string' },
-            { name: 'data', type: 'string' },
-            { name: 'exceptingId', type: ['null', 'string'] },
-        ],
-    });
 
     /**
      * Initialize the adapter.
@@ -521,15 +506,13 @@ export class RedisAdapter extends LocalAdapter {
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId: string|null = null): any {
-        let msg = this.broadcastedMessageSchema.toBuffer({
+        this.pubClient.publish(this.channel, JSON.stringify({
             uuid: this.uuid,
             appId,
             channel,
             data,
             exceptingId,
-        });
-
-        this.pubClient.publish(this.channel, msg);
+        }));
 
         super.send(appId, channel, data, exceptingId);
     }
@@ -545,7 +528,7 @@ export class RedisAdapter extends LocalAdapter {
             return;
         }
 
-        const decodedMessage: PubsubBroadcastedMessage = this.broadcastedMessageSchema.fromBuffer(msg);
+        let decodedMessage: PubsubBroadcastedMessage = JSON.parse(msg.toString());
 
         if (typeof decodedMessage !== 'object') {
             return;
