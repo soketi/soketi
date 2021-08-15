@@ -101,7 +101,7 @@ export class RedisAdapter extends LocalAdapter {
     /**
      * The Avro schema for pubsub broadcasted message.
      */
-    public pubsubBroadcastedMessageAvroType = avsc.Type.forSchema({
+    public broadcastedMessageSchema = avsc.Type.forSchema({
         type: 'record',
         fields: [
             { name: 'uuid', type: 'string' },
@@ -521,7 +521,7 @@ export class RedisAdapter extends LocalAdapter {
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string): any {
-        let msg = this.pubsubBroadcastedMessageAvroType.toBuffer({
+        let msg = this.broadcastedMessageSchema.toBuffer({
             uuid: this.uuid,
             appId,
             channel,
@@ -545,7 +545,7 @@ export class RedisAdapter extends LocalAdapter {
             return;
         }
 
-        const decodedMessage: PubsubBroadcastedMessage = this.pubsubBroadcastedMessageAvroType.fromBuffer(msg);
+        const decodedMessage: PubsubBroadcastedMessage = this.broadcastedMessageSchema.fromBuffer(msg);
 
         if (typeof decodedMessage !== 'object') {
             return;
