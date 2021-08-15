@@ -99,7 +99,7 @@ export class Adapter implements AdapterInterface {
     /**
      * Send a message to a namespace and channel.
      */
-    send(appId: string, channel: string, data: string, exceptingId?: string): void {
+    send(appId: string, channel: string, data: string, exceptingId: string|null = null): void {
         return this.driver.send(appId, channel, data, exceptingId);
     }
 

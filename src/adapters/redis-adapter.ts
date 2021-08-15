@@ -32,7 +32,7 @@ interface PubsubBroadcastedMessage {
     appId: string;
     channel: string;
     data: any;
-    exceptingId?: string;
+    exceptingId?: string|null;
 }
 
 interface Request {
@@ -108,7 +108,7 @@ export class RedisAdapter extends LocalAdapter {
             { name: 'appId', type: 'string' },
             { name: 'channel', type: 'string' },
             { name: 'data', type: 'string' },
-            { name: 'exceptingId', type: 'string' },
+            { name: 'exceptingId', type: ['null', 'string'] },
         ],
     });
 
@@ -520,7 +520,7 @@ export class RedisAdapter extends LocalAdapter {
     /**
      * Send a message to a namespace and channel.
      */
-    send(appId: string, channel: string, data: string, exceptingId?: string): any {
+    send(appId: string, channel: string, data: string, exceptingId: string|null = null): any {
         let msg = this.broadcastedMessageSchema.toBuffer({
             uuid: this.uuid,
             appId,
