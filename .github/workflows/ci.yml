@@ -22,6 +22,7 @@ jobs:
       matrix:
         node:
           - 14.x
+          - 16.x
         adapter:
           - local
           - redis
@@ -30,12 +31,14 @@ jobs:
           - dynamodb
           - mysql
           - postgres
-        rate_limiter:
-          - local
-          - redis
-        queue_driver:
-          - sync
-          - redis
+
+        include:
+          - adapter: local
+            rate_limiter: local
+            queue_driver: sync
+          - adapter: redis
+            rate_limiter: redis
+            queue_driver: redis
 
     name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 

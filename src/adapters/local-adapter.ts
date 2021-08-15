@@ -103,7 +103,7 @@ export class LocalAdapter implements AdapterInterface {
     /**
      * Send a message to a namespace and channel.
      */
-    send(appId: string, channel: string, data: string, exceptingId?: string): any {
+    send(appId: string, channel: string, data: string, exceptingId: string|null = null): any {
         let nsp = this.namespaces.get(appId);
 
         if (! nsp) {
