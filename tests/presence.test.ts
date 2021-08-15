@@ -187,8 +187,7 @@ describe('presence channel test', () => {
                         let socket = namespace.sockets.get(namespace.sockets.keys().next().value);
 
                         expect(namespace.channels.size).toBe(0);
-                        // TODO: This assertion is crazy
-                        // expect(namespace.sockets.size).toBe(1);
+                        expect(namespace.sockets.size).toBe(1);
                         expect(socket.subscribedChannels.size).toBe(0);
                         expect(socket.presence.size).toBe(0);
 
@@ -221,8 +220,7 @@ describe('presence channel test', () => {
                 Utils.wait(3000).then(() => {
                     let namespace = server.adapter.getNamespace('app-id');
 
-                    // TODO: This assertion is crazy
-                    // expect(namespace.sockets.size).toBe(0);
+                    expect(namespace.sockets.size).toBe(0);
                     expect(namespace.channels.size).toBe(0);
 
                     done();
