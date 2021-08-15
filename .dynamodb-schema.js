@@ -15,6 +15,7 @@ let createRecord = () => {
             AppSecret: { S: 'app-secret' },
             MaxConnections: { N: '-1' },
             EnableClientMessages: { B: 'false' },
+            Enabled: { B: 'true' },
             MaxBackendEventsPerSecond: { N: '-1' },
             MaxClientEventsPerSecond: { N: '-1' },
             MaxReadRequestsPerSecond: { N: '-1' },

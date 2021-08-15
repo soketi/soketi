@@ -26,6 +26,7 @@ describe('webhooks test', () => {
         Utils.newServer({
             'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
+            'database.redis.keyPrefix': 'client-event-webhook',
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
                 let app = new App(server.options.appManager.array.apps[0]);
@@ -64,7 +65,7 @@ describe('webhooks test', () => {
                 });
             });
         });
-    });
+    }, 60 * 1000);
 
     Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from channel_occupied and channel_vacated', done => {
         let webhooks = [{
@@ -77,6 +78,7 @@ describe('webhooks test', () => {
         Utils.newServer({
             'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
+            'database.redis.keyPrefix': 'channel-webhooks',
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
                 let app = new App(server.options.appManager.array.apps[0]);
@@ -109,7 +111,7 @@ describe('webhooks test', () => {
                 });
             });
         });
-    });
+    }, 60 * 1000);
 
     Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from member_added and member_removed', done => {
         let webhooks = [{
@@ -122,6 +124,7 @@ describe('webhooks test', () => {
         Utils.newServer({
             'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
+            'database.redis.keyPrefix': 'presence-webhooks',
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
                 let app = new App(server.options.appManager.array.apps[0]);
@@ -200,5 +203,5 @@ describe('webhooks test', () => {
                 });
             });
         });
-    });
+    }, 60 * 1000);
 });

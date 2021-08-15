@@ -21,7 +21,7 @@ export interface AdapterInterface {
     /**
      * Send a message to a namespace and channel.
      */
-    send(appId: string, channel: string, data: string, exceptingId?: string): any;
+    send(appId: string, channel: string, data: string, exceptingId?: string|null): any;
 
     /**
      * Clear the local namespaces.

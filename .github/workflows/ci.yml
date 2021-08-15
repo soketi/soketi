@@ -22,6 +22,7 @@ jobs:
       matrix:
         node:
           - 14.x
+          - 16.x
         adapter:
           - local
           - redis
@@ -30,16 +31,21 @@ jobs:
           - dynamodb
           - mysql
           - postgres
-        rate_limiter:
-          - local
-          - redis
 
-    name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }})
+        include:
+          - adapter: local
+            rate_limiter: local
+            queue_driver: sync
+          - adapter: redis
+            rate_limiter: redis
+            queue_driver: redis
+
+    name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-node@v2.2.0
+      - uses: actions/setup-node@v2.4.0
         name: Installing Node.js v${{ matrix.node }}
         with:
           node-version: ${{ matrix.node }}
@@ -104,11 +110,12 @@ jobs:
         env:
           TEST_ADAPTER: ${{ matrix.adapter }}
           TEST_APP_MANAGER: ${{ matrix.app_manager }}
+          TEST_QUEUE_DRIVER: ${{ matrix.queue_driver }}
           TEST_RATE_LIMITER: ${{ matrix.rate_limiter }}
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
 
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v2.0.2
         with:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}

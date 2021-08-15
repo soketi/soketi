@@ -39,8 +39,12 @@ export class Namespace {
     /**
      * Remove a socket from the namespace.
      */
-    removeSocket(wsId: string): Promise<boolean> {
-        return Promise.resolve(this.sockets.delete(wsId));
+    async removeSocket(wsId: string): Promise<boolean> {
+        for (let channel of this.channels.keys()){
+            await this.removeFromChannel(wsId, channel);
+        }
+
+        return this.sockets.delete(wsId);
     }
 
     /**
@@ -63,7 +67,7 @@ export class Namespace {
      * Remove a socket ID from the channel identifier.
      * Return the total number of connections remaining to the channel.
      */
-    removeFromChannel(wsId: string, channel: string): Promise<number> {
+    async removeFromChannel(wsId: string, channel: string): Promise<number> {
         return new Promise(resolve => {
             if (this.channels.has(channel)) {
                 this.channels.get(channel).delete(wsId);

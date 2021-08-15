@@ -39,6 +39,7 @@ export class Server {
                         secret: 'app-secret',
                         maxConnections: -1,
                         enableClientMessages: false,
+                        enabled: true,
                         maxBackendEventsPerSecond: -1,
                         maxClientEventsPerSecond: -1,
                         maxReadRequestsPerSecond: -1,
@@ -139,6 +140,9 @@ export class Server {
         },
         queue: {
             driver: 'sync',
+            redis: {
+                concurrency: 1,
+            },
         },
         rateLimiter: {
             driver: 'local',
@@ -273,17 +277,17 @@ export class Server {
      * Stop the server.
      */
     stop(): Promise<void> {
+        this.closing = true;
+
         if (this.options.debug) {
-            this.closing = true;
-
             Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...\n');
-
             Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
         }
 
         return this.wsHandler.closeAllLocalSockets().then(() => {
             return Promise.all([
                 this.metricsManager.clear(),
+                this.queueManager.clear(),
             ]).then(() => {
                 if (this.options.debug) {
                     Log.warning('⚡ All sockets were closed. Now closing the server.');

@@ -7,7 +7,7 @@ export class SyncQueueDriver implements QueueInterface {
     /**
      * The list of queues with their code.
      */
-    protected queues = new Map<string, CallableFunction>();
+    protected queues: Map<string, CallableFunction> = new Map();
 
     /**
      * Initialize the Prometheus exporter.
@@ -41,5 +41,12 @@ export class SyncQueueDriver implements QueueInterface {
             this.queues.set(queueName, callback);
             resolve();
         });
+    }
+
+    /**
+     * Clear the queues for a graceful shutdown.
+     */
+    clear(): Promise<void> {
+        return Promise.resolve();
     }
 }
