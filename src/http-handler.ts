@@ -32,7 +32,7 @@ export class HttpHandler {
         this.attachMiddleware(res, [
             this.corsMiddleware,
         ]).then(res => {
-            let {rss, heapTotal, external, arrayBuffers} = process.memoryUsage();
+            let { rss, heapTotal, external, arrayBuffers } = process.memoryUsage();
 
             let totalSize = v8.getHeapStatistics().total_available_size;
             let usedSize = rss + heapTotal + external + arrayBuffers;
@@ -54,14 +54,6 @@ export class HttpHandler {
         this.attachMiddleware(res, [
             this.corsMiddleware,
         ]).then(res => {
-            let metricsResponse = metrics => {
-                if (res.query.json) {
-                    this.sendJson(res, metrics)
-                } else {
-                    this.send(res, metrics)
-                }
-            };
-
             let handleError = err => {
                 this.serverErrorResponse(res, 'A server error has occurred.');
             }
@@ -69,12 +61,16 @@ export class HttpHandler {
             if (res.query.json) {
                 this.server.metricsManager
                     .getMetricsAsJson()
-                    .then(metricsResponse)
+                    .then(metrics => {
+                        this.sendJson(res, metrics)
+                    })
                     .catch(handleError);
             } else {
                 this.server.metricsManager
                     .getMetricsAsPlaintext()
-                    .then(metricsResponse)
+                    .then(metrics => {
+                        this.send(res, metrics)
+                    })
                     .catch(handleError);
             }
         });
@@ -237,7 +233,7 @@ export class HttpHandler {
                 }), message.socket_id);
             });
 
-            this.server.metricsManager.markApiMessage(res.params.appId, message, {ok: true});
+            this.server.metricsManager.markApiMessage(res.params.appId, message, { ok: true });
 
             this.sendJson(res, {
                 ok: true,
