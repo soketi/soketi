@@ -1,8 +1,8 @@
 import async from 'async';
-import {HttpResponse, RecognizedString} from 'uWebSockets.js';
-import {Server} from './server';
-import {Utils} from './utils';
-import {Log} from './log';
+import { HttpResponse, RecognizedString } from 'uWebSockets.js';
+import { Server } from './server';
+import { Utils } from './utils';
+import { Log } from './log';
 
 const v8 = require('v8');
 
@@ -32,7 +32,7 @@ export class HttpHandler {
         this.attachMiddleware(res, [
             this.corsMiddleware,
         ]).then(res => {
-            let { rss, heapTotal, external, arrayBuffers } = process.memoryUsage();
+            let {rss, heapTotal, external, arrayBuffers} = process.memoryUsage();
 
             let totalSize = v8.getHeapStatistics().total_available_size;
             let usedSize = rss + heapTotal + external + arrayBuffers;
@@ -233,7 +233,7 @@ export class HttpHandler {
                 }), message.socket_id);
             });
 
-            this.server.metricsManager.markApiMessage(res.params.appId, message, { ok: true });
+            this.server.metricsManager.markApiMessage(res.params.appId, message, {ok: true});
 
             this.sendJson(res, {
                 ok: true,
