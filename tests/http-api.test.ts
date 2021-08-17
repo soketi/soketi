@@ -445,4 +445,18 @@ describe('http api test', () => {
                 });
         });
     });
+
+    test('non existent route must return 404', done => {
+        Utils.newServer({}, (server: Server) => {
+
+            axios.get('http://127.0.0.1:6001/favicon.ico').then(res => {
+                throw new Error('Status must be 404');
+            },(e) => {
+                if (e.response.status !== 404) {
+                    throw new Error('Status must be 404');
+                }
+                done()
+            });
+        });
+    });
 });

@@ -242,6 +242,8 @@ export class HttpHandler {
     }
 
     notFound(res: HttpResponse) {
+        //Send status before any headers.
+        res.writeStatus('404 Not Found')
         this.attachMiddleware(res, [
             this.corsMiddleware,
         ]).then(res => {
@@ -250,15 +252,15 @@ export class HttpHandler {
     }
 
     protected badResponse(res: HttpResponse, error: string) {
-        return this.sendJson(res, {error, code: 400,}, '400 Invalid Request')
+        return this.sendJson(res, {error, code: 400}, '400 Invalid Request')
     }
 
     protected notFoundResponse(res: HttpResponse, error: string) {
-        return this.sendJson(res, {error, code: 404,}, '404 Not Found')
+        return this.sendJson(res, {error, code: 404}, '404 Not Found')
     }
 
     protected unauthorizedResponse(res: HttpResponse, error: string) {
-        return this.sendJson(res, {error, code: 401,}, '401 Unauthorized')
+        return this.sendJson(res, {error, code: 401}, '401 Unauthorized')
     }
 
     protected entityTooLargeResponse(res: HttpResponse, error: string) {
