@@ -616,11 +616,11 @@ export class WsHandler {
         ws.timeout = setTimeout(() => {
             ws.timeout = setTimeout(() => {
                 ws.close();
-            }, 90_000);
+            }, 30_000);
             ws.send(JSON.stringify({
                 event: 'pusher:ping',
                 data: {},
             }));
-        }, 30_000);
+        }, 120_000);
     }
 }
