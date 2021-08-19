@@ -611,7 +611,8 @@ export class WsHandler {
     protected updateTimeout(ws: WebSocket) {
         this.clearTimeout(ws);
 
-        ws.timeout = setTimeout(() => {
+        ws.timeout = setTimeout(async () => {
+            await this.unsubscribeFromAllChannels(ws)
             ws.close();
         }, 120_000);
     }
