@@ -137,7 +137,7 @@ export class WsHandler {
 
         if (message) {
             if (message.event === 'pusher:pong') {
-                //TODO this.handlePong(ws);
+                //do nothing. timeout will update anyway
             } else if (message.event === 'pusher:ping') {
                 this.handlePing(ws);
             } else if (message.event === 'pusher:subscribe') {
