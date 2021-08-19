@@ -614,9 +614,11 @@ export class WsHandler {
         this.clearTimeout(ws);
 
         ws.timeout = setTimeout(() => {
-            ws.timeout = setTimeout(() => {
+            ws.timeout = setTimeout(async () => {
+                await this.unsubscribeFromAllChannels(ws)
                 ws.close();
             }, 30_000);
+
             ws.send(JSON.stringify({
                 event: 'pusher:ping',
                 data: {},
