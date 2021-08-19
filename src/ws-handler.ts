@@ -136,8 +136,10 @@ export class WsHandler {
         }
 
         if (message) {
-            if (message.event === 'pusher:ping') {
-                this.handlePong(ws);
+            if (message.event === 'pusher:pong') {
+                //TODO this.handlePong(ws);
+            } else if (message.event === 'pusher:ping') {
+                this.handlePing(ws);
             } else if (message.event === 'pusher:subscribe') {
                 this.subscribeToChannel(ws, message);
             } else if (message.event === 'pusher:unsubscribe') {
@@ -151,6 +153,8 @@ export class WsHandler {
                 });
             }
         }
+
+        this.updateTimeout(ws);
 
         if (ws.app) {
             this.server.metricsManager.markWsMessageReceived(ws.app.id, message);
@@ -230,9 +234,7 @@ export class WsHandler {
     /**
      * Send back the pong response.
      */
-    handlePong(ws: WebSocket): any {
-        this.updateTimeout(ws);
-
+    handlePing(ws: WebSocket): any {
         ws.send(JSON.stringify({
             event: 'pusher:pong',
             data: {},
@@ -612,7 +614,13 @@ export class WsHandler {
         this.clearTimeout(ws);
 
         ws.timeout = setTimeout(() => {
-            ws.close();
-        }, 120_000);
+            ws.timeout = setTimeout(() => {
+                ws.close();
+            }, 90_000);
+            ws.send(JSON.stringify({
+                event: 'pusher:ping',
+                data: {},
+            }));
+        }, 30_000);
     }
 }
