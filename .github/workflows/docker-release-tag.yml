@@ -26,7 +26,7 @@ jobs:
         id: docker_meta
         uses: docker/metadata-action@v3.4.1
         with:
-          images: soketi/pws
+          images: quay.io/soketi/pws
           tags: |
             type=semver,pattern={{version}}-${{ matrix.node }}
             type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}
@@ -41,9 +41,10 @@ jobs:
         id: tag
         uses: dawidd6/action-get-tag@v1
 
-      - name: Login to DockerHub
+      - name: Login to Quay
         uses: docker/login-action@v1
         with:
+          registry: quay.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
