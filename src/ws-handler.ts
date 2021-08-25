@@ -58,56 +58,63 @@ export class WsHandler {
                 },
             }));
 
-            return ws.close();
+            return ws.end();
         }
 
         ws.id = this.generateSocketId();
         ws.subscribedChannels = new Set();
         ws.presence = new Map<string, PresenceMember>();
+        ws.sendJson = (data) => {
+            if (ws.send(JSON.stringify(data))) {
+                this.updateTimeout(ws);
+            }
+
+            this.server.metricsManager.markWsMessageSent(ws.app.id, data);
+        }
 
         this.checkForValidApp(ws).then(validApp => {
             if (! validApp) {
-                ws.send(JSON.stringify({
+                ws.sendJson({
                     event: 'pusher:error',
                     data: {
                         code: 4001,
                         message: `App key ${ws.appKey} does not exist.`,
                     },
-                }));
+                });
 
-                return ws.close();
+                return ws.end();
             }
 
             ws.app = validApp;
 
             this.checkIfAppIsEnabled(ws).then(enabled => {
                 if (! enabled) {
-                    ws.send(JSON.stringify({
+                    ws.sendJson({
                         event: 'pusher:error',
                         data: {
                             code: 4003,
                             message: 'The app is not enabled.',
                         },
-                    }));
+                    });
 
-                    return ws.close();
+                    return ws.end();
                 }
 
                 this.checkAppConnectionLimit(ws).then(canConnect => {
                     if (! canConnect) {
-                        ws.send(JSON.stringify({
+                        ws.sendJson({
                             event: 'pusher:error',
                             data: {
                                 code: 4100,
                                 message: 'The current concurrent connections quota has been reached.',
                             },
-                        }));
+                        });
 
-                        ws.close();
+                        ws.end();
                     } else {
                         this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
-                        let broadcastMessage = {
+                        const broadcastMessage = {
                             event: 'pusher:connection_established',
                             data: JSON.stringify({
                                 socket_id: ws.id,
@@ -115,12 +122,9 @@ export class WsHandler {
                             }),
                         };
 
-                        ws.send(JSON.stringify(broadcastMessage));
-
-                        this.updateTimeout(ws);
+                        ws.sendJson(broadcastMessage);
 
                         this.server.metricsManager.markNewConnection(ws);
-                        this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
                     }
                 });
             });
@@ -185,15 +189,15 @@ export class WsHandler {
             namespace.getSockets().then(sockets => {
                 async.each([...sockets], ([wsId, ws]: [string, WebSocket], wsCallback) => {
                     try {
-                        ws.send(JSON.stringify({
+                        ws.sendJson({
                             event: 'pusher:error',
                             data: {
                                 code: 4200,
                                 message: 'Server closed. Please reconnect shortly.',
                             },
-                        }));
+                        });
 
-                        ws.close();
+                        ws.end(1013);
                     } catch (e) {
                         //
                     }
@@ -231,12 +235,10 @@ export class WsHandler {
      * Send back the pong response.
      */
     handlePong(ws: WebSocket): any {
-        this.updateTimeout(ws);
-
-        ws.send(JSON.stringify({
+        ws.sendJson({
             event: 'pusher:pong',
             data: {},
-        }));
+        });
     }
 
     /**
@@ -257,9 +259,7 @@ export class WsHandler {
                 },
             };
 
-            ws.send(JSON.stringify(broadcastMessage));
-
-            this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
+            ws.sendJson(broadcastMessage);
 
             return;
         }
@@ -270,7 +270,7 @@ export class WsHandler {
 
                 // For auth errors, send pusher:subscription_error
                 if (authError) {
-                    return ws.send(JSON.stringify({
+                    return ws.sendJson({
                         event: 'pusher:subscription_error',
                         channel,
                         data: {
@@ -278,11 +278,11 @@ export class WsHandler {
                             error: errorMessage,
                             status: 401,
                         },
-                    }));
+                    });
                 }
 
                 // Otherwise, catch any non-auth related errors.
-                return ws.send(JSON.stringify({
+                return ws.sendJson({
                     event: 'pusher:subscription_error',
                     channel,
                     data: {
@@ -290,7 +290,7 @@ export class WsHandler {
                         error: errorMessage,
                         status: errorCode,
                     },
-                }));
+                });
             }
 
             if (! ws.subscribedChannels.has(channel)) {
@@ -311,9 +311,7 @@ export class WsHandler {
                     channel,
                 };
 
-                ws.send(JSON.stringify(broadcastMessage));
-
-                this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
+                ws.sendJson(broadcastMessage);
 
                 return;
             }
@@ -334,9 +332,7 @@ export class WsHandler {
                     },
                 };
 
-                ws.send(JSON.stringify(broadcastMessage));
-
-                this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
+                ws.sendJson(broadcastMessage);
 
                 return;
             }
@@ -361,9 +357,7 @@ export class WsHandler {
                     }),
                 };
 
-                ws.send(JSON.stringify(broadcastMessage));
-
-                this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
+                ws.sendJson(broadcastMessage);
 
                 this.server.webhookSender.sendMemberAdded(ws.app, channel, member.user_id as string);
 
@@ -378,7 +372,7 @@ export class WsHandler {
             }).catch(err => {
                 Log.error(err);
 
-                ws.send(JSON.stringify({
+                ws.sendJson({
                     event: 'pusher:error',
                     channel,
                     data: {
@@ -386,7 +380,7 @@ export class WsHandler {
                         error: 'A server error has occured.',
                         code: 4302,
                     },
-                }));
+                });
             });
         });
     }
@@ -454,14 +448,14 @@ export class WsHandler {
         let { event, data, channel } = message;
 
         if (! ws.app.enableClientMessages) {
-            return ws.send(JSON.stringify({
+            return ws.sendJson({
                 event: 'pusher:error',
                 channel,
                 data: {
                     code: 4301,
                     message: `The app does not have client messaging enabled.`,
                 },
-            }));
+            });
         }
 
         // Make sure the event name length is not too big.
@@ -475,9 +469,7 @@ export class WsHandler {
                 },
             };
 
-            ws.send(JSON.stringify(broadcastMessage));
-
-            this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
+            ws.sendJson(broadcastMessage);
 
             return;
         }
@@ -495,9 +487,7 @@ export class WsHandler {
                 },
             };
 
-            ws.send(JSON.stringify(broadcastMessage));
-
-            this.server.metricsManager.markWsMessageSent(ws.app.id, broadcastMessage);
+            ws.sendJson(broadcastMessage);
 
             return;
         }
@@ -523,14 +513,14 @@ export class WsHandler {
                     return;
                 }
 
-                ws.send(JSON.stringify({
+                ws.sendJson({
                     event: 'pusher:error',
                     channel,
                     data: {
                         code: 4301,
                         message: 'The rate limit for sending client events exceeded the quota.',
                     },
-                }))
+                })
             });
         });
     }
@@ -612,7 +602,7 @@ export class WsHandler {
         this.clearTimeout(ws);
 
         ws.timeout = setTimeout(() => {
-            ws.close();
+            ws.end(1006);
         }, 120_000);
     }
 }
