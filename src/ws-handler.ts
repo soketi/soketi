@@ -50,13 +50,13 @@ export class WsHandler {
      */
     onOpen(ws: WebSocket): any {
         if (this.server.closing) {
-            ws.send(JSON.stringify({
+            ws.sendJson({
                 event: 'pusher:error',
                 data: {
                     code: 4200,
                     message: 'Server is closing. Please reconnect shortly.',
                 },
-            }));
+            });
 
             return ws.end();
         }
@@ -64,6 +64,7 @@ export class WsHandler {
         ws.id = this.generateSocketId();
         ws.subscribedChannels = new Set();
         ws.presence = new Map<string, PresenceMember>();
+
         ws.sendJson = (data) => {
             if (ws.send(JSON.stringify(data))) {
                 this.updateTimeout(ws);
