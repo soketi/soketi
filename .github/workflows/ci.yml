@@ -115,7 +115,7 @@ jobs:
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
 
-      - uses: codecov/codecov-action@v2.0.2
+      - uses: codecov/codecov-action@v2.0.3
         with:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
