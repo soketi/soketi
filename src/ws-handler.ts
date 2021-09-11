@@ -49,6 +49,16 @@ export class WsHandler {
      * Handle a new open connection.
      */
     onOpen(ws: WebSocket): any {
+        ws.sendJson = (data) => {
+            if (ws.send(JSON.stringify(data))) {
+                this.updateTimeout(ws);
+
+                if (ws.app) {
+                    this.server.metricsManager.markWsMessageSent(ws.app.id, data);
+                }
+            }
+        }
+
         if (this.server.closing) {
             ws.sendJson({
                 event: 'pusher:error',
@@ -64,16 +74,6 @@ export class WsHandler {
         ws.id = this.generateSocketId();
         ws.subscribedChannels = new Set();
         ws.presence = new Map<string, PresenceMember>();
-
-        ws.sendJson = (data) => {
-            if (ws.send(JSON.stringify(data))) {
-                this.updateTimeout(ws);
-
-                if (ws.app) {
-                    this.server.metricsManager.markWsMessageSent(ws.app.id, data);
-                }
-            }
-        }
 
         this.checkForValidApp(ws).then(validApp => {
             if (!validApp) {
