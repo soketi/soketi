@@ -373,7 +373,7 @@ export class Server {
 
             server.any('/*', (res, req) => {
                 return this.httpHandler.notFound(res);
-            })
+            });
 
             resolve(server);
         });

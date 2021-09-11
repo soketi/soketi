@@ -455,7 +455,8 @@ describe('http api test', () => {
                 if (e.response.status !== 404) {
                     throw new Error('Status must be 404');
                 }
-                done()
+
+                done();
             });
         });
     });
