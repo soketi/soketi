@@ -94,7 +94,7 @@ export class App implements AppInterface {
         this.maxReadRequestsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxReadRequestsPerSecond', 'MaxReadRequestsPerSecond', 'max_read_req_per_sec'], -1));
         this.webhooks = this.extractFromPassedKeys(app, ['webhooks', 'Webhooks'], []);
 
-        if (! (this.webhooks instanceof Array)) {
+        if (!(this.webhooks instanceof Array)) {
             this.webhooks = [];
         }
     }

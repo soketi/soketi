@@ -23,7 +23,7 @@ export class SyncQueueDriver implements QueueInterface {
         return new Promise(resolve => {
             let jobCallback = this.queues.get(queueName);
 
-            if (! jobCallback) {
+            if (!jobCallback) {
                 return resolve();
             }
 

@@ -53,7 +53,7 @@ export class Namespace {
      */
     addToChannel(ws: WebSocket, channel: string): Promise<number> {
         return new Promise(resolve => {
-            if (! this.channels.has(channel)) {
+            if (!this.channels.has(channel)) {
                 this.channels.set(channel, new Set);
             }
 
@@ -86,7 +86,7 @@ export class Namespace {
      */
     isInChannel(wsId: string, channel: string): Promise<boolean> {
         return new Promise(resolve => {
-            if (! this.channels.has(channel)) {
+            if (!this.channels.has(channel)) {
                 return resolve(false);
             }
 
@@ -106,7 +106,7 @@ export class Namespace {
      */
     getChannelSockets(channel: string): Promise<Map<string, WebSocket>> {
         return new Promise(resolve => {
-            if (! this.channels.has(channel)) {
+            if (!this.channels.has(channel)) {
                 return resolve(new Map<string, WebSocket>());
             }
 
@@ -114,7 +114,7 @@ export class Namespace {
 
             resolve(
                 Array.from(wsIds).reduce((sockets, wsId) => {
-                    if (! this.sockets.has(wsId)) {
+                    if (!this.sockets.has(wsId)) {
                         return sockets;
                     }
 

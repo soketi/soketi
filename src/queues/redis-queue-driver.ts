@@ -30,7 +30,7 @@ export class RedisQueueDriver implements QueueInterface {
         return new Promise(resolve => {
             let queueWithWorker = this.queueWithWorker.get(queueName);
 
-            if (! queueWithWorker) {
+            if (!queueWithWorker) {
                 return resolve();
             }
 
@@ -44,7 +44,7 @@ export class RedisQueueDriver implements QueueInterface {
      */
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
         return new Promise(resolve => {
-            if (! this.queueWithWorker.has(queueName)) {
+            if (!this.queueWithWorker.has(queueName)) {
                 let connection = new Redis(this.server.options.database.redis);
 
                 this.queueWithWorker.set(queueName, {
