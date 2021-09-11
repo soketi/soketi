@@ -68,9 +68,11 @@ export class WsHandler {
         ws.sendJson = (data) => {
             if (ws.send(JSON.stringify(data))) {
                 this.updateTimeout(ws);
-            }
 
-            this.server.metricsManager.markWsMessageSent(ws.app.id, data);
+                if (ws.app) {
+                    this.server.metricsManager.markWsMessageSent(ws.app.id, data);
+                }
+            }
         }
 
         this.checkForValidApp(ws).then(validApp => {
