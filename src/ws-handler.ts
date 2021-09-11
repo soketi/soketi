@@ -1,7 +1,7 @@
 import { App } from './app';
 import async from 'async';
 import { EncryptedPrivateChannelManager } from './channels';
-import { HttpRequest, HttpResponse } from 'uWebSockets.js';
+import { HttpRequest, HttpResponse, RecognizedString } from 'uWebSockets.js';
 import { Log } from './log';
 import { Namespace } from './namespace';
 import { PresenceChannelManager } from './channels';
@@ -64,6 +64,14 @@ export class WsHandler {
         ws.id = this.generateSocketId();
         ws.subscribedChannels = new Set();
         ws.presence = new Map<string, PresenceMember>();
+
+        let originalSend = ws.send;
+
+        ws.send = (message: RecognizedString, isBinary?: boolean, compress?: boolean): boolean => {
+            this.updateTimeout(ws);
+
+            return originalSend(message, isBinary, compress);
+        };
 
         this.checkForValidApp(ws).then(validApp => {
             if (! validApp) {
@@ -131,6 +139,8 @@ export class WsHandler {
      * Handle a received message from the client.
      */
     onMessage(ws: WebSocket, message: any, isBinary: boolean): any {
+        this.updateTimeout(ws);
+
         if (message instanceof ArrayBuffer) {
             message = JSON.parse(ab2str(message));
         }
@@ -231,8 +241,6 @@ export class WsHandler {
      * Send back the pong response.
      */
     handlePong(ws: WebSocket): any {
-        this.updateTimeout(ws);
-
         ws.send(JSON.stringify({
             event: 'pusher:pong',
             data: {},
