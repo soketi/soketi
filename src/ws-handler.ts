@@ -117,7 +117,7 @@ export class WsHandler {
                     } else {
                         this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
-                        const broadcastMessage = {
+                        let broadcastMessage = {
                             event: 'pusher:connection_established',
                             data: JSON.stringify({
                                 socket_id: ws.id,
