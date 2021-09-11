@@ -71,7 +71,7 @@ export class Metrics implements MetricsInterface {
      * Get the stored metrics as plain text, if possible.
      */
     getMetricsAsPlaintext(): Promise<string> {
-        if (! this.server.options.metrics.enabled) {
+        if (!this.server.options.metrics.enabled) {
             return Promise.resolve('');
         }
 
@@ -82,7 +82,7 @@ export class Metrics implements MetricsInterface {
       * Get the stored metrics as JSON.
       */
     getMetricsAsJson(): Promise<prom.metric[]|void> {
-        if (! this.server.options.metrics.enabled) {
+        if (!this.server.options.metrics.enabled) {
             return Promise.resolve();
         }
 

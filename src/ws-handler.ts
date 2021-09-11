@@ -49,6 +49,16 @@ export class WsHandler {
      * Handle a new open connection.
      */
     onOpen(ws: WebSocket): any {
+        ws.sendJson = (data) => {
+            if (ws.send(JSON.stringify(data))) {
+                this.updateTimeout(ws);
+
+                if (ws.app) {
+                    this.server.metricsManager.markWsMessageSent(ws.app.id, data);
+                }
+            }
+        }
+
         if (this.server.closing) {
             ws.sendJson({
                 event: 'pusher:error',
@@ -65,18 +75,8 @@ export class WsHandler {
         ws.subscribedChannels = new Set();
         ws.presence = new Map<string, PresenceMember>();
 
-        ws.sendJson = (data) => {
-            if (ws.send(JSON.stringify(data))) {
-                this.updateTimeout(ws);
-
-                if (ws.app) {
-                    this.server.metricsManager.markWsMessageSent(ws.app.id, data);
-                }
-            }
-        }
-
         this.checkForValidApp(ws).then(validApp => {
-            if (! validApp) {
+            if (!validApp) {
                 ws.sendJson({
                     event: 'pusher:error',
                     data: {
@@ -91,7 +91,7 @@ export class WsHandler {
             ws.app = validApp;
 
             this.checkIfAppIsEnabled(ws).then(enabled => {
-                if (! enabled) {
+                if (!enabled) {
                     ws.sendJson({
                         event: 'pusher:error',
                         data: {
@@ -104,7 +104,7 @@ export class WsHandler {
                 }
 
                 this.checkAppConnectionLimit(ws).then(canConnect => {
-                    if (! canConnect) {
+                    if (!canConnect) {
                         ws.sendJson({
                             event: 'pusher:error',
                             data: {
@@ -268,7 +268,7 @@ export class WsHandler {
         }
 
         channelManager.join(ws, channel, message).then((response) => {
-            if (! response.success) {
+            if (!response.success) {
                 let { authError, type, errorMessage, errorCode } = response;
 
                 // For auth errors, send pusher:subscription_error
@@ -296,7 +296,7 @@ export class WsHandler {
                 });
             }
 
-            if (! ws.subscribedChannels.has(channel)) {
+            if (!ws.subscribedChannels.has(channel)) {
                 ws.subscribedChannels.add(channel);
             }
 
@@ -308,7 +308,7 @@ export class WsHandler {
             }
 
             // For non-presence channels, end with subscription succeeded.
-            if (! (channelManager instanceof PresenceChannelManager)) {
+            if (!(channelManager instanceof PresenceChannelManager)) {
                 let broadcastMessage = {
                     event: 'pusher_internal:subscription_succeeded',
                     channel,
@@ -436,7 +436,7 @@ export class WsHandler {
      * Unsubscribe the connection from all channels.
      */
     unsubscribeFromAllChannels(ws: WebSocket): Promise<void> {
-        if (! ws.subscribedChannels) {
+        if (!ws.subscribedChannels) {
             return Promise.resolve();
         }
         return async.each(ws.subscribedChannels, (channel, callback) => {
@@ -450,7 +450,7 @@ export class WsHandler {
     handleClientEvent(ws: WebSocket, message: any): any {
         let { event, data, channel } = message;
 
-        if (! ws.app.enableClientMessages) {
+        if (!ws.app.enableClientMessages) {
             return ws.sendJson({
                 event: 'pusher:error',
                 channel,
@@ -496,7 +496,7 @@ export class WsHandler {
         }
 
         this.server.adapter.isInChannel(ws.app.id, channel, ws.id).then(canBroadcast => {
-            if (! canBroadcast) {
+            if (!canBroadcast) {
                 return;
             }
 

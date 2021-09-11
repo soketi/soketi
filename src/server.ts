@@ -371,6 +371,10 @@ export class Server {
                 return this.httpHandler.events(res);
             });
 
+            server.any('/*', (res, req) => {
+                return this.httpHandler.notFound(res);
+            });
+
             resolve(server);
         });
     }

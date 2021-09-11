@@ -34,7 +34,7 @@ export class DynamoDbAppManager implements AppManagerInterface {
         }).promise().then((response) => {
             let item = response.Item;
 
-            if (! item) {
+            if (!item) {
                 return null;
             }
 
@@ -60,7 +60,7 @@ export class DynamoDbAppManager implements AppManagerInterface {
         }).promise().then((response) => {
             let item = response.Items[0] || null;
 
-            if (! item) {
+            if (!item) {
                 return null;
             }
 

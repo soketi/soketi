@@ -524,7 +524,7 @@ export class RedisAdapter extends LocalAdapter {
     protected onMessage(pattern: string, redisChannel: string, msg: Buffer) {
         redisChannel = redisChannel.toString();
 
-        if (! redisChannel.startsWith(this.channel)) {
+        if (!redisChannel.startsWith(this.channel)) {
             return;
         }
 
@@ -551,7 +551,7 @@ export class RedisAdapter extends LocalAdapter {
 
         if (redisChannel.startsWith(this.responseChannel)) {
             return this.onResponse(redisChannel, msg);
-        } else if (! redisChannel.startsWith(this.requestChannel)) {
+        } else if (!redisChannel.startsWith(this.requestChannel)) {
             return;
         }
 
@@ -699,7 +699,7 @@ export class RedisAdapter extends LocalAdapter {
 
         const requestId = response.requestId;
 
-        if (! requestId || ! this.requests.has(requestId)) {
+        if (!requestId || ! this.requests.has(requestId)) {
             return;
         }
 
@@ -710,7 +710,7 @@ export class RedisAdapter extends LocalAdapter {
             case RequestType.CHANNEL_SOCKETS:
                 request.msgCount++;
 
-                if (! response.sockets) {
+                if (!response.sockets) {
                     return;
                 }
 
@@ -731,7 +731,7 @@ export class RedisAdapter extends LocalAdapter {
             case RequestType.CHANNELS:
                 request.msgCount++;
 
-                if (! response.channels) {
+                if (!response.channels) {
                     return;
                 }
 
@@ -760,7 +760,7 @@ export class RedisAdapter extends LocalAdapter {
             case RequestType.CHANNEL_MEMBERS:
                 request.msgCount++;
 
-                if (! response.members) {
+                if (!response.members) {
                     return;
                 }
 
