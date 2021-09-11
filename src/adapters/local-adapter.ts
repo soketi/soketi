@@ -116,9 +116,7 @@ export class LocalAdapter implements AdapterInterface {
                     return;
                 }
 
-                ws.send(data);
-
-                this.server.metricsManager.markWsMessageSent(ws.app.id, data);
+                ws.sendJson(JSON.parse(data));
             });
         });
     }
