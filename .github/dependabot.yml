@@ -1,7 +1,28 @@
 version: 2
+registries:
+  quay:
+    type: docker-registry
+    url: quay.io
+    username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+    password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 updates:
 - package-ecosystem: github-actions
   directory: "/"
   schedule:
     interval: weekly
   open-pull-requests-limit: 10
+  versioning-strategy: increase
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  versioning-strategy: increase
+- package-ecosystem: docker
+  directory: "/"
+  registries:
+    - quay
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  versioning-strategy: increase
