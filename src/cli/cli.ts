@@ -66,6 +66,7 @@ export class Cli {
         NODE_ID: 'instance.node_id',
         POD_ID: 'instance.pod_id',
         PORT: 'port',
+        PATH_PREFIX: 'pathPrefix',
         PRESENCE_MAX_MEMBER_SIZE: 'presence.maxMemberSizeInKb',
         PRESENCE_MAX_MEMBERS: 'presence.maxMembersPerChannel',
         QUEUE_DRIVER: 'queue.driver',

@@ -134,6 +134,7 @@ export class Server {
             },
         },
         port: 6001,
+        pathPrefix: '',
         presence: {
             maxMembersPerChannel: 100,
             maxMemberSizeInKb: 2,
@@ -301,11 +302,18 @@ export class Server {
     }
 
     /**
+     * Generates the correct url
+     */
+    protected url(path: string): string {
+        return this.options.pathPrefix + path;
+    }
+
+    /**
      * Configure the WebSocket logic.
      */
     protected configureWebsockets(server: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
-            server = server.ws('/app/:id', {
+            server = server.ws(this.url('/app/:id'), {
                 idleTimeout: 120, // According to protocol
                 maxBackpressure: 1024 * 1024,
                 maxPayloadLength: 100 * 1024 * 1024, // 100 MB
@@ -324,18 +332,18 @@ export class Server {
      */
     protected configureHttp(server: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
-            server.get('/', (res, req) => this.httpHandler.healthCheck(res));
-            server.get('/usage', (res, req) => this.httpHandler.usage(res));
+            server.get(this.url('/'), (res, req) => this.httpHandler.healthCheck(res));
+            server.get(this.url('/usage'), (res, req) => this.httpHandler.usage(res));
 
             if (this.options.metrics.enabled) {
-                server.get('/metrics', (res, req) => {
+                server.get(this.url('/metrics'), (res, req) => {
                     res.query = queryString.parse(req.getQuery());
 
                     return this.httpHandler.metrics(res);
                 });
             }
 
-            server.get('/apps/:appId/channels', (res, req) => {
+            server.get(this.url('/apps/:appId/channels'), (res, req) => {
                 res.params = { appId: req.getParameter(0) };
                 res.query = queryString.parse(req.getQuery());
                 res.method = req.getMethod().toUpperCase();
@@ -344,7 +352,7 @@ export class Server {
                 return this.httpHandler.channels(res);
             });
 
-            server.get('/apps/:appId/channels/:channelName', (res, req) => {
+            server.get(this.url('/apps/:appId/channels/:channelName'), (res, req) => {
                 res.params = { appId: req.getParameter(0), channel: req.getParameter(1) };
                 res.query = queryString.parse(req.getQuery());
                 res.method = req.getMethod().toUpperCase();
@@ -353,7 +361,7 @@ export class Server {
                 return this.httpHandler.channel(res);
             });
 
-            server.get('/apps/:appId/channels/:channelName/users', (res, req) => {
+            server.get(this.url('/apps/:appId/channels/:channelName/users'), (res, req) => {
                 res.params = { appId: req.getParameter(0), channel: req.getParameter(1) };
                 res.query = queryString.parse(req.getQuery());
                 res.method = req.getMethod().toUpperCase();
@@ -362,7 +370,7 @@ export class Server {
                 return this.httpHandler.channelUsers(res);
             });
 
-            server.post('/apps/:appId/events', (res, req) => {
+            server.post(this.url('/apps/:appId/events'), (res, req) => {
                 res.params = { appId: req.getParameter(0) };
                 res.query = queryString.parse(req.getQuery());
                 res.method = req.getMethod().toUpperCase();
@@ -371,7 +379,7 @@ export class Server {
                 return this.httpHandler.events(res);
             });
 
-            server.any('/*', (res, req) => {
+            server.any(this.url('/*'), (res, req) => {
                 return this.httpHandler.notFound(res);
             });
 
