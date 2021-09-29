@@ -139,7 +139,11 @@ export class WsHandler {
      */
     onMessage(ws: WebSocket, message: any, isBinary: boolean): any {
         if (message instanceof ArrayBuffer) {
-            message = JSON.parse(ab2str(message));
+            try {
+                message = JSON.parse(ab2str(message));
+            } catch (err) {
+                return;
+            }
         }
 
         if (message) {
