@@ -92,6 +92,7 @@ export interface Options {
         };
     },
     port: number;
+    pathPrefix: string;
     presence: {
         maxMembersPerChannel: string|number;
         maxMemberSizeInKb: string|number;
