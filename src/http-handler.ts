@@ -394,6 +394,13 @@ export class HttpHandler {
     protected readJson(res: HttpResponse, cb: CallableFunction, err: any) {
         let buffer;
 
+        let loggingAction = (payload) => {
+            if (this.server.options.debug) {
+                Log.info(`⚡ HTTP Payload received: ${res.method} ${res.url}`);
+                Log.info(payload);
+            }
+        };
+
         res.onData((ab, isLast) => {
             let chunk = Buffer.from(ab);
 
@@ -413,6 +420,7 @@ export class HttpHandler {
                     raw = Buffer.concat([buffer, chunk]).toString();
 
                     cb(json, raw);
+                    loggingAction(json);
                 } else {
                     try {
                         // @ts-ignore
@@ -424,6 +432,7 @@ export class HttpHandler {
                     }
 
                     cb(json, raw);
+                    loggingAction(json);
                 }
             } else {
                 if (buffer) {

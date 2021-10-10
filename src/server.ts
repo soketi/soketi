@@ -332,55 +332,43 @@ export class Server {
      */
     protected configureHttp(server: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
-            server.get(this.url('/'), (res, req) => this.httpHandler.healthCheck(res));
-            server.get(this.url('/usage'), (res, req) => this.httpHandler.usage(res));
+            server.get(this.url('/'), (res, req) => this.httpHandler.healthCheck(this.injectReqInfoInRes(res, req)));
+            server.get(this.url('/usage'), (res, req) => this.httpHandler.usage(this.injectReqInfoInRes(res, req)));
 
             if (this.options.metrics.enabled) {
                 server.get(this.url('/metrics'), (res, req) => {
-                    res.query = queryString.parse(req.getQuery());
-
-                    return this.httpHandler.metrics(res);
+                    return this.httpHandler.metrics(
+                        this.injectReqInfoInRes(res, req)
+                    );
                 });
             }
 
             server.get(this.url('/apps/:appId/channels'), (res, req) => {
-                res.params = { appId: req.getParameter(0) };
-                res.query = queryString.parse(req.getQuery());
-                res.method = req.getMethod().toUpperCase();
-                res.url = req.getUrl();
-
-                return this.httpHandler.channels(res);
+                return this.httpHandler.channels(
+                    this.injectReqInfoInRes(res, req)
+                );
             });
 
             server.get(this.url('/apps/:appId/channels/:channelName'), (res, req) => {
-                res.params = { appId: req.getParameter(0), channel: req.getParameter(1) };
-                res.query = queryString.parse(req.getQuery());
-                res.method = req.getMethod().toUpperCase();
-                res.url = req.getUrl();
-
-                return this.httpHandler.channel(res);
+                return this.httpHandler.channel(
+                    this.injectReqInfoInRes(res, req)
+                );
             });
 
             server.get(this.url('/apps/:appId/channels/:channelName/users'), (res, req) => {
-                res.params = { appId: req.getParameter(0), channel: req.getParameter(1) };
-                res.query = queryString.parse(req.getQuery());
-                res.method = req.getMethod().toUpperCase();
-                res.url = req.getUrl();
-
-                return this.httpHandler.channelUsers(res);
+                return this.httpHandler.channelUsers(
+                    this.injectReqInfoInRes(res, req)
+                );
             });
 
             server.post(this.url('/apps/:appId/events'), (res, req) => {
-                res.params = { appId: req.getParameter(0) };
-                res.query = queryString.parse(req.getQuery());
-                res.method = req.getMethod().toUpperCase();
-                res.url = req.getUrl();
-
-                return this.httpHandler.events(res);
+                return this.httpHandler.events(
+                    this.injectReqInfoInRes(res, req)
+                );
             });
 
             server.any(this.url('/*'), (res, req) => {
-                return this.httpHandler.notFound(res);
+                return this.httpHandler.notFound(this.injectReqInfoInRes(res, req));
             });
 
             resolve(server);
@@ -394,5 +382,17 @@ export class Server {
         return this.options.ssl.certPath !== '' ||
             this.options.ssl.keyPath !== '' ||
             this.options.ssl.passphrase !== '';
+    }
+
+    /**
+     * Inject the HttpRequest metadata into res for easy access.
+     */
+    protected injectReqInfoInRes(res: HttpResponse, req: HttpRequest): HttpResponse {
+        res.params = { appId: req.getParameter(0) };
+        res.query = queryString.parse(req.getQuery());
+        res.method = req.getMethod().toUpperCase();
+        res.url = req.getUrl();
+
+        return res;
     }
 }
