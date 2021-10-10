@@ -49,12 +49,22 @@ export class WsHandler {
      * Handle a new open connection.
      */
     onOpen(ws: WebSocket): any {
+        if (this.server.options.debug) {
+            Log.success('👨‍🔬 New connection:');
+            Log.success({ ws });
+        }
+
         ws.sendJson = (data) => {
             if (ws.send(JSON.stringify(data))) {
                 this.updateTimeout(ws);
 
                 if (ws.app) {
                     this.server.metricsManager.markWsMessageSent(ws.app.id, data);
+                }
+
+                if (this.server.options.debug) {
+                    Log.success('✈ Sent message to client:');
+                    Log.success({ ws, data });
                 }
             }
         }
@@ -146,6 +156,14 @@ export class WsHandler {
             }
         }
 
+        if (this.server.options.debug) {
+            Log.info('⚡ New message received:');
+            Log.info({
+                message,
+                isBinary,
+            });
+        }
+
         if (message) {
             if (message.event === 'pusher:ping') {
                 this.handlePong(ws);
@@ -172,6 +190,11 @@ export class WsHandler {
      * Handle the event of the client closing the connection.
      */
     onClose(ws: WebSocket, code: number, message: any): any {
+        if (this.server.options.debug) {
+            Log.warning('❌ Connection closed:');
+            Log.warning({ ws, code, message });
+        }
+
         this.unsubscribeFromAllChannels(ws).then(() => {
             if (ws.app) {
                 this.server.adapter.getNamespace(ws.app.id).removeSocket(ws.id);
