@@ -460,4 +460,32 @@ describe('http api test', () => {
             });
         });
     });
+
+    test('check server can handle a numeric app id', done => {
+        Utils.newServer({
+            'appManager.array.apps.0.id': 40000
+        }, (server: Server) => {
+            let client = Utils.newClient();
+            let backend = Utils.newBackend("40000");
+            let channelName = Utils.randomChannelName();
+
+            client.connection.bind('connected', () => {
+                let channel = client.subscribe(channelName);
+
+                channel.bind('greeting', e => {
+                    expect(e.message).toBe('hello');
+                    expect(e.weirdVariable).toBe('abc/d');
+                    client.disconnect();
+                    done();
+                });
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello', weirdVariable: 'abc/d' })
+                        .catch(error => {
+                            throw new Error(error);
+                        });
+                });
+            });
+        });
+    });
 });
