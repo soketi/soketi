@@ -218,8 +218,11 @@ export class Server {
     async start(options: any = {}, callback?: CallableFunction) {
         for (let path in options) {
             // Make sure none of the id's are int.
-            if(path.match("^appManager.array.apps.\\d+.id"))
-                if(Number.isInteger(options[path])) options[path] = options[path].toString()
+            if (path.match("^appManager.array.apps.\\d+.id")) {
+                if (Number.isInteger(options[path])) {
+                    options[path] = options[path].toString();
+                }
+            }
 
             this.options = dot.set(this.options, path, options[path]);
         }
