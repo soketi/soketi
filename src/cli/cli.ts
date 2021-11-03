@@ -63,8 +63,6 @@ export class Cli {
         METRICS_ENABLED: 'metrics.enabled',
         METRICS_DRIVER: 'metrics.driver',
         METRICS_PROMETHEUS_PREFIX: 'metrics.prometheus.prefix',
-        NODE_ID: 'instance.node_id',
-        POD_ID: 'instance.pod_id',
         PORT: 'port',
         PATH_PREFIX: 'pathPrefix',
         PRESENCE_MAX_MEMBER_SIZE: 'presence.maxMemberSizeInKb',
