@@ -37,7 +37,7 @@
     "knex": "^0.95.13",
     "mysql": "^2.18.1",
     "pg": "^8.7.1",
-    "prom-client": "^13.1.0",
+    "prom-client": "^14.0.1",
     "prometheus-query": "^3.0.3",
     "pusher": "^5.0.0",
     "query-string": "^7.0.0",
