@@ -80,9 +80,7 @@ export interface Options {
         requestLimitInMb: string|number;
     };
     instance: {
-        node_id: string|number|null;
         process_id: string|number;
-        pod_id: string|number|null;
     };
     metrics: {
         enabled: boolean;

@@ -122,9 +122,7 @@ export class Server {
             requestLimitInMb: 100,
         },
         instance: {
-            node_id: null,
             process_id: process.pid || uuidv4(),
-            pod_id: null,
         },
         metrics: {
             enabled: false,
