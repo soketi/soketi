@@ -1,0 +1,52 @@
+<?php
+
+require __DIR__ . '/vendor/autoload.php';
+
+use Carbon\Carbon;
+use Pusher\Pusher;
+use React\EventLoop\Loop;
+use Toolkit\PFlag\Flags;
+use Toolkit\PFlag\FlagType;
+
+$loop = Loop::get();
+$flags = array_shift($argv);
+
+$fs = Flags::new();
+$fs->setScriptFile($flags);
+
+$fs->addOpt('interval', 'i', 'Specify at which interval to send each message.', FlagType::FLOAT, false, 0.1);
+$fs->addOpt('messages', 'm', 'Specify the number of messages to send.', FlagType::INT, false, 100);
+$fs->addOpt('host', 'h', 'Specify the host to connect to.', FlagType::STRING, false, '127.0.0.1');
+$fs->addOpt('ssl', 's', 'Securely connect to the server.', FlagType::BOOL, false, false);
+
+if (! $fs->parse($argv)) {
+    return;
+}
+
+$options = $fs->getOpts();
+$args = $fs->getArgs();
+
+$pusher = new Pusher('app-key', 'app-secret', 'app-id', [
+    'host' => $options['host'],
+    'port' => 6001,
+    'scheme' => $options['ssl'] ? 'https' : 'http',
+    'encrypted' => true,
+    'useTLS' => $options['ssl'],
+]);
+
+$interval = $options['interval'] ?? null;
+$messagesBeforeStop = $options['messages'] ?? null;
+$totalMessages = 0;
+
+$loop->addPeriodicTimer($interval, function () use ($pusher, &$totalMessages, $messagesBeforeStop, $loop) {
+    if ($totalMessages >= $messagesBeforeStop) {
+        echo "Sent: {$totalMessages} messages";
+        return $loop->stop();
+    }
+
+    $pusher->trigger('benchmark', 'timed-message', [
+        'time' => Carbon::now()->getPreciseTimestamp(3),
+    ]);
+
+    $totalMessages++;
+});

@@ -1,7 +1,9 @@
+benchmark/vendor/
 build/
 coverage/
 dist/
 node_modules/
+benchmark/composer.lock
 npm-debug.log
 package-lock.json
 yarn.lock
