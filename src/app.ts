@@ -166,8 +166,8 @@ export class App implements AppInterface {
     }
 
     /**
-     * If it's already an array or an invalid JSON, it returns an empty array.
-     * If it's a JSON-formatted string, parse it and returns it.
+     * If it's already an array, it returns the array. For an invalid JSON, it returns an empty array.
+     * If it's a JSON-formatted string, it parses it and returns the value.
      */
     protected transformPotentialJsonToArray(potentialJson: any): any {
         if (potentialJson instanceof Array) {
