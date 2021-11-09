@@ -72,7 +72,7 @@
   },
   "scripts": {
     "build": "./node_modules/.bin/tsc",
-    "build-watch": "./node_modules/.bin/tsc -W",
+    "build:watch": "./node_modules/.bin/tsc -W",
     "lint": "eslint --ext .js,.ts ./src",
     "prepublish": "npm run build",
     "test": "jest --detectOpenHandles --forceExit",
