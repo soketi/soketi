@@ -1,6 +1,7 @@
 import { App, WebhookInterface } from './app';
 import axios from 'axios';
 import { Utils } from './utils';
+import { Log } from './log';
 import { Server } from './server';
 import { createHmac } from "crypto";
 
@@ -52,10 +53,20 @@ export class WebhookSender {
             };
 
             axios.post(target, payload, { headers }).then((res) => {
+                if (this.server.options.debug) {
+                    Log.successTitle('✅ Webhook sent.');
+                    Log.success({ target, payload });
+                }
+
                 if (typeof done === 'function') {
                     done();
                 }
             }).catch(err => {
+                if (this.server.options.debug) {
+                    Log.errorTitle('❎ Webhook could not be sent.');
+                    Log.error({ err, target, payload });
+                }
+
                 // TODO: Maybe retry exponentially?
                 if (typeof done === 'function') {
                     done();
@@ -156,6 +167,14 @@ export class WebhookSender {
                     payload: payload,
                     pusherSignature: createWebhookHmac(JSON.stringify(payload), app.secret),
                 });
+
+                if (this.server.options.debug) {
+                    Log.successTitle('🚀 Added webhook to queue.');
+                    Log.success({
+                        target: webhook.url,
+                        payload: payload,
+                    });
+                }
             }
         });
     }
