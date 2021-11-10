@@ -396,7 +396,7 @@ export class HttpHandler {
 
         let loggingAction = (payload) => {
             if (this.server.options.debug) {
-                Log.info('⚡ HTTP Payload received:');
+                Log.infoTitle('⚡ HTTP Payload received:');
                 Log.info(payload);
             }
         };

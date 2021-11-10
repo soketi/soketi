@@ -232,7 +232,7 @@ export class Server {
         this.webhookSender = new WebhookSender(this);
 
         if (this.options.debug) {
-            Log.title('\n📡 pWS Server initialization started.\n');
+            Log.info('\n📡 pWS Server initialization started.\n');
             Log.info('⚡ Initializing the HTTP API & Websockets Server...\n');
         }
 
@@ -257,11 +257,11 @@ export class Server {
                 server.listen('0.0.0.0', this.options.port, serverProcess => {
                     this.serverProcess = serverProcess;
 
-                    Log.success('🎉 Server is up and running!\n');
+                    Log.successTitle('🎉 Server is up and running!\n');
 
                     if (this.options.debug) {
-                        Log.success(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
-                        Log.success(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
+                        Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
+                        Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
                     }
 
                     if (callback) {
@@ -289,7 +289,7 @@ export class Server {
                 this.queueManager.clear(),
             ]).then(() => {
                 if (this.options.debug) {
-                    Log.warning('⚡ All sockets were closed. Now closing the server.');
+                    Log.warningTitle('⚡ All sockets were closed. Now closing the server.');
                 }
 
                 uWS.us_listen_socket_close(this.serverProcess);

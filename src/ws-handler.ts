@@ -50,7 +50,7 @@ export class WsHandler {
      */
     onOpen(ws: WebSocket): any {
         if (this.server.options.debug) {
-            Log.success('👨‍🔬 New connection:');
+            Log.successTitle('👨‍🔬 New connection:');
             Log.success({ ws });
         }
 
@@ -63,7 +63,7 @@ export class WsHandler {
                 }
 
                 if (this.server.options.debug) {
-                    Log.success('✈ Sent message to client:');
+                    Log.successTitle('✈ Sent message to client:');
                     Log.success({ ws, data });
                 }
             }
@@ -157,7 +157,7 @@ export class WsHandler {
         }
 
         if (this.server.options.debug) {
-            Log.info('⚡ New message received:');
+            Log.infoTitle('⚡ New message received:');
             Log.info({
                 message,
                 isBinary,
@@ -191,7 +191,7 @@ export class WsHandler {
      */
     onClose(ws: WebSocket, code: number, message: any): any {
         if (this.server.options.debug) {
-            Log.warning('❌ Connection closed:');
+            Log.warningTitle('❌ Connection closed:');
             Log.warning({ ws, code, message });
         }
 
