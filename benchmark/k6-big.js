@@ -3,6 +3,10 @@ import ws from 'k6/ws';
 
 const delayTrend = new Trend('message_delay_trend');
 
+// Low: php send.php --interval 1
+// Mild: php send.php --interval 0.5
+// Overkill: php send.php --interval 0.1
+
 export const options = {
     // Custom options
     host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
