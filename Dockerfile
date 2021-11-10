@@ -1,6 +1,7 @@
-ARG VERSION=lts
+ARG REPOSITORY=node
+ARG NODE_TAG=lts
 
-FROM node:$VERSION
+FROM $REPOSITORY:$NODE_TAG
 
 LABEL maintainer="Renoki Co. <alex@renoki.org>"
 

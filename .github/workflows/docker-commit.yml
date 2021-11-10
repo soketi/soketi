@@ -21,6 +21,17 @@ jobs:
         node:
           - 14-alpine
           - 16-alpine
+        repo:
+          - node
+          - arm64v8/node
+          - arm32v7/node
+        includes:
+          - repo: node
+            arch: linux/amd64
+          - repo: arm64v8/node
+            arch: linux/arm64/v8
+          - repo: arm32v7/node
+            arch: linux/arm/v7
 
     services:
       registry:
@@ -28,7 +39,7 @@ jobs:
         ports:
           - 5000:5000
 
-    name: Tag & Test Commit (node:${{ matrix.node }})
+    name: Tag & Test Commit (${{ matrix.repo }}:${{ matrix.node }} as arch ${{ matrix.arch }})
 
     steps:
       - uses: actions/checkout@v2
@@ -47,7 +58,8 @@ jobs:
           push: true
           tags: localhost:5000/soketi/pws:${{ github.sha }}-${{ matrix.node }}
           build-args: |
-            VERSION=${{ matrix.node }}
+            NODE_TAG=${{ matrix.node }}
+            REPOSITORY=${{ matrix.repo }}
 
       - name: Test
         run: |
@@ -69,8 +81,7 @@ jobs:
           context: .
           tags: quay.io/soketi/pws:${{ github.sha }}-${{ matrix.node }}
           build-args: |
-            VERSION=${{ matrix.node }}
+            NODE_TAG=${{ matrix.node }}
+            REPOSITORY=${{ matrix.repo }}
           platforms: |
-            linux/amd64
-            linux/arm/v7
-            linux/arm64/v8
+            ${{ matrix.arch }}
