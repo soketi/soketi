@@ -1,60 +1,35 @@
 const colors = require('colors');
 
-colors.setTheme({
-    silly: 'rainbow',
-    input: 'grey',
-    verbose: 'cyan',
-    prompt: 'grey',
-    info: 'cyan',
-    data: 'grey',
-    help: 'cyan',
-    warn: 'yellow',
-    debug: 'blue',
-    error: 'red',
-    h1: 'grey',
-    h2: 'yellow'
-});
-
 export class Log {
-    /**
-     * Console log heading 1.
-     */
-    static title(message: any): void {
-        console.log(colors.bold(message));
+    static infoTitle(message: any): void {
+        console.log(colors.bold.black.bgCyan(message));
     }
 
-    /**
-     * Console log heaing 2.
-     */
-    static subtitle(message: any): void {
-        console.log(colors.h2.bold(message));
+    static successTitle(message: any): void {
+        console.log(colors.bold.black.bgGreen(message));
     }
 
-    /**
-     * Console log info.
-     */
+    static errorTitle(message: any): void {
+        console.log(colors.bold.black.bgRed(message));
+    }
+
+    static warningTitle(message: any): void {
+        console.log(colors.bold.black.bgYellow(message));
+    }
+
     static info(message: any): void {
-        console.log(colors.info(message));
+        console.log(colors.cyan(message));
     }
 
-    /**
-     * Console log success.
-     */
     static success(message: any): void {
         console.log(colors.green(message));
     }
 
-    /**
-     * Console log info.
-     */
     static error(message: any): void {
-        console.log(colors.error(message));
+        console.log(colors.red(message));
     }
 
-    /**
-     * Console log warning.
-     */
     static warning(message: any): void {
-        console.log(colors.warn(message));
+        console.log(colors.yellow(message));
     }
 }
