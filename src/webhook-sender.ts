@@ -32,26 +32,23 @@ export class WebhookSender {
     constructor(protected server: Server) {
         let queueProcessor = (job, done) => {
             let rawData: {
-                time: number;
                 target: string;
                 appKey: string;
-                appSecret: string;
-                clientEvent: ClientEventData;
+                payload: {
+                    time_ms: number;
+                    events: ClientEventData[];
+                },
+                pusherSignature: string;
             } = job.data;
 
-            const { time, target, appKey, appSecret, clientEvent } = rawData;
-
-            const payload = {
-                time_ms: time,
-                events: [clientEvent],
-            };
+            const { target, appKey, payload, pusherSignature } = rawData;
 
             const headers = {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'User-Agent': `PwsWebhooksAxiosClient/1.0 (Process: ${this.server.options.instance.process_id})`,
                 'X-Pusher-Key': appKey,
-                'X-Pusher-Signature': createWebhookHmac(JSON.stringify(payload), appSecret),
+                'X-Pusher-Signature': pusherSignature,
             };
 
             axios.post(target, payload, { headers }).then((res) => {
@@ -144,14 +141,20 @@ export class WebhookSender {
     protected send(app: App, data: ClientEventData, queueName: string): void {
         app.webhooks.forEach((webhook: WebhookInterface) => {
             if (webhook.event_types.includes(data.name)) {
+                // According to the Pusher docs: The time_ms key provides the unix timestamp in milliseconds when the webhook was created.
+                // So we set the time here instead of creating a new one in the queue handler so you can detect delayed webhooks when the queue is busy.
+                let time = (new Date).getTime();
+
+                let payload = {
+                    time_ms: time,
+                    events: [data],
+                };
+
                 this.server.queueManager.addToQueue(queueName, {
-                    // According to the Pusher docs: The time_ms key provides the unix timestamp in milliseconds when the webhook was created.
-                    // So we set the time here instead of creating a new one in the queue handler so you can detect delayed webhooks when the queue is busy.
-                    time: (new Date).getTime(),
                     target: webhook.url,
                     appKey: app.key,
-                    appSecret: app.secret,
-                    clientEvent: data,
+                    payload: payload,
+                    pusherSignature: createWebhookHmac(JSON.stringify(payload), app.secret),
                 });
             }
         });
