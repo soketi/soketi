@@ -1,6 +1,10 @@
 const colors = require('colors');
 
 export class Log {
+    static infoTitle(message: any): void {
+        console.log(colors.bold.black.bgCyan(message));
+    }
+
     static successTitle(message: any): void {
         console.log(colors.bold.black.bgGreen(message));
     }
@@ -11,10 +15,6 @@ export class Log {
 
     static warningTitle(message: any): void {
         console.log(colors.bold.black.bgYellow(message));
-    }
-
-    static infoTitle(message: any): void {
-        console.log(colors.bold.cyan(message));
     }
 
     static info(message: any): void {
