@@ -1,6 +1,7 @@
 import { App } from '../src/app';
 import { Server } from '../src/server';
 import { Utils } from './utils';
+import { createWebhookHmac } from "../src/webhook-sender";
 
 jest.retryTimes(2);
 
@@ -30,7 +31,7 @@ describe('webhooks test', () => {
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
                 let app = new App(server.options.appManager.array.apps[0]);
-                let rightSignature = app.createWebhookHmac(JSON.stringify(req.body));
+                let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
 
                 expect(req.headers['x-pusher-key']).toBe('app-key');
                 expect(req.headers['x-pusher-signature']).toBe(rightSignature);
@@ -87,7 +88,7 @@ describe('webhooks test', () => {
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
                 let app = new App(server.options.appManager.array.apps[0]);
-                let rightSignature = app.createWebhookHmac(JSON.stringify(req.body));
+                let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
 
                 expect(req.headers['x-pusher-key']).toBe('app-key');
                 expect(req.headers['x-pusher-signature']).toBe(rightSignature);
@@ -136,7 +137,7 @@ describe('webhooks test', () => {
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
                 let app = new App(server.options.appManager.array.apps[0]);
-                let rightSignature = app.createWebhookHmac(JSON.stringify(req.body));
+                let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
 
                 expect(req.headers['x-pusher-key']).toBe('app-key');
                 expect(req.headers['x-pusher-signature']).toBe(rightSignature);
