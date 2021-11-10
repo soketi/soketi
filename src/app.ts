@@ -1,6 +1,5 @@
 import { HttpResponse } from 'uWebSockets.js';
 
-const { createHmac } = require('crypto');
 const Pusher = require('pusher');
 const pusherUtil = require('pusher/lib/util');
 
@@ -97,15 +96,6 @@ export class App implements AppInterface {
         if (!(this.webhooks instanceof Array)) {
             this.webhooks = [];
         }
-    }
-
-    /**
-     * Create the HMAC for the given data.
-     */
-    createWebhookHmac(data: string): string {
-        return createHmac('sha256', this.secret)
-            .update(data)
-            .digest('hex');
     }
 
     /**

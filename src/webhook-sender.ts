@@ -2,6 +2,7 @@ import { App, WebhookInterface } from './app';
 import axios from 'axios';
 import { Utils } from './utils';
 import { Server } from './server';
+import { createHmac } from "crypto";
 
 export interface ClientEventData {
     name: string;
@@ -15,6 +16,15 @@ export interface ClientEventData {
     time_ms?: number;
 }
 
+/**
+ * Create the HMAC for the given data.
+ */
+export function createWebhookHmac(data: string, secret: string): string {
+    return createHmac('sha256', secret)
+        .update(data)
+        .digest('hex');
+}
+
 export class WebhookSender {
     /**
      * Initialize the Webhook sender.
@@ -22,14 +32,26 @@ export class WebhookSender {
     constructor(protected server: Server) {
         let queueProcessor = (job, done) => {
             let rawData: {
-                webhook: WebhookInterface;
-                headers: { [key: string]: string; };
-                data: ClientEventData;
+                target: string;
+                appKey: string;
+                payload: {
+                    time_ms: number;
+                    events: ClientEventData[];
+                },
+                pusherSignature: string;
             } = job.data;
 
-            let { webhook, headers, data } = rawData;
+            const { target, appKey, payload, pusherSignature } = rawData;
 
-            axios.post(webhook.url, data, { headers }).then((res) => {
+            const headers = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'User-Agent': `PwsWebhooksAxiosClient/1.0 (Process: ${this.server.options.instance.process_id})`,
+                'X-Pusher-Key': appKey,
+                'X-Pusher-Signature': pusherSignature,
+            };
+
+            axios.post(target, payload, { headers }).then((res) => {
                 if (typeof done === 'function') {
                     done();
                 }
@@ -117,25 +139,22 @@ export class WebhookSender {
      * Send a webhook for the app with the given data.
      */
     protected send(app: App, data: ClientEventData, queueName: string): void {
-        let dataToSend = {
-            ...data,
-            ...{ time_ms: (new Date).getTime() },
-        };
-
-        let headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'User-Agent': `PwsWebhooksAxiosClient/1.0 (Process: ${this.server.options.instance.process_id})`,
-            'X-Pusher-Key': app.key,
-            'X-Pusher-Signature': app.createWebhookHmac(JSON.stringify(dataToSend)),
-        };
-
         app.webhooks.forEach((webhook: WebhookInterface) => {
             if (webhook.event_types.includes(data.name)) {
+                // According to the Pusher docs: The time_ms key provides the unix timestamp in milliseconds when the webhook was created.
+                // So we set the time here instead of creating a new one in the queue handler so you can detect delayed webhooks when the queue is busy.
+                let time = (new Date).getTime();
+
+                let payload = {
+                    time_ms: time,
+                    events: [data],
+                };
+
                 this.server.queueManager.addToQueue(queueName, {
-                    webhook,
-                    headers,
-                    data: dataToSend,
+                    target: webhook.url,
+                    appKey: app.key,
+                    payload: payload,
+                    pusherSignature: createWebhookHmac(JSON.stringify(payload), app.secret),
                 });
             }
         });
