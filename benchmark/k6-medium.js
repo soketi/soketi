@@ -1,9 +1,9 @@
 import { Trend } from 'k6/metrics';
 import ws from 'k6/ws';
 
-// Low: php send.php --interval 1
-// Mild: php send.php --interval 0.5
-// Overkill: php send.php --interval 0.1
+// Low: php send --interval 1
+// Mild: php send --interval 0.5
+// Overkill: php send --interval 0.1
 
 const delayTrend = new Trend('message_delay_ms');
 
