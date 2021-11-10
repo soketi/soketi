@@ -118,8 +118,8 @@ export class WebhookSender {
      */
     protected send(app: App, data: ClientEventData, queueName: string): void {
         let dataToSend = {
-            ...data,
-            ...{ time_ms: (new Date).getTime() },
+            time_ms: (new Date).getTime(),
+            events: [data],
         };
 
         let headers = {

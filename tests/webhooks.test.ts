@@ -34,12 +34,17 @@ describe('webhooks test', () => {
 
                 expect(req.headers['x-pusher-key']).toBe('app-key');
                 expect(req.headers['x-pusher-signature']).toBe(rightSignature);
-                expect(req.body.name).toBe('client_event');
-                expect(req.body.channel).toBe(channelName);
-                expect(req.body.event).toBe('client-greeting');
-                expect(req.body.data.message).toBe('hello');
-                expect(req.body.socket_id).toBeDefined();
                 expect(req.body.time_ms).toBeDefined();
+                expect(req.body.events).toBeDefined();
+                expect(req.body.events.length).toBe(1);
+
+                const webhookEvent = req.body.events[0];
+
+                expect(webhookEvent.name).toBe('client_event');
+                expect(webhookEvent.channel).toBe(channelName);
+                expect(webhookEvent.event).toBe('client-greeting');
+                expect(webhookEvent.data.message).toBe('hello');
+                expect(webhookEvent.socket_id).toBeDefined();
 
                 res.json({ ok: true });
                 done();
@@ -86,17 +91,20 @@ describe('webhooks test', () => {
 
                 expect(req.headers['x-pusher-key']).toBe('app-key');
                 expect(req.headers['x-pusher-signature']).toBe(rightSignature);
+                expect(req.body.time_ms).toBeDefined();
+                expect(req.body.events).toBeDefined();
+                expect(req.body.events.length).toBe(1);
 
-                if (req.body.name === 'channel_occupied') {
-                    expect(req.body.channel).toBe(channelName);
-                    expect(req.body.time_ms).toBeDefined();
+                const webhookEvent = req.body.events[0];
+
+                if (webhookEvent.name === 'channel_occupied') {
+                    expect(webhookEvent.channel).toBe(channelName);
                 }
 
                 res.json({ ok: true });
 
-                if (req.body.name === 'channel_vacated') {
-                    expect(req.body.channel).toBe(channelName);
-                    expect(req.body.time_ms).toBeDefined();
+                if (webhookEvent.name === 'channel_vacated') {
+                    expect(webhookEvent.channel).toBe(channelName);
                     done();
                 }
             }, (activeHttpServer) => {
@@ -132,19 +140,23 @@ describe('webhooks test', () => {
 
                 expect(req.headers['x-pusher-key']).toBe('app-key');
                 expect(req.headers['x-pusher-signature']).toBe(rightSignature);
+                expect(req.body.time_ms).toBeDefined();
+                expect(req.body.events).toBeDefined();
+                expect(req.body.events.length).toBe(1);
+
+                const webhookEvent = req.body.events[0];
 
                 if (req.body.name === 'member_added') {
-                    expect(req.body.channel).toBe(channelName);
-                    expect([1, 2].includes(req.body.user_id)).toBe(true);
-                    expect(req.body.time_ms).toBeDefined();
+                    expect(webhookEvent.channel).toBe(channelName);
+                    expect(webhookEvent.user_id).toBe(2);
+                    expect([1, 2].includes(webhookEvent.user_id)).toBe(true);
                 }
 
                 res.json({ ok: true });
 
-                if (req.body.name === 'member_removed') {
-                    expect(req.body.channel).toBe(channelName);
-                    expect(req.body.time_ms).toBeDefined();
-                    expect(req.body.user_id).toBe(2);
+                if (webhookEvent.name === 'member_removed') {
+                    expect(webhookEvent.channel).toBe(channelName);
+                    expect(webhookEvent.user_id).toBe(2);
                     done();
                 }
             }, (activeHttpServer) => {
