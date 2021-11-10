@@ -18,13 +18,13 @@ jobs:
 
     strategy:
       matrix:
-        node:
-          - 14-alpine
-          - 16-alpine
         repo:
           - node
           - arm64v8/node
           - arm32v7/node
+        node:
+          - 14-alpine
+          - 16-alpine
         includes:
           - repo: node
             arch: linux/amd64
