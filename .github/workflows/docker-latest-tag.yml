@@ -72,3 +72,7 @@ jobs:
           tags: quay.io/soketi/pws:latest-${{ matrix.node }}
           build-args: |
             VERSION=${{ matrix.node }}
+          platforms: |
+            linux/amd64
+            linux/arm/v7
+            linux/arm64/v8
