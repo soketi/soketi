@@ -5,7 +5,7 @@ import ws from 'k6/ws';
 // Mild: php send.php --interval 0.5
 // Overkill: php send.php --interval 0.1
 
-const delayTrend = new Trend('message_delay_trend');
+const delayTrend = new Trend('message_delay_ms');
 
 export const options = {
     // Custom options
