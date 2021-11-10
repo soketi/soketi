@@ -25,7 +25,7 @@ jobs:
         node:
           - 14-alpine
           - 16-alpine
-        includes:
+        include:
           - repo: node
             arch: linux/amd64
           - repo: arm64v8/node
@@ -39,7 +39,7 @@ jobs:
         ports:
           - 5000:5000
 
-    name: Tag & Test Commit (${{ matrix.repo }}:${{ matrix.node }} as arch ${{ matrix.arch }})
+    name: Tag & Test Commit (${{ matrix.repo }}:${{ matrix.node }} as ${{ matrix.arch }})
 
     steps:
       - uses: actions/checkout@v2
