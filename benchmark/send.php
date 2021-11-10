@@ -15,7 +15,7 @@ $fs = Flags::new();
 $fs->setScriptFile($flags);
 
 $fs->addOpt('interval', 'i', 'Specify at which interval to send each message.', FlagType::FLOAT, false, 0.1);
-$fs->addOpt('messages', 'm', 'Specify the number of messages to send.', FlagType::INT, false, 100);
+$fs->addOpt('messages', 'm', 'Specify the number of messages to send.', FlagType::INT, false);
 $fs->addOpt('host', 'h', 'Specify the host to connect to.', FlagType::STRING, false, '127.0.0.1');
 $fs->addOpt('ssl', 's', 'Securely connect to the server.', FlagType::BOOL, false, false);
 
@@ -39,7 +39,7 @@ $messagesBeforeStop = $options['messages'] ?? null;
 $totalMessages = 0;
 
 $loop->addPeriodicTimer($interval, function () use ($pusher, &$totalMessages, $messagesBeforeStop, $loop) {
-    if ($totalMessages >= $messagesBeforeStop) {
+    if ($messagesBeforeStop && $totalMessages >= $messagesBeforeStop) {
         echo "Sent: {$totalMessages} messages";
         return $loop->stop();
     }
