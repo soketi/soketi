@@ -16,6 +16,7 @@ RUN apk add --no-cache --update git python3 gcompat && \
     # Install the app in temporary build folder.
     cd /tmp/build && \
     npm install && \
+    npm run build && \
     # Copy just the necessary files to the /app folder.
     mkdir -p /app && \
     cp -r bin/ dist/ LICENSE package.json README.md /app && \
