@@ -1,4 +1,4 @@
-ARG VERSION=lts
+ARG VERSION=alpine-lts
 
 FROM node:$VERSION
 
@@ -8,31 +8,19 @@ ENV PYTHONUNBUFFERED=1
 
 COPY . /tmp/build
 
+WORKDIR /tmp/build
+
 RUN apk add --no-cache --update git python3 gcompat && \
     apk add --virtual build-dependencies build-base gcc wget && \
     ln -sf python3 /usr/bin/python && \
     python3 -m ensurepip && \
     pip3 install --no-cache --upgrade pip setuptools && \
-    # Install the app in temporary build folder.
-    cd /tmp/build && \
-    npm install && \
-    npm run build && \
-    # Copy just the necessary files to the /app folder.
+    ash ./build-minimal-production && \
     mkdir -p /app && \
-    cp -r bin/ dist/ LICENSE package.json README.md /app && \
-    rm -rf /tmp/* && \
-    # Delete the node_modules folder and install just the packages required for production.
-    cd /app && \
-    npm install --only=prod --ignore-scripts && \
-    npm prune --production && \
-    # Cleanup the image.
-    npm install modclean -g && \
-    rm -rf node_modules/*/test/ node_modules/*/tests/ && \
-    rm -rf /var/cache/* /usr/lib/python* && \
-    apk --purge del build-dependencies build-base gcc && \
-    npm cache clean --force && \
-    modclean -n default:safe --run && \
-    npm uninstall -g modclean
+    cd /tmp/build && \
+    mv production-app/* /app/ && \
+    rm -rf /tmp/* /var/cache/* /usr/lib/python* && \
+    apk --purge del build-dependencies build-base gcc
 
 WORKDIR /app
 

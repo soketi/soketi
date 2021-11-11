@@ -3,6 +3,7 @@ build/
 coverage/
 dist/
 node_modules/
+production-app/
 benchmark/composer.lock
 npm-debug.log
 package-lock.json
