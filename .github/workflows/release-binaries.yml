@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  # push:
+  #   tags:
+  #     - "*"
+
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+    tags-ignore:
+      - "*"
+
+jobs:
+  build:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        node:
+          - 14
+          - 16
+        platform:
+          - node${{ matrix.node }}-darwin-x64
+          - node${{ matrix.node }}-linux-x64
+          - node${{ matrix.node }}-win-x64
+        include:
+          - platform: node${{ matrix.node }}-darwin-x64
+            os: macos-latest
+          - platform: node${{ matrix.node }}-linux-x64
+            os: ubuntu-latest
+          - platform: node${{ matrix.node }}-win-x64
+            os: windows-latest
+
+    name: Release Binary for ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2.4.1
+        name: Installing Node.js v${{ matrix.node }}.x
+        with:
+          node-version: ${{ matrix.node }}.x
+
+      - name: Build for Production
+        run: |
+          ./build-minimal-production
+
+      - name: Build ${{ matrix.platform }} binary
+        run: |
+          cd production-app/
+          pkg . --compress="Brotli" --options="*" -t ${{ matrix.platform }}
