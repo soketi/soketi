@@ -24,11 +24,12 @@ RUN apk add --no-cache --update git python3 gcompat && \
     # Delete the node_modules folder and install just the packages required for production.
     cd /app && \
     npm install --only=prod --ignore-scripts && \
+    npm prune --production && \
     # Cleanup the image.
     npm install modclean -g && \
     rm -rf node_modules/*/test/ node_modules/*/tests/ && \
-    apk --purge del build-dependencies && \
-    npm prune && \
+    rm -rf /var/cache/* /usr/lib/python* && \
+    apk --purge del build-dependencies build-base gcc && \
     npm cache clean --force && \
     modclean -n default:safe --run && \
     npm uninstall -g modclean
