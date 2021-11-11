@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+
+    runs-on: ubuntu-latest
+
+    name: Publish to NPM
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2.4.1
+        name: Installing Node.js v16.x
+        with:
+          node-version: 16.x
+
+      - name: Installing dependencies
+        run: |
+          npm install
+
+      - name: Lint & Compile
+        run: |
+          npm run lint
+          npm run build
+
+      - name: Cleanup
+        run: |
+          npm prune --production
+          rm -rf node_modules/*/test/ node_modules/*/tests/
+
+      - name: Compute GitHub tag
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+
+      - name: Publish
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          npm set //registry.npmjs.org/:_authToken $NPM_TOKEN
+          npm version ${{ steps.tag.outputs.tag }}
+          npm publish --access=public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
