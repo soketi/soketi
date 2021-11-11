@@ -37,6 +37,7 @@ jobs:
 
       - name: Build ${{ matrix.platform }} binary
         run: |
+          npm install -g pkg
           cd production-app/
           pkg . \
             --compress="Brotli" \
