@@ -22,19 +22,16 @@ jobs:
 
     strategy:
       matrix:
-        node:
-          - 14
-          - 16
         platform:
-          - node${{ matrix.node }}-darwin-x64
-          - node${{ matrix.node }}-linux-x64
-          - node${{ matrix.node }}-win-x64
+          - node16-darwin-x64
+          - node16-linux-x64
+          - node16-win-x64
         include:
-          - platform: node${{ matrix.node }}-darwin-x64
+          - platform: node16-darwin-x64
             os: macos-latest
-          - platform: node${{ matrix.node }}-linux-x64
+          - platform: node16-linux-x64
             os: ubuntu-latest
-          - platform: node${{ matrix.node }}-win-x64
+          - platform: node16-win-x64
             os: windows-latest
 
     name: Release Binary for ${{ matrix.platform }}
@@ -43,9 +40,9 @@ jobs:
       - uses: actions/checkout@v2
 
       - uses: actions/setup-node@v2.4.1
-        name: Installing Node.js v${{ matrix.node }}.x
+        name: Installing Node.js v16.x
         with:
-          node-version: ${{ matrix.node }}.x
+          node-version: 16.x
 
       - name: Build for Production
         run: |
