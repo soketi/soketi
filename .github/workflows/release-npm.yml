@@ -11,15 +11,15 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    name: Publish NPM
+    name: Publish to NPM
 
     steps:
     - uses: actions/checkout@v2
 
     - uses: actions/setup-node@v2.4.1
-      name: Installing Node.js v14.x
+      name: Installing Node.js v16.x
       with:
-        node-version: 14.x
+        node-version: 16.x
 
     - name: Installing dependencies
       run: |
@@ -29,6 +29,11 @@ jobs:
       run: |
         npm run lint
         npm run build
+
+    - name: Cleanup
+      run: |
+        npm prune --production
+        rm -rf node_modules/*/test/ node_modules/*/tests/
 
     - name: Compute GitHub tag
       id: tag
