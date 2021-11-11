@@ -39,4 +39,7 @@ jobs:
         run: |
           npm install -g pkg
           cd production-app/
-          pkg . --options="*" -t node16-darwin-x64,node16-linux-x64,node16-win-x64
+          pkg . \
+            --compress="Brotli" \
+            --options="*" \
+            -t node16-darwin-x64,node16-linux-x64,node16-win-x64
