@@ -46,6 +46,7 @@ jobs:
 
       - name: Build for Production
         run: |
+          chmod +x build-minimal-production
           ./build-minimal-production
 
       - name: Build ${{ matrix.platform }} binary
