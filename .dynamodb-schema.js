@@ -1,9 +1,9 @@
-import {
+const {
     CreateTableCommand,
     DescribeTableCommand,
     DynamoDBClient,
     PutItemCommand,
-} from '@aws-sdk/client-dynamodb';
+} = require('@aws-sdk/client-dynamodb');
 
 let ddb = new DynamoDBClient({
     apiVersion: '2012-08-10',
