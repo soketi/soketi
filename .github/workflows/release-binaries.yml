@@ -18,23 +18,9 @@ jobs:
   build:
     if: "!contains(github.event.head_commit.message, 'skip ci')"
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        platform:
-          - node16-darwin-x64
-          - node16-linux-x64
-          - node16-win-x64
-        include:
-          - platform: node16-darwin-x64
-            os: macos-latest
-          - platform: node16-linux-x64
-            os: ubuntu-latest
-          - platform: node16-win-x64
-            os: windows-latest
-
-    name: Release Binary for ${{ matrix.platform }}
+    name: Release Binaries
 
     steps:
       - uses: actions/checkout@v2
@@ -52,4 +38,7 @@ jobs:
       - name: Build ${{ matrix.platform }} binary
         run: |
           cd production-app/
-          pkg . --compress="Brotli" --options="*" -t ${{ matrix.platform }}
+          pkg . \
+            --compress="Brotli" \
+            --options="*" \
+            -t node16-darwin-x64,node16-linux-x64,node16-win-x64
