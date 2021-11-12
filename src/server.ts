@@ -258,11 +258,8 @@ export class Server {
                     this.serverProcess = serverProcess;
 
                     Log.successTitle('🎉 Server is up and running!\n');
-
-                    if (this.options.debug) {
-                        Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
-                        Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
-                    }
+                    Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
+                    Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
 
                     if (callback) {
                         callback(this);
