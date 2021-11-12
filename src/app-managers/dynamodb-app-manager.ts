@@ -1,22 +1,21 @@
 import { App } from '../app';
 import { AppManagerInterface } from './app-manager-interface';
-import { AttributeValue, DynamoDBClient, GetItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb';
-import { unmarshall } from '@aws-sdk/util-dynamodb';
-
+import { AttributeMap } from 'aws-sdk/clients/dynamodb';
 import { boolean } from 'boolean';
+import { DynamoDB } from 'aws-sdk';
 import { Server } from '../server';
 
 export class DynamoDbAppManager implements AppManagerInterface {
     /**
      * The DynamoDB client.
      */
-    protected dynamodb: DynamoDBClient;
+    protected dynamodb: DynamoDB;
 
     /**
      * Create a new app manager instance.
      */
     constructor(protected server: Server) {
-        this.dynamodb = new DynamoDBClient({
+        this.dynamodb = new DynamoDB({
             apiVersion: '2012-08-10',
             region: server.options.appManager.dynamodb.region,
             endpoint: server.options.appManager.dynamodb.endpoint,
@@ -27,12 +26,12 @@ export class DynamoDbAppManager implements AppManagerInterface {
      * Find an app by given ID.
      */
     findById(id: string): Promise<App|null> {
-        return this.dynamodb.send(new GetItemCommand({
+        return this.dynamodb.getItem({
             TableName: this.server.options.appManager.dynamodb.table,
             Key: {
                 AppId: { S: id },
             },
-        })).then((response) => {
+        }).promise().then((response) => {
             let item = response.Item;
 
             if (!item) {
@@ -49,7 +48,7 @@ export class DynamoDbAppManager implements AppManagerInterface {
      * Find an app by given key.
      */
     findByKey(key: string): Promise<App|null> {
-        return this.dynamodb.send(new QueryCommand({
+        return this.dynamodb.query({
             TableName: this.server.options.appManager.dynamodb.table,
             IndexName: 'AppKeyIndex',
             ScanIndexForward: false,
@@ -58,7 +57,7 @@ export class DynamoDbAppManager implements AppManagerInterface {
             ExpressionAttributeValues: {
                 ':app_key': { S: key },
             },
-        })).then((response) => {
+        }).promise().then((response) => {
             let item = response.Items[0] || null;
 
             if (!item) {
@@ -74,8 +73,8 @@ export class DynamoDbAppManager implements AppManagerInterface {
     /**
      * Transform the marshalled item to a key-value pair.
      */
-    protected unmarshallItem(item: { [key: string]: AttributeValue }): { [key: string]: any; } {
-        let appObject = unmarshall(item);
+    protected unmarshallItem(item: AttributeMap): { [key: string]: any; } {
+        let appObject = DynamoDB.Converter.unmarshall(item);
 
         // Making sure EnableClientMessages is boolean.
         if (appObject.EnableClientMessages instanceof Buffer) {
