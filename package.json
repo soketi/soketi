@@ -1,10 +1,10 @@
 {
-  "name": "@soketi/pws",
+  "name": "@soketi/soketi",
   "version": "0.0.0-dev",
-  "description": "pWS is a free, open-source Pusher drop-in alterantive.",
+  "description": "Just another simple, fast, and resilient open-source WebSockets server.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/soketi/pws.git"
+    "url": "https://github.com/soketi/soketi.git"
   },
   "main": "dist/index.js",
   "keywords": [
@@ -79,7 +79,7 @@
     "test:watch": "npm test -- --watch"
   },
   "bin": {
-    "pws-server": "bin/server.js",
-    "pws-pm2-server": "bin/pm2.js"
+    "soketi": "bin/server.js",
+    "soketi-pm2": "bin/pm2.js"
   }
 }

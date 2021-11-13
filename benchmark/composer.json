@@ -1,5 +1,5 @@
 {
-    "name": "soketi/pws-benchmark",
+    "name": "soketi/soketi-benchmark",
     "type": "package",
     "license": "MIT",
     "minimum-stability": "dev",

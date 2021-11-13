@@ -1,17 +1,17 @@
-pWS - Pusher (over) [uWS](https://github.com/uNetworking/uWebSockets.js)
-========================================================================
+soketi
+======
 
-![CI](https://github.com/soketi/pws/workflows/CI/badge.svg?branch=master)
-[![codecov](https://codecov.io/gh/soketi/pws/branch/master/graph/badge.svg)](https://codecov.io/gh/soketi/pws/branch/master)
-[![Latest Stable Version](https://img.shields.io/github/v/release/soketi/pws)](https://www.npmjs.com/package/@soketi/pws)
-[![Total Downloads](https://img.shields.io/npm/dt/@soketi/pws)](https://www.npmjs.com/package/@soketi/pws)
-[![License](https://img.shields.io/npm/l/@soketi/pws)](https://www.npmjs.com/package/@soketi/pws)
+![CI](https://github.com/soketi/soketi/workflows/CI/badge.svg?branch=master)
+[![codecov](https://codecov.io/gh/soketi/soketi/branch/master/graph/badge.svg)](https://codecov.io/gh/soketi/soketi/branch/master)
+[![Latest Stable Version](https://img.shields.io/github/v/release/soketi/soketi)](https://www.npmjs.com/package/@soketi/soketi)
+[![Total Downloads](https://img.shields.io/npm/dt/@soketi/soketi)](https://www.npmjs.com/package/@soketi/soketi)
+[![License](https://img.shields.io/npm/l/@soketi/soketi)](https://www.npmjs.com/package/@soketi/soketi)
 
-pWS is a free, scalable and resilient open-source Pusher drop-in alternative. 📡
+Just another simple, fast, and resilient open-source WebSockets server. 📣
 
 The server is built on top of [uWebSockets.js](https://github.com/uNetworking/uWebSockets.js) - a C application ported to Node.js, that claims to be running _[8.5x that of Fastify](https://alexhultman.medium.com/serving-100k-requests-second-from-a-fanless-raspberry-pi-4-over-ethernet-fdd2c2e05a1e) and at least [10x that of Socket.IO](https://medium.com/swlh/100k-secure-websockets-with-raspberry-pi-4-1ba5d2127a23). ([_source_](https://github.com/uNetworking/uWebSockets.js))_
 
-pWS implements the [Pusher Protocol v7](https://pusher.com/docs/channels/library\_auth\_reference/pusher-websockets-protocol#version-7-2017-11) - meaning that any Pusher-maintained client can connect to it, bringing a plug-and-play experience for the already-built frontend apps that you already implemented.
+soketi implements the [Pusher Protocol v7](https://pusher.com/docs/channels/library\_auth\_reference/pusher-websockets-protocol#version-7-2017-11) (and soon, more!) so that any Pusher-maintained client can connect to it, bringing a _just-change-the-pusher-client-credentials_ experience for the already-built frontend apps.
 
 ## 🤝 Supporting
 
@@ -19,7 +19,7 @@ pWS implements the [Pusher Protocol v7](https://pusher.com/docs/channels/library
 
 ## 📃 Documentation
 
-[The entire documentation is available on Gitbook 🌍](https://rennokki.gitbook.io/soketi-pws)
+[The entire documentation is available on Gitbook 🌍](https://rennokki.gitbook.io/soketi)
 
 ## 🤝 Contributing
 
