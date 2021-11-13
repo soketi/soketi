@@ -19,7 +19,7 @@ soketi implements the [Pusher Protocol v7](https://pusher.com/docs/channels/libr
 
 ## 📃 Documentation
 
-[The entire documentation is available on Gitbook 🌍](https://rennokki.gitbook.io/soketi)
+[The entire documentation is available on Gitbook 🌍](https://rennokki.gitbook.io/soketi-docs/)
 
 ## 🤝 Contributing
 
