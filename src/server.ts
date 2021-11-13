@@ -128,7 +128,7 @@ export class Server {
             enabled: false,
             driver: 'prometheus',
             prometheus: {
-                prefix: 'pws_',
+                prefix: 'soketi_',
             },
         },
         port: 6001,
@@ -232,7 +232,7 @@ export class Server {
         this.webhookSender = new WebhookSender(this);
 
         if (this.options.debug) {
-            Log.info('\n📡 pWS Server initialization started.\n');
+            Log.info('\n📡 soketi initialization....\n');
             Log.info('⚡ Initializing the HTTP API & Websockets Server...\n');
         }
 

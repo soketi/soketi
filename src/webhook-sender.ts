@@ -47,7 +47,7 @@ export class WebhookSender {
             const headers = {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'User-Agent': `PwsWebhooksAxiosClient/1.0 (Process: ${this.server.options.instance.process_id})`,
+                'User-Agent': `SoketiWebhooksAxiosClient/1.0 (Process: ${this.server.options.instance.process_id})`,
                 'X-Pusher-Key': appKey,
                 'X-Pusher-Signature': pusherSignature,
             };
