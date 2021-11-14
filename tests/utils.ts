@@ -42,6 +42,7 @@ export class Utils {
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
             'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
             'metrics.enabled': true,
+            'appManager.mysql.useMysql2': true,
         };
 
         return Server.start(options, (server: Server) => {
