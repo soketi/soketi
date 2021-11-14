@@ -1,6 +1,8 @@
 soketi
 ======
 
+<img src="assets/logo.png" width="120" />
+
 ![CI](https://github.com/soketi/soketi/workflows/CI/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/soketi/soketi/branch/master/graph/badge.svg)](https://codecov.io/gh/soketi/soketi/branch/master)
 [![Latest Stable Version](https://img.shields.io/github/v/release/soketi/soketi)](https://www.npmjs.com/package/@soketi/soketi)
