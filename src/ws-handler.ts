@@ -98,7 +98,7 @@ export class WsHandler {
                 return ws.end();
             }
 
-            ws.app = validApp;
+            ws.app = validApp.forWebSocket();
 
             this.checkIfAppIsEnabled(ws).then(enabled => {
                 if (!enabled) {
