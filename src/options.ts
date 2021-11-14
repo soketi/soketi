@@ -45,6 +45,7 @@ export interface Options {
         mysql: {
             table: string;
             version: string|number;
+            useMysql2: boolean;
         };
         postgres: {
             table: string;

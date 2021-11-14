@@ -23,6 +23,7 @@ export class Cli {
         APP_MANAGER_MYSQL_VERSION: 'appManager.mysql.version',
         APP_MANAGER_POSTGRES_TABLE: 'appManager.postgres.table',
         APP_MANAGER_POSTGRES_VERSION: 'appManager.postgres.version',
+        APP_MANAGER_USE_MYSQL2: 'appManager.mysql.useMysql2',
         CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength',
         DEBUG: 'debug',
         DEFAULT_APP_ID: 'appManager.array.apps.0.id',

@@ -55,6 +55,7 @@ export class Server {
             mysql: {
                 table: 'apps',
                 version: '8.0',
+                useMysql2: false,
             },
             postgres: {
                 table: 'apps',
