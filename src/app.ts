@@ -22,9 +22,7 @@ export interface WebhookInterface {
     lambda_function?: string;
     event_types: string[];
     lambda: {
-        async: boolean;
-        region?: string;
-        endpoint?: string;
+        async?: boolean;
         client_options?: Lambda.Types.ClientConfiguration,
     };
 }
