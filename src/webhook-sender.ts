@@ -96,6 +96,7 @@ export class WebhookSender {
 
                         let lambda = new Lambda({
                             apiVersion: '2015-03-31',
+                            region: webhook.lambda.region || 'us-east-1',
                             ...(webhook.lambda.client_options || {}),
                         });
 
