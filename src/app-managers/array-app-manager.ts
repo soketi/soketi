@@ -1,13 +1,13 @@
 import { App } from '../app';
-import { AppManagerInterface } from './app-manager-interface';
+import { BaseAppManager } from './base-app-manager';
 import { Server } from '../server';
 
-export class ArrayAppManager implements AppManagerInterface {
+export class ArrayAppManager extends BaseAppManager {
     /**
      * Create a new app manager instance.
      */
     constructor(protected server: Server) {
-        //
+        super();
     }
 
     /**
