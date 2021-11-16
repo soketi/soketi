@@ -7,7 +7,7 @@ const pusherUtil = require('pusher/lib/util');
 export interface AppInterface {
     id: string;
     key: string;
-    secret?: string;
+    secret: string;
     maxConnections: string|number;
     enableClientMessages: boolean;
     enabled: boolean;
@@ -106,7 +106,7 @@ export class App implements AppInterface {
      * Usually used when attached to WS connections, as they don't need these details.
      */
      forWebSocket(): App {
-        delete this.secret;
+        // delete this.secret;
         delete this.maxBackendEventsPerSecond;
         delete this.maxReadRequestsPerSecond;
         delete this.webhooks;
