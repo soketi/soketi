@@ -72,10 +72,10 @@ export class Utils {
             next();
         });
 
-        webhooksApp.post('/webhook', requestHandler);
+        webhooksApp.post('*', requestHandler);
 
         let server = webhooksApp.listen(3001, () => {
-            Log.success('🎉 Webhook Server is up and running!');
+            Log.successTitle('🎉 Webhook Server is up and running!');
         });
 
         server.on('error', err => {
