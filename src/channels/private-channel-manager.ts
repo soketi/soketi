@@ -40,12 +40,10 @@ export class PrivateChannelManager extends PublicChannelManager {
      * Get the signed token from the given message, by the Socket.
      */
     protected getExpectedSignature(app: App, socketId: string, message: any): Promise<string> {
-        return new Promise(resolve => {
-            let token = new Pusher.Token(app.key, app.secret);
+        return this.server.appManager.getAppSecret(app.id).then(secret => {
+            let token = new Pusher.Token(app.key, secret);
 
-            resolve(
-                app.key + ':' + token.sign(this.getDataToSignForSignature(socketId, message))
-            );
+            return app.key + ':' + token.sign(this.getDataToSignForSignature(socketId, message));
         });
     }
 
