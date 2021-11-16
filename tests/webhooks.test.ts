@@ -217,4 +217,53 @@ describe('webhooks test', () => {
             });
         });
     }, 60 * 1000);
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('lambda webhooks', done => {
+        let webhooks = [{
+            event_types: ['client_event'],
+            lambda_function: 'some-lambda-function',
+            lambda: {
+                client_options: {
+                    endpoint: 'http://127.0.0.1:3001',
+                },
+            },
+        }];
+
+        let channelName = `private-${Utils.randomChannelName()}`;
+
+        Utils.newServer({
+            'appManager.array.apps.0.enableClientMessages': true,
+            'appManager.array.apps.0.webhooks': webhooks,
+            'database.redis.keyPrefix': 'client-event-webhook',
+        }, (server: Server) => {
+            Utils.newWebhookServer((req, res) => {
+                // Mocking the AWS endpoint as our webhook so that we can test
+                // the fact that the AWS client sends the webhook through Lambda.
+                expect(req.originalUrl).toBe('/2015-03-31/functions/some-lambda-function/invocations');
+
+                res.json({ ok: true });
+                done();
+            }, (activeHttpServer) => {
+                let client1 = Utils.newClientForPrivateChannel();
+
+                client1.connection.bind('connected', () => {
+                    let channel = client1.subscribe(channelName);
+
+                    channel.bind('pusher:subscription_succeeded', () => {
+                        let client2 = Utils.newClientForPrivateChannel();
+
+                        client2.connection.bind('connected', () => {
+                            let channel = client2.subscribe(channelName);
+
+                            channel.bind('pusher:subscription_succeeded', () => {
+                                channel.trigger('client-greeting', {
+                                    message: 'hello',
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    }, 60 * 1000);
 });

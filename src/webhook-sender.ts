@@ -1,6 +1,7 @@
 import { App, WebhookInterface } from './app';
 import axios from 'axios';
 import { Utils } from './utils';
+import { Lambda } from 'aws-sdk';
 import { Log } from './log';
 import { Server } from './server';
 import { createHmac } from "crypto";
@@ -33,7 +34,6 @@ export class WebhookSender {
     constructor(protected server: Server) {
         let queueProcessor = (job, done) => {
             let rawData: {
-                target: string;
                 appKey: string;
                 payload: {
                     time_ms: number;
@@ -42,35 +42,84 @@ export class WebhookSender {
                 pusherSignature: string;
             } = job.data;
 
-            const { target, appKey, payload, pusherSignature } = rawData;
+            const { appKey, payload, pusherSignature } = rawData;
 
-            const headers = {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'User-Agent': `SoketiWebhooksAxiosClient/1.0 (Process: ${this.server.options.instance.process_id})`,
-                'X-Pusher-Key': appKey,
-                'X-Pusher-Signature': pusherSignature,
-            };
+            server.appManager.findByKey(appKey).then(app => {
+                app.webhooks.forEach((webhook: WebhookInterface) => {
+                    if (! webhook.event_types.includes(payload.events[0].name)) {
+                        return;
+                    }
 
-            axios.post(target, payload, { headers }).then((res) => {
-                if (this.server.options.debug) {
-                    Log.successTitle('✅ Webhook sent.');
-                    Log.success({ target, payload });
-                }
+                    if (this.server.options.debug) {
+                        Log.successTitle('🚀 Processing webhook from queue.');
+                        Log.success({
+                            appKey,
+                            payload,
+                            pusherSignature,
+                        });
+                    }
 
-                if (typeof done === 'function') {
-                    done();
-                }
-            }).catch(err => {
-                if (this.server.options.debug) {
-                    Log.errorTitle('❎ Webhook could not be sent.');
-                    Log.error({ err, target, payload });
-                }
+                    const headers = {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'User-Agent': `SoketiWebhooksAxiosClient/1.0 (Process: ${this.server.options.instance.process_id})`,
+                        'X-Pusher-Key': appKey,
+                        'X-Pusher-Signature': pusherSignature,
+                    };
 
-                // TODO: Maybe retry exponentially?
-                if (typeof done === 'function') {
-                    done();
-                }
+                    // Send HTTP POST to the target URL
+                    if (webhook.url) {
+                        axios.post(webhook.url, payload, { headers }).then((res) => {
+                            if (this.server.options.debug) {
+                                Log.successTitle('✅ Webhook sent.');
+                                Log.success({ webhook, payload });
+                            }
+                        }).catch(err => {
+                            // TODO: Maybe retry exponentially?
+
+                            if (this.server.options.debug) {
+                                Log.errorTitle('❎ Webhook could not be sent.');
+                                Log.error({ err, webhook, payload });
+                            }
+                        }).then(() => {
+                            if (typeof done === 'function') {
+                                done();
+                            }
+                        });
+                    } else if (webhook.lambda_function) {
+                        // Invoke a Lambda function
+                        const params = {
+                            FunctionName: webhook.lambda_function,
+                            InvocationType: webhook.lambda.async ? 'Event' : 'RequestResponse',
+                            Payload: Buffer.from(JSON.stringify({ payload, headers })),
+                        };
+
+                        let lambda = new Lambda({
+                            apiVersion: '2015-03-31',
+                            region: webhook.lambda.region || 'us-east-1',
+                            ...(webhook.lambda.client_options || {}),
+                        });
+
+                        lambda.invoke(params, (err, data) => {
+                            if (err) {
+                                if (this.server.options.debug) {
+                                    Log.errorTitle('❎ Lambda trigger failed.');
+                                    Log.error({ webhook, err, data });
+                                }
+                            } else {
+                                if (this.server.options.debug) {
+                                    Log.successTitle('✅ Lambda triggered.');
+                                    Log.success({ webhook, payload });
+                                }
+                            }
+
+                            if (typeof done === 'function') {
+                                // TODO: Maybe retry exponentially?
+                                done();
+                            }
+                        });
+                    }
+                });
             });
         };
 
@@ -150,32 +199,21 @@ export class WebhookSender {
      * Send a webhook for the app with the given data.
      */
     protected send(app: App, data: ClientEventData, queueName: string): void {
-        app.webhooks.forEach((webhook: WebhookInterface) => {
-            if (webhook.event_types.includes(data.name)) {
-                // According to the Pusher docs: The time_ms key provides the unix timestamp in milliseconds when the webhook was created.
-                // So we set the time here instead of creating a new one in the queue handler so you can detect delayed webhooks when the queue is busy.
-                let time = (new Date).getTime();
+        // According to the Pusher docs: The time_ms key provides the unix timestamp in milliseconds when the webhook was created.
+        // So we set the time here instead of creating a new one in the queue handler so you can detect delayed webhooks when the queue is busy.
+        let time = (new Date).getTime();
 
-                let payload = {
-                    time_ms: time,
-                    events: [data],
-                };
+        let payload = {
+            time_ms: time,
+            events: [data],
+        };
 
-                this.server.queueManager.addToQueue(queueName, {
-                    target: webhook.url,
-                    appKey: app.key,
-                    payload: payload,
-                    pusherSignature: createWebhookHmac(JSON.stringify(payload), app.secret),
-                });
+        let pusherSignature = createWebhookHmac(JSON.stringify(payload), app.secret);
 
-                if (this.server.options.debug) {
-                    Log.successTitle('🚀 Added webhook to queue.');
-                    Log.success({
-                        target: webhook.url,
-                        payload: payload,
-                    });
-                }
-            }
+        this.server.queueManager.addToQueue(queueName, {
+            appKey: app.key,
+            payload,
+            pusherSignature,
         });
     }
 }
