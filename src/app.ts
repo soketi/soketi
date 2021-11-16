@@ -23,6 +23,7 @@ export interface WebhookInterface {
     event_types: string[];
     lambda: {
         async?: boolean;
+        region?: string;
         client_options?: Lambda.Types.ClientConfiguration,
     };
 }
@@ -105,6 +106,7 @@ export class App implements AppInterface {
      * Usually used when attached to WS connections, as they don't need these details.
      */
      forWebSocket(): App {
+         delete this.secret;
         delete this.maxBackendEventsPerSecond;
         delete this.maxReadRequestsPerSecond;
         delete this.webhooks;
