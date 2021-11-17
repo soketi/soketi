@@ -43,6 +43,7 @@
     "pusher": "^5.0.0",
     "query-string": "^7.0.0",
     "rate-limiter-flexible": "^2.3.4",
+    "sqs-consumer": "^5.6.0",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.4.0",
     "uuid": "^8.3.2",
     "yargs": "^17.2.1"

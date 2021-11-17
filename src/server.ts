@@ -143,6 +143,18 @@ export class Server {
             redis: {
                 concurrency: 1,
             },
+            sqs: {
+                region: 'us-east-1',
+                client_options: {},
+                consumer_options: {},
+                queues: {
+                    client_event_webhooks: '',
+                    member_added_webhooks: '',
+                    member_removed_webhooks: '',
+                    channel_vacated_webhooks: '',
+                    channel_occupied_webhooks: '',
+                },
+            },
         },
         rateLimiter: {
             driver: 'local',
@@ -285,6 +297,7 @@ export class Server {
             return Promise.all([
                 this.metricsManager.clear(),
                 this.queueManager.clear(),
+                // this.adapter.clear(),
             ]).then(() => {
                 if (this.options.debug) {
                     Log.warningTitle('⚡ All sockets were closed. Now closing the server.');

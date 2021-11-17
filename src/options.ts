@@ -1,4 +1,6 @@
 import { AppInterface } from './app';
+import { ConsumerOptions } from 'sqs-consumer';
+import { SQS } from 'aws-sdk';
 
 interface Redis {
     host: string;
@@ -100,6 +102,18 @@ export interface Options {
         driver: string;
         redis: {
             concurrency: number;
+        };
+        sqs: {
+            region?: string;
+            client_options?: SQS.Types.ClientConfiguration;
+            consumer_options?: ConsumerOptions;
+            queues: {
+                client_event_webhooks: string;
+                member_added_webhooks: string;
+                member_removed_webhooks: string;
+                channel_vacated_webhooks: string;
+                channel_occupied_webhooks: string;
+            };
         };
     };
     rateLimiter: {

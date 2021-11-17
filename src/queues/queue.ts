@@ -1,6 +1,7 @@
 import { Log } from './../log';
 import { QueueInterface } from './queue-interface';
 import { RedisQueueDriver } from './redis-queue-driver';
+import { SqsQueueDriver } from './sqs-queue-driver';
 import { SyncQueueDriver } from './sync-queue-driver';
 import { Server } from '../server';
 
@@ -18,6 +19,8 @@ export class Queue implements QueueInterface {
             this.driver = new SyncQueueDriver(server);
         } else if (server.options.queue.driver === 'redis') {
             this.driver = new RedisQueueDriver(server);
+        } else if (server.options.queue.driver === 'sqs') {
+            this.driver = new SqsQueueDriver(server);
         } else {
             Log.error('No queue driver specified.');
         }
