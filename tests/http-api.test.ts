@@ -27,7 +27,7 @@ describe('http api test', () => {
 
     test('usage endpoint', done => {
         Utils.newServer({}, (server: Server) => {
-            axios.get('http://127.0.0.1:6001/usage').then(res => {
+            axios.get('http://127.0.0.1:5601/usage').then(res => {
                 done();
             }).catch(() => {
                 throw new Error('Usage endpoint failed');
