@@ -10,13 +10,17 @@ import { Queue } from './queues/queue';
 import { QueueInterface } from './queues/queue-interface';
 import { RateLimiter } from './rate-limiters/rate-limiter';
 import { RateLimiterInterface } from './rate-limiters/rate-limiter-interface';
+import { Request, Response } from 'express';
+import { Server as HttpServer } from 'http';
 import { v4 as uuidv4 } from 'uuid';
 import { WebhookSender } from './webhook-sender';
 import { WebSocket } from 'uWebSockets.js';
 import { WsHandler } from './ws-handler';
 
+const express = require('express');
 const queryString = require('query-string');
 const uWS = require('uWebSockets.js');
+const v8 = require('v8');
 
 export class Server {
     /**
@@ -131,6 +135,7 @@ export class Server {
             prometheus: {
                 prefix: 'soketi_',
             },
+            port: 9601,
         },
         port: 6001,
         pathPrefix: '',
@@ -205,6 +210,11 @@ export class Server {
     public webhookSender: WebhookSender;
 
     /**
+     * The Express.js server for metrics (including Prometheus), if applicable.
+     */
+    public metricsServer: HttpServer;
+
+    /**
      * Start the server statically.
      */
     static async start(options: any = {}, callback?: CallableFunction) {
@@ -254,17 +264,24 @@ export class Server {
                 Log.info('⚡ Initializing the HTTP webserver...\n');
             }
 
-            this.configureHttp(server).then(server => {
-                server.listen('0.0.0.0', this.options.port, serverProcess => {
-                    this.serverProcess = serverProcess;
+            this.configureMetricsServer().then(() => {
+                this.configureHttp(server).then(server => {
+                    server.listen('0.0.0.0', this.options.port, serverProcess => {
+                        this.serverProcess = serverProcess;
 
-                    Log.successTitle('🎉 Server is up and running!\n');
-                    Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
-                    Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
+                        Log.successTitle('🎉 Server is up and running!\n');
+                        Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
+                        Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
+                        Log.successTitle(`🎊 The /usage endpoint is available on port ${this.options.metrics.port}.\n`);
 
-                    if (callback) {
-                        callback(this);
-                    }
+                        if (this.options.metrics.enabled) {
+                            Log.successTitle(`🌠 Prometheus /metrics endpoint is available on port ${this.options.metrics.port}.\n`);
+                        }
+
+                        if (callback) {
+                            callback(this);
+                        }
+                    });
                 });
             });
         });
@@ -281,24 +298,26 @@ export class Server {
             Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
         }
 
-        return this.wsHandler.closeAllLocalSockets().then(() => {
-            return Promise.all([
-                this.metricsManager.clear(),
-                this.queueManager.clear(),
-            ]).then(() => {
-                if (this.options.debug) {
-                    Log.warningTitle('⚡ All sockets were closed. Now closing the server.');
-                }
+        return this.closeMetricsServer().then(() => {
+            this.wsHandler.closeAllLocalSockets().then(() => {
+                return Promise.all([
+                    this.metricsManager.clear(),
+                    this.queueManager.clear(),
+                ]).then(() => {
+                    if (this.options.debug) {
+                        Log.warningTitle('⚡ All sockets were closed. Now closing the server.');
+                    }
 
-                uWS.us_listen_socket_close(this.serverProcess);
+                    uWS.us_listen_socket_close(this.serverProcess);
 
-                return new Promise(resolve => setTimeout(resolve, 3000));
+                    return new Promise(resolve => setTimeout(resolve, 3000));
+                });
             });
         });
     }
 
     /**
-     * Generates the correct url
+     * Generates the URL with the set pathPrefix from options.
      */
     protected url(path: string): string {
         return this.options.pathPrefix + path;
@@ -329,15 +348,6 @@ export class Server {
     protected configureHttp(server: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
             server.get(this.url('/'), (res, req) => this.httpHandler.healthCheck(res));
-            server.get(this.url('/usage'), (res, req) => this.httpHandler.usage(res));
-
-            if (this.options.metrics.enabled) {
-                server.get(this.url('/metrics'), (res, req) => {
-                    res.query = queryString.parse(req.getQuery());
-
-                    return this.httpHandler.metrics(res);
-                });
-            }
 
             server.get(this.url('/apps/:appId/channels'), (res, req) => {
                 res.params = { appId: req.getParameter(0) };
@@ -381,6 +391,84 @@ export class Server {
 
             resolve(server);
         });
+    }
+
+    /**
+     * Configure the metrics server at a separate port for under-the-firewall access.
+     */
+    protected configureMetricsServer(): Promise<HttpServer|null> {
+        return new Promise(resolve => {
+            Log.info('🕵️‍♂️ Initiating metrics endpoints...\n');
+
+            const app = express();
+
+            app.use((req: Request, res: Response, next) => {
+                res.header('Access-Control-Allow-Origin', '*');
+                res.header('Access-Control-Allow-Methods', '*');
+                res.header('Access-Control-Allow-Headers', '*');
+                next();
+            });
+
+            app.get(this.url('/usage'), (req: Request, res: Response) => {
+                let {
+                    rss,
+                    heapTotal,
+                    external,
+                    arrayBuffers,
+                } = process.memoryUsage();
+
+                let totalSize = v8.getHeapStatistics().total_available_size;
+                let usedSize = rss + heapTotal + external + arrayBuffers;
+                let freeSize = totalSize - usedSize;
+                let percentUsage = (usedSize / totalSize) * 100;
+
+                return res.json({
+                    memory: {
+                        free: freeSize,
+                        used: usedSize,
+                        total: totalSize,
+                        percent: percentUsage,
+                    },
+                });
+            })
+
+            if (this.options.metrics.enabled) {
+                app.get(this.url('/metrics'), (req: Request, res: Response) => {
+                    let handleError = error => {
+                        return res.status(500).json({ error, code: 500 });
+                    };
+
+                    if (req.query.json) {
+                        this.metricsManager.getMetricsAsJson().then(metrics => {
+                            res.json(metrics);
+                        }).catch(handleError);
+                    } else {
+                        this.metricsManager.getMetricsAsPlaintext().then(metrics => {
+                            res.send(metrics);
+                        }).catch(handleError);
+                    }
+                });
+            }
+
+            app.on('error', err => {
+                console.log('Metrics server error', err);
+            });
+
+            return resolve(this.metricsServer = app.listen(this.options.metrics.port, () => {
+                //
+            }));
+        });
+    }
+
+    /**
+     * Close the metrics server, if possible.
+     */
+    protected closeMetricsServer(): Promise<any> {
+        if (!this.metricsServer) {
+            return Promise.resolve();
+        }
+
+        return Promise.resolve(this.metricsServer.close());
     }
 
     /**

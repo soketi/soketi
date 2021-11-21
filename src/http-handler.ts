@@ -4,8 +4,6 @@ import { Server } from './server';
 import { Utils } from './utils';
 import { Log } from './log';
 
-const v8 = require('v8');
-
 export interface ChannelResponse {
     subscription_count: number;
     user_count?: number;
@@ -25,59 +23,6 @@ export class HttpHandler {
             this.corsMiddleware,
         ]).then(res => {
             this.send(res, 'OK');
-        });
-    }
-
-    usage(res: HttpResponse) {
-        this.attachMiddleware(res, [
-            this.corsMiddleware,
-        ]).then(res => {
-            let {
-                rss,
-                heapTotal,
-                external,
-                arrayBuffers,
-            } = process.memoryUsage();
-
-            let totalSize = v8.getHeapStatistics().total_available_size;
-            let usedSize = rss + heapTotal + external + arrayBuffers;
-            let freeSize = totalSize - usedSize;
-            let percentUsage = (usedSize / totalSize) * 100;
-
-            return this.sendJson(res, {
-                memory: {
-                    free: freeSize,
-                    used: usedSize,
-                    total: totalSize,
-                    percent: percentUsage,
-                },
-            });
-        });
-    }
-
-    metrics(res: HttpResponse) {
-        this.attachMiddleware(res, [
-            this.corsMiddleware,
-        ]).then(res => {
-            let handleError = err => {
-                this.serverErrorResponse(res, 'A server error has occurred.');
-            }
-
-            if (res.query.json) {
-                this.server.metricsManager
-                    .getMetricsAsJson()
-                    .then(metrics => {
-                        this.sendJson(res, metrics);
-                    })
-                    .catch(handleError);
-            } else {
-                this.server.metricsManager
-                    .getMetricsAsPlaintext()
-                    .then(metrics => {
-                        this.send(res, metrics);
-                    })
-                    .catch(handleError);
-            }
         });
     }
 

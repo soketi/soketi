@@ -64,6 +64,7 @@ export class Cli {
         METRICS_ENABLED: 'metrics.enabled',
         METRICS_DRIVER: 'metrics.driver',
         METRICS_PROMETHEUS_PREFIX: 'metrics.prometheus.prefix',
+        METRICS_SERVER_PORT: 'metrics.port',
         PORT: 'port',
         PATH_PREFIX: 'pathPrefix',
         PRESENCE_MAX_MEMBER_SIZE: 'presence.maxMemberSizeInKb',
