@@ -114,7 +114,7 @@ export class RedisAdapter extends LocalAdapter {
         this.responseChannel = `${this.channel}#comms#res`;
 
         let redisDefaultOptions = {
-            maxRetriesPerRequest: 2,
+            // maxRetriesPerRequest: 2,
             retryStrategy: times => times * 2,
         };
 
