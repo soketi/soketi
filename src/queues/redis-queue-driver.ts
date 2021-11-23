@@ -53,7 +53,10 @@ export class RedisQueueDriver implements QueueInterface {
                 });
 
                 this.queueWithWorker.set(queueName, {
-                    queue: new Queue(queueName, { connection }),
+                    queue: new Queue(queueName, {
+                        connection,
+                        defaultJobOptions: { attempts: 6, delay: 1000 },
+                    }),
                     // TODO: Sandbox the worker? https://docs.bullmq.io/guide/workers/sandboxed-processors
                     worker: new Worker(queueName, callback as any, {
                         connection,
