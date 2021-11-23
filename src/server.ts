@@ -463,12 +463,16 @@ export class Server {
     /**
      * Close the metrics server, if possible.
      */
-    protected closeMetricsServer(): Promise<any> {
+    protected closeMetricsServer(): Promise<void> {
         if (!this.metricsServer) {
             return Promise.resolve();
         }
 
-        return Promise.resolve(this.metricsServer.close());
+        return new Promise(resolve => {
+            this.metricsServer.close(() => {
+                resolve();
+            });
+        });
     }
 
     /**
