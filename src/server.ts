@@ -396,7 +396,7 @@ export class Server {
     /**
      * Configure the metrics server at a separate port for under-the-firewall access.
      */
-    protected configureMetricsServer(): Promise<HttpServer|null> {
+    protected configureMetricsServer(): Promise<void> {
         return new Promise(resolve => {
             Log.info('🕵️‍♂️ Initiating metrics endpoints...\n');
 
@@ -454,9 +454,9 @@ export class Server {
                 console.log('Metrics server error', err);
             });
 
-            return resolve(this.metricsServer = app.listen(this.options.metrics.port, () => {
-                //
-            }));
+            this.metricsServer = app.listen(this.options.metrics.port, () => {
+                resolve();
+            });
         });
     }
 
