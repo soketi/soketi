@@ -299,7 +299,7 @@ export class Server {
         }
 
         return this.closeMetricsServer().then(() => {
-            this.wsHandler.closeAllLocalSockets().then(() => {
+            return this.wsHandler.closeAllLocalSockets().then(() => {
                 return Promise.all([
                     this.metricsManager.clear(),
                     this.queueManager.clear(),
