@@ -298,8 +298,8 @@ export class Server {
             Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
         }
 
-        return this.closeMetricsServer().then(() => {
-            return this.wsHandler.closeAllLocalSockets().then(() => {
+        return this.wsHandler.closeAllLocalSockets().then(() => {
+            this.closeMetricsServer().then(() => {
                 return Promise.all([
                     this.metricsManager.clear(),
                     this.queueManager.clear(),
