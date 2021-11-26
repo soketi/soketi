@@ -131,6 +131,7 @@ export class Server {
             prometheus: {
                 prefix: 'soketi_',
             },
+            port: 9601,
         },
         port: 6001,
         pathPrefix: '',
@@ -163,6 +164,11 @@ export class Server {
      * The server process.
      */
     private serverProcess;
+
+    /**
+     * The metrics server process.
+     */
+    private metricsServerProcess;
 
     /**
      * The WS handler for the incoming connections.
@@ -245,6 +251,8 @@ export class Server {
             })
             : uWS.App();
 
+        let metricsServer: TemplatedApp = uWS.App();
+
         if (this.options.debug) {
             Log.info('⚡ Initializing the Websocket listeners and channels...\n');
         }
@@ -255,16 +263,27 @@ export class Server {
             }
 
             this.configureHttp(server).then(server => {
-                server.listen('0.0.0.0', this.options.port, serverProcess => {
-                    this.serverProcess = serverProcess;
+                this.configureMetricsServer(metricsServer).then(metricsServer => {
+                    metricsServer.listen('0.0.0.0', this.options.metrics.port, metricsServerProcess => {
+                        this.metricsServerProcess = metricsServerProcess;
 
-                    Log.successTitle('🎉 Server is up and running!\n');
-                    Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
-                    Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
+                        server.listen('0.0.0.0', this.options.port, serverProcess => {
+                            this.serverProcess = serverProcess;
 
-                    if (callback) {
-                        callback(this);
-                    }
+                            Log.successTitle('🎉 Server is up and running!\n');
+                            Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
+                            Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
+                            Log.successTitle(`🎊 The /usage endpoint is available on port ${this.options.metrics.port}.\n`);
+
+                            if (this.options.metrics.enabled) {
+                                Log.successTitle(`🌠 Prometheus /metrics endpoint is available on port ${this.options.metrics.port}.\n`);
+                            }
+
+                            if (callback) {
+                                callback(this);
+                            }
+                        });
+                    });
                 });
             });
         });
@@ -290,7 +309,13 @@ export class Server {
                     Log.warningTitle('⚡ All sockets were closed. Now closing the server.');
                 }
 
-                uWS.us_listen_socket_close(this.serverProcess);
+                if (this.serverProcess) {
+                    uWS.us_listen_socket_close(this.serverProcess);
+                }
+
+                if (this.metricsServerProcess) {
+                    uWS.us_listen_socket_close(this.metricsServerProcess);
+                }
 
                 return new Promise(resolve => setTimeout(resolve, 3000));
             });
@@ -298,7 +323,7 @@ export class Server {
     }
 
     /**
-     * Generates the correct url
+     * Generates the URL with the set pathPrefix from options.
      */
     protected url(path: string): string {
         return this.options.pathPrefix + path;
@@ -330,15 +355,6 @@ export class Server {
         return new Promise(resolve => {
             server.get(this.url('/'), (res, req) => this.httpHandler.healthCheck(res));
             server.get(this.url('/ready'), (res, req) => this.httpHandler.ready(res));
-            server.get(this.url('/usage'), (res, req) => this.httpHandler.usage(res));
-
-            if (this.options.metrics.enabled) {
-                server.get(this.url('/metrics'), (res, req) => {
-                    res.query = queryString.parse(req.getQuery());
-
-                    return this.httpHandler.metrics(res);
-                });
-            }
 
             server.get(this.url('/apps/:appId/channels'), (res, req) => {
                 res.params = { appId: req.getParameter(0) };
@@ -381,6 +397,29 @@ export class Server {
             });
 
             resolve(server);
+        });
+    }
+
+    /**
+     * Configure the metrics server at a separate port for under-the-firewall access.
+     */
+    protected configureMetricsServer(metricsServer: TemplatedApp): Promise<TemplatedApp> {
+        return new Promise(resolve => {
+            Log.info('🕵️‍♂️ Initiating metrics endpoints...\n');
+
+            metricsServer.get(this.url('/'), (res, req) => this.httpHandler.healthCheck(res));
+            metricsServer.get(this.url('/ready'), (res, req) => this.httpHandler.ready(res));
+            metricsServer.get(this.url('/usage'), (res, req) => this.httpHandler.usage(res));
+
+            if (this.options.metrics.enabled) {
+                metricsServer.get(this.url('/metrics'), (res, req) => {
+                    res.query = queryString.parse(req.getQuery());
+
+                    return this.httpHandler.metrics(res);
+                });
+            }
+
+            resolve(metricsServer);
         });
     }
 

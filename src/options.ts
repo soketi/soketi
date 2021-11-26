@@ -89,6 +89,7 @@ export interface Options {
         prometheus: {
             prefix: string;
         };
+        port: number;
     },
     port: number;
     pathPrefix: string;

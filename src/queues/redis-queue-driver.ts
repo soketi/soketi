@@ -45,10 +45,18 @@ export class RedisQueueDriver implements QueueInterface {
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
         return new Promise(resolve => {
             if (!this.queueWithWorker.has(queueName)) {
-                let connection = new Redis(this.server.options.database.redis);
+
+                let connection = new Redis({
+                    maxRetriesPerRequest: null,
+                    enableReadyCheck: false,
+                    ...this.server.options.database.redis,
+                });
 
                 this.queueWithWorker.set(queueName, {
-                    queue: new Queue(queueName, { connection }),
+                    queue: new Queue(queueName, {
+                        connection,
+                        defaultJobOptions: { attempts: 6, delay: 1000 },
+                    }),
                     // TODO: Sandbox the worker? https://docs.bullmq.io/guide/workers/sandboxed-processors
                     worker: new Worker(queueName, callback as any, {
                         connection,
