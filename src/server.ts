@@ -329,6 +329,7 @@ export class Server {
     protected configureHttp(server: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
             server.get(this.url('/'), (res, req) => this.httpHandler.healthCheck(res));
+            server.get(this.url('/ready'), (res, req) => this.httpHandler.ready(res));
             server.get(this.url('/usage'), (res, req) => this.httpHandler.usage(res));
 
             if (this.options.metrics.enabled) {
