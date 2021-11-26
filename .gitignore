@@ -7,5 +7,6 @@ production-app/
 .env
 benchmark/composer.lock
 npm-debug.log
+package-lock.json
 yarn.lock
 *.db
