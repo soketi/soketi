@@ -10,17 +10,13 @@ import { Queue } from './queues/queue';
 import { QueueInterface } from './queues/queue-interface';
 import { RateLimiter } from './rate-limiters/rate-limiter';
 import { RateLimiterInterface } from './rate-limiters/rate-limiter-interface';
-import { Request, Response } from 'express';
-import { Server as HttpServer } from 'http';
 import { v4 as uuidv4 } from 'uuid';
 import { WebhookSender } from './webhook-sender';
 import { WebSocket } from 'uWebSockets.js';
 import { WsHandler } from './ws-handler';
 
-const express = require('express');
 const queryString = require('query-string');
 const uWS = require('uWebSockets.js');
-const v8 = require('v8');
 
 export class Server {
     /**
@@ -170,6 +166,11 @@ export class Server {
     private serverProcess;
 
     /**
+     * The metrics server process.
+     */
+    private metricsServerProcess;
+
+    /**
      * The WS handler for the incoming connections.
      */
     public wsHandler: WsHandler;
@@ -208,11 +209,6 @@ export class Server {
      * The sender for webhooks.
      */
     public webhookSender: WebhookSender;
-
-    /**
-     * The Express.js server for metrics (including Prometheus), if applicable.
-     */
-    public metricsServer: HttpServer;
 
     /**
      * Start the server statically.
@@ -255,6 +251,8 @@ export class Server {
             })
             : uWS.App();
 
+        let metricsServer: TemplatedApp = uWS.App();
+
         if (this.options.debug) {
             Log.info('⚡ Initializing the Websocket listeners and channels...\n');
         }
@@ -264,23 +262,27 @@ export class Server {
                 Log.info('⚡ Initializing the HTTP webserver...\n');
             }
 
-            this.configureMetricsServer().then(() => {
-                this.configureHttp(server).then(server => {
-                    server.listen('0.0.0.0', this.options.port, serverProcess => {
-                        this.serverProcess = serverProcess;
+            this.configureHttp(server).then(server => {
+                this.configureMetricsServer(metricsServer).then(metricsServer => {
+                    metricsServer.listen('0.0.0.0', this.options.metrics.port, metricsServerProcess => {
+                        this.metricsServerProcess = metricsServerProcess;
 
-                        Log.successTitle('🎉 Server is up and running!\n');
-                        Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
-                        Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
-                        Log.successTitle(`🎊 The /usage endpoint is available on port ${this.options.metrics.port}.\n`);
+                        server.listen('0.0.0.0', this.options.port, serverProcess => {
+                            this.serverProcess = serverProcess;
 
-                        if (this.options.metrics.enabled) {
-                            Log.successTitle(`🌠 Prometheus /metrics endpoint is available on port ${this.options.metrics.port}.\n`);
-                        }
+                            Log.successTitle('🎉 Server is up and running!\n');
+                            Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
+                            Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
+                            Log.successTitle(`🎊 The /usage endpoint is available on port ${this.options.metrics.port}.\n`);
 
-                        if (callback) {
-                            callback(this);
-                        }
+                            if (this.options.metrics.enabled) {
+                                Log.successTitle(`🌠 Prometheus /metrics endpoint is available on port ${this.options.metrics.port}.\n`);
+                            }
+
+                            if (callback) {
+                                callback(this);
+                            }
+                        });
                     });
                 });
             });
@@ -299,19 +301,23 @@ export class Server {
         }
 
         return this.wsHandler.closeAllLocalSockets().then(() => {
-            this.closeMetricsServer().then(() => {
-                return Promise.all([
-                    this.metricsManager.clear(),
-                    this.queueManager.clear(),
-                ]).then(() => {
-                    if (this.options.debug) {
-                        Log.warningTitle('⚡ All sockets were closed. Now closing the server.');
-                    }
+            return Promise.all([
+                this.metricsManager.clear(),
+                this.queueManager.clear(),
+            ]).then(() => {
+                if (this.options.debug) {
+                    Log.warningTitle('⚡ All sockets were closed. Now closing the server.');
+                }
 
+                if (this.serverProcess) {
                     uWS.us_listen_socket_close(this.serverProcess);
+                }
 
-                    return new Promise(resolve => setTimeout(resolve, 3000));
-                });
+                if (this.metricsServerProcess) {
+                    uWS.us_listen_socket_close(this.metricsServerProcess);
+                }
+
+                return new Promise(resolve => setTimeout(resolve, 3000));
             });
         });
     }
@@ -397,82 +403,23 @@ export class Server {
     /**
      * Configure the metrics server at a separate port for under-the-firewall access.
      */
-    protected configureMetricsServer(): Promise<void> {
+    protected configureMetricsServer(metricsServer: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
             Log.info('🕵️‍♂️ Initiating metrics endpoints...\n');
 
-            const app = express();
-
-            app.use((req: Request, res: Response, next) => {
-                res.header('Access-Control-Allow-Origin', '*');
-                res.header('Access-Control-Allow-Methods', '*');
-                res.header('Access-Control-Allow-Headers', '*');
-                next();
-            });
-
-            app.get(this.url('/usage'), (req: Request, res: Response) => {
-                let {
-                    rss,
-                    heapTotal,
-                    external,
-                    arrayBuffers,
-                } = process.memoryUsage();
-
-                let totalSize = v8.getHeapStatistics().total_available_size;
-                let usedSize = rss + heapTotal + external + arrayBuffers;
-                let freeSize = totalSize - usedSize;
-                let percentUsage = (usedSize / totalSize) * 100;
-
-                return res.json({
-                    memory: {
-                        free: freeSize,
-                        used: usedSize,
-                        total: totalSize,
-                        percent: percentUsage,
-                    },
-                });
-            })
+            metricsServer.get(this.url('/'), (res, req) => this.httpHandler.healthCheck(res));
+            metricsServer.get(this.url('/ready'), (res, req) => this.httpHandler.ready(res));
+            metricsServer.get(this.url('/usage'), (res, req) => this.httpHandler.usage(res));
 
             if (this.options.metrics.enabled) {
-                app.get(this.url('/metrics'), (req: Request, res: Response) => {
-                    let handleError = error => {
-                        return res.status(500).json({ error, code: 500 });
-                    };
+                metricsServer.get(this.url('/metrics'), (res, req) => {
+                    res.query = queryString.parse(req.getQuery());
 
-                    if (req.query.json) {
-                        this.metricsManager.getMetricsAsJson().then(metrics => {
-                            res.json(metrics);
-                        }).catch(handleError);
-                    } else {
-                        this.metricsManager.getMetricsAsPlaintext().then(metrics => {
-                            res.send(metrics);
-                        }).catch(handleError);
-                    }
+                    return this.httpHandler.metrics(res);
                 });
             }
 
-            app.on('error', err => {
-                console.log('Metrics server error', err);
-            });
-
-            this.metricsServer = app.listen(this.options.metrics.port, () => {
-                resolve();
-            });
-        });
-    }
-
-    /**
-     * Close the metrics server, if possible.
-     */
-    protected closeMetricsServer(): Promise<void> {
-        if (!this.metricsServer) {
-            return Promise.resolve();
-        }
-
-        return new Promise(resolve => {
-            this.metricsServer.close(() => {
-                resolve();
-            });
+            resolve(metricsServer);
         });
     }
 
