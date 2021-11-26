@@ -269,12 +269,38 @@ export class WsHandler {
             event: 'pusher:pong',
             data: {},
         });
+
+        if (this.server.closing) {
+            ws.sendJson({
+                event: 'pusher:error',
+                data: {
+                    code: 4200,
+                    message: 'Server closed. Please reconnect shortly.',
+                },
+            });
+
+            // See: https://www.iana.org/assignments/websocket/websocket.xhtml
+            return ws.end(1012);
+        }
     }
 
     /**
      * Instruct the server to subscribe the connection to the channel.
      */
     subscribeToChannel(ws: WebSocket, message: any): any {
+        if (this.server.closing) {
+            ws.sendJson({
+                event: 'pusher:error',
+                data: {
+                    code: 4200,
+                    message: 'Server closed. Please reconnect shortly.',
+                },
+            });
+
+            // See: https://www.iana.org/assignments/websocket/websocket.xhtml
+            return ws.end(1012);
+        }
+
         let channel = message.data.channel;
         let channelManager = this.getChannelManagerFor(channel);
 
