@@ -78,7 +78,8 @@ export class WsHandler {
                 },
             });
 
-            return ws.end();
+            // See: https://www.iana.org/assignments/websocket/websocket.xhtml
+            return ws.end(1012);
         }
 
         ws.id = this.generateSocketId();
@@ -95,7 +96,8 @@ export class WsHandler {
                     },
                 });
 
-                return ws.end();
+                // See: https://www.iana.org/assignments/websocket/websocket.xhtml
+                return ws.end(1002);
             }
 
             ws.app = validApp.forWebSocket();
@@ -110,7 +112,8 @@ export class WsHandler {
                         },
                     });
 
-                    return ws.end();
+                    // See: https://www.iana.org/assignments/websocket/websocket.xhtml
+                    return ws.end(1002);
                 }
 
                 this.checkAppConnectionLimit(ws).then(canConnect => {
@@ -123,7 +126,8 @@ export class WsHandler {
                             },
                         });
 
-                        ws.end();
+                        // See: https://www.iana.org/assignments/websocket/websocket.xhtml
+                        ws.end(1013);
                     } else {
                         this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
@@ -227,7 +231,8 @@ export class WsHandler {
                             },
                         });
 
-                        ws.end(1013);
+                        // See: https://www.iana.org/assignments/websocket/websocket.xhtml
+                        ws.end(1012);
                     } catch (e) {
                         //
                     }
@@ -269,12 +274,38 @@ export class WsHandler {
             event: 'pusher:pong',
             data: {},
         });
+
+        if (this.server.closing) {
+            ws.sendJson({
+                event: 'pusher:error',
+                data: {
+                    code: 4200,
+                    message: 'Server closed. Please reconnect shortly.',
+                },
+            });
+
+            // See: https://www.iana.org/assignments/websocket/websocket.xhtml
+            return ws.end(1012);
+        }
     }
 
     /**
      * Instruct the server to subscribe the connection to the channel.
      */
     subscribeToChannel(ws: WebSocket, message: any): any {
+        if (this.server.closing) {
+            ws.sendJson({
+                event: 'pusher:error',
+                data: {
+                    code: 4200,
+                    message: 'Server closed. Please reconnect shortly.',
+                },
+            });
+
+            // See: https://www.iana.org/assignments/websocket/websocket.xhtml
+            return ws.end(1012);
+        }
+
         let channel = message.data.channel;
         let channelManager = this.getChannelManagerFor(channel);
 
@@ -466,6 +497,7 @@ export class WsHandler {
         if (!ws.subscribedChannels) {
             return Promise.resolve();
         }
+
         return async.each(ws.subscribedChannels, (channel, callback) => {
             this.unsubscribeFromChannel(ws, channel).then(() => callback());
         });
@@ -550,7 +582,7 @@ export class WsHandler {
                         code: 4301,
                         message: 'The rate limit for sending client events exceeded the quota.',
                     },
-                })
+                });
             });
         });
     }
@@ -632,6 +664,7 @@ export class WsHandler {
         this.clearTimeout(ws);
 
         ws.timeout = setTimeout(() => {
+            // See: https://www.iana.org/assignments/websocket/websocket.xhtml
             ws.end(1006);
         }, 120_000);
     }
