@@ -845,4 +845,12 @@ export class PrivateNetworkAdapter extends LocalAdapter {
     protected getNumSub(): Promise<number> {
         return Promise.resolve(Object.keys(this.discover.nodes).length);
     }
+
+    /**
+     * Clear the local namespaces.
+     */
+     clear(namespaceId?: string): void {
+        super.clear(namespaceId);
+        this.discover.stop();
+    }
 }
