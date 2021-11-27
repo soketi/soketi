@@ -553,7 +553,7 @@ export class PrivateNetworkAdapter extends LocalAdapter {
      * Listen for message coming from other nodes to broadcast
      * a specific message to the local sockets.
      */
-    protected onMessage(message: any) {
+    protected onMessage(message: PubsubBroadcastedMessage) {
         if (typeof message !== 'object') {
             return;
         }
@@ -696,7 +696,7 @@ export class PrivateNetworkAdapter extends LocalAdapter {
     /**
      * Respond to a specific node when requested data.
      */
-    protected onResponse(response: any) {
+    protected onResponse(response: Response) {
         const requestId = response.requestId;
 
         if (!requestId || ! this.requests.has(requestId)) {
