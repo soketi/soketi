@@ -80,7 +80,7 @@ export class PrivateNetworkAdapter extends LocalAdapter {
      */
     protected channel: string;
 
-     /**
+    /**
      * The list of current request made by this instance.
      */
     protected requests: Map<string, Request> = new Map();
@@ -90,12 +90,12 @@ export class PrivateNetworkAdapter extends LocalAdapter {
      */
     protected requestChannel;
 
-     /**
+    /**
       * The channel to emit back based on the requests.
       */
     protected responseChannel;
 
-     /**
+    /**
       * The time (in ms) for the request to be fulfilled.
       */
     public readonly requestsTimeout: number;
@@ -116,6 +116,7 @@ export class PrivateNetworkAdapter extends LocalAdapter {
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
 
+        // TODO: Make them configurable.
         this.discover = Discover({
             checkInterval: 500,
             nodeTimeout: 2000,
@@ -554,10 +555,6 @@ export class PrivateNetworkAdapter extends LocalAdapter {
      * a specific message to the local sockets.
      */
     protected onMessage(message: PubsubBroadcastedMessage) {
-        if (typeof message !== 'object') {
-            return;
-        }
-
         const { uuid, appId, channel, data, exceptingId } = message;
 
         if (uuid === this.uuid || ! appId || ! channel || ! data) {
@@ -570,7 +567,7 @@ export class PrivateNetworkAdapter extends LocalAdapter {
     /**
      * Listen for requests coming from other nodes.
      */
-    protected async onRequest(request: any) {
+    protected async onRequest(request: Request) {
         let response: any;
         let localSockets: WebSocket[];
         let localMembers: Map<string, PresenceMember>;
@@ -846,6 +843,6 @@ export class PrivateNetworkAdapter extends LocalAdapter {
      * Get the number of Discover nodes.
      */
     protected getNumSub(): Promise<number> {
-        return Promise.resolve(this.nodes.size + 1);
+        return Promise.resolve(Object.keys(this.discover.nodes).length);
     }
 }
