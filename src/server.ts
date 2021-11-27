@@ -295,10 +295,8 @@ export class Server {
     stop(): Promise<void> {
         this.closing = true;
 
-        if (this.options.debug) {
-            Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...\n');
-            Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
-        }
+        Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...\n');
+        Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
 
         return this.wsHandler.closeAllLocalSockets().then(() => {
             return Promise.all([

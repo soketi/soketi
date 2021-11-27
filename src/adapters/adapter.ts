@@ -3,6 +3,7 @@ import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { Namespace } from '../namespace';
 import { PresenceMember } from '../presence-member';
+import { PrivateNetworkAdapter } from './private-network-adapter';
 import { RedisAdapter } from './redis-adapter';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
@@ -21,6 +22,8 @@ export class Adapter implements AdapterInterface {
             this.driver = new LocalAdapter(server);
         } else if (server.options.adapter.driver === 'redis') {
             this.driver = new RedisAdapter(server);
+        } else if (server.options.adapter.driver === 'private-network') {
+            this.driver = new PrivateNetworkAdapter(server);
         } else {
             Log.error('Adapter driver not set.');
         }

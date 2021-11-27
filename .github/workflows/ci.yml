@@ -25,6 +25,7 @@ jobs:
         adapter:
           - local
           - redis
+          - private-network
         app_manager:
           - array
           - dynamodb
@@ -35,6 +36,9 @@ jobs:
           - adapter: local
             rate_limiter: local
             queue_driver: sync
+          - adapter: private-network
+            rate_limiter: redis
+            queue_driver: redis
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis

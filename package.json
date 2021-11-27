@@ -37,6 +37,7 @@
     "knex": "^0.95.14",
     "mysql": "^2.18.1",
     "mysql2": "^2.3.3",
+    "node-discover": "^1.2.1",
     "pg": "^8.7.1",
     "prom-client": "^14.0.1",
     "prometheus-query": "^3.0.3",
