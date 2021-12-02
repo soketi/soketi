@@ -211,6 +211,19 @@ export class Server {
     public webhookSender: WebhookSender;
 
     /**
+     * Initialize the server.
+     */
+    constructor() {
+        this.setAppManager(new AppManager(this));
+        this.setAdapter(new Adapter(this));
+        this.setMetricsManager(new Metrics(this));
+        this.setRateLimiter(new RateLimiter(this));
+        this.setQueueManager(new Queue(this));
+        // TODO: Make webhook sender extendable.
+        this.webhookSender = new WebhookSender(this);
+    }
+
+    /**
      * Start the server statically.
      */
     static async start(options: any = {}, callback?: CallableFunction) {
@@ -229,14 +242,8 @@ export class Server {
             console.dir(this.options, { depth: 100 });
         }
 
-        this.appManager = new AppManager(this);
-        this.adapter = new Adapter(this);
-        this.metricsManager = new Metrics(this);
-        this.rateLimiter = new RateLimiter(this);
         this.wsHandler = new WsHandler(this);
         this.httpHandler = new HttpHandler(this);
-        this.queueManager = new Queue(this);
-        this.webhookSender = new WebhookSender(this);
 
         if (this.options.debug) {
             Log.info('\n📡 soketi initialization....\n');
@@ -318,6 +325,51 @@ export class Server {
                 return new Promise(resolve => setTimeout(resolve, 3000));
             });
         });
+    }
+
+    /**
+     * Set the options for the server. The key should be string.
+     * For nested values, use the dot notation.
+     */
+    setOptions(options: { [key: string]: any; }): void {
+        for (let optionKey in options) {
+            this.options = dot.set(this.options, optionKey, options[optionKey]);
+        }
+    }
+
+    /**
+     * Set the app manager.
+     */
+    setAppManager(instance: AppManagerInterface): void {
+        this.appManager = instance;
+    }
+
+    /**
+     * Set the adapter.
+     */
+    setAdapter(instance: AdapterInterface) {
+        this.adapter = instance;
+    }
+
+    /**
+     * Set the metrics manager.
+     */
+    setMetricsManager(instance: MetricsInterface) {
+        this.metricsManager = instance;
+    }
+
+    /**
+     * Set the rate limiter.
+     */
+    setRateLimiter(instance: RateLimiterInterface) {
+        this.rateLimiter = instance;
+    }
+
+    /**
+     * Set the queue manager.
+     */
+    setQueueManager(instance: QueueInterface) {
+        this.queueManager = instance;
     }
 
     /**

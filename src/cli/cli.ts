@@ -109,7 +109,10 @@ export class Cli {
                     }
                 }
 
-                this.server.options = dot.set(this.server.options, optionKey, value);
+                let settingObject = {};
+                settingObject[optionKey] = value;
+
+                this.server.setOptions(settingObject);
             }
         }
     }
