@@ -29,7 +29,7 @@ export class PresenceChannelManager extends PrivateChannelManager {
                 return {
                     success: false,
                     ws,
-                    errorCOde: 4301,
+                    errorCode: 4301,
                     errorMessage: `The maximum size for a channel member is ${this.server.options.presence.maxMemberSizeInKb} KB.`,
                     type: 'LimitReached',
                 };
