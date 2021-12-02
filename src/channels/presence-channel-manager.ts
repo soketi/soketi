@@ -2,6 +2,7 @@ import { JoinResponse, LeaveResponse } from './public-channel-manager';
 import { Log } from '../log';
 import { PresenceMember } from '../presence-member';
 import { PrivateChannelManager } from './private-channel-manager';
+import { Utils } from '../utils';
 import { WebSocket } from 'uWebSockets.js';
 
 export class PresenceChannelManager extends PrivateChannelManager {
@@ -20,13 +21,25 @@ export class PresenceChannelManager extends PrivateChannelManager {
                 };
             }
 
+            let member: PresenceMember = JSON.parse(message.data.channel_data);
+
+            let memberSizeInKb = Utils.dataToKilobytes(member.user_info);
+
+            if (memberSizeInKb > this.server.options.presence.maxMemberSizeInKb) {
+                return {
+                    success: false,
+                    ws,
+                    errorCOde: 4301,
+                    errorMessage: `The maximum size for a channel member is ${this.server.options.presence.maxMemberSizeInKb} KB.`,
+                    type: 'LimitReached',
+                };
+            }
+
             return super.join(ws, channel, message).then(response => {
                 // Make sure to forward the response in case an error occurs.
                 if (!response.success) {
                     return response;
                 }
-
-                let member: PresenceMember = JSON.parse(message.data.channel_data);
 
                 return {
                     ...response,

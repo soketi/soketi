@@ -380,24 +380,6 @@ export class WsHandler {
             // Otherwise, prepare a response for the presence channel.
             let { user_id, user_info } = response.member;
 
-            let memberSizeInKb = Utils.dataToKilobytes(user_info);
-
-            if (memberSizeInKb > this.server.options.presence.maxMemberSizeInKb) {
-                let broadcastMessage = {
-                    event: 'pusher:subscription_error',
-                    channel,
-                    data: {
-                        type: 'LimitReached',
-                        error: `The maximum size for a channel member is ${this.server.options.presence.maxMemberSizeInKb} KB.`,
-                        code: 4301,
-                    },
-                };
-
-                ws.sendJson(broadcastMessage);
-
-                return;
-            }
-
             this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
                 let member = { user_id, user_info };
 
