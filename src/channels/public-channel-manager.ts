@@ -15,6 +15,7 @@ export interface JoinResponse {
 
 export interface LeaveResponse {
     left: boolean;
+    remainingConnections?: number;
     member?: PresenceMember;
 }
 
@@ -40,8 +41,11 @@ export class PublicChannelManager {
      * Mark the connection as closed and unsubscribe it.
      */
     leave(ws: WebSocket, channel: string): Promise<LeaveResponse> {
-        return this.server.adapter.getNamespace(ws.app.id).removeFromChannel(ws.id, channel).then(() => {
-            return { left: true };
+        return this.server.adapter.getNamespace(ws.app.id).removeFromChannel(ws.id, channel).then((remainingConnections) => {
+            return {
+                left: true,
+                remainingConnections,
+            };
         });
     }
 }

@@ -1,3 +1,4 @@
+import { assert } from 'console';
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
@@ -237,6 +238,72 @@ describe('presence channel test', () => {
 
                 channel.bind('pusher:subscription_succeeded', (data) => {
                     Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                });
+            });
+        });
+    });
+
+    test('connecting to the channel twice with same user does not trigger member_added twice', done => {
+        Utils.newServer({}, (server: Server) => {
+            let john = {
+                user_id: 1,
+                user_info: {
+                    id: 1,
+                    name: 'John',
+                },
+            };
+
+            let alice = {
+                user_id: 2,
+                user_info: {
+                    id: 2,
+                    name: 'Alice',
+                },
+            };
+
+            let johnClient = Utils.newClientForPresenceUser(john);
+            let channelName = `presence-${Utils.randomChannelName()}`;
+
+            johnClient.connection.bind('connected', () => {
+                let johnChannel = johnClient.subscribe(channelName);
+
+                johnChannel.bind('pusher:subscription_succeeded', (data) => {
+                    let aliceClient = Utils.newClientForPresenceUser(alice);
+
+                    aliceClient.connection.bind('connected', () => {
+                        let aliceChannel = aliceClient.subscribe(channelName);
+
+                        aliceChannel.bind('pusher:member_added', data => {
+                            throw new Error('Did not expect John to be added again.');
+                        });
+
+                        aliceChannel.bind('pusher:member_removed', data => {
+                            server.adapter.getChannelMembers('app-id', channelName).then(members => {
+                                if (members.size === 1) {
+                                    done();
+                                } else {
+                                    throw new Error('The member_removed got triggered but John did not left.');
+                                }
+                            });
+                        });
+
+                        aliceChannel.bind('pusher:subscription_succeeded', (data) => {
+                            expect(data.count).toBe(2);
+
+                            let anotherJohnClient = Utils.newClientForPresenceUser(john);
+
+                            anotherJohnClient.connection.bind('connected', () => {
+                                let anotherJohnChannel = anotherJohnClient.subscribe(channelName);
+
+                                anotherJohnChannel.bind('pusher:subscription_succeeded', (data) => {
+                                    expect(data.count).toBe(2);
+
+                                    anotherJohnClient.disconnect();
+                                    johnClient.disconnect();
+                                });
+                            });
+                        });
+                    });
                 });
             });
         });
