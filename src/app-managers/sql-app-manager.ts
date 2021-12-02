@@ -1,9 +1,9 @@
 import { App } from './../app';
-import { AppManagerInterface } from './app-manager-interface';
+import { BaseAppManager } from './base-app-manager';
 import { Knex, knex } from 'knex';
 import { Server } from './../server';
 
-export abstract class SqlAppManager implements AppManagerInterface {
+export abstract class SqlAppManager extends BaseAppManager {
     /**
      * The Knex connection.
      *
@@ -15,6 +15,8 @@ export abstract class SqlAppManager implements AppManagerInterface {
      * Create a new app manager instance.
      */
     constructor(protected server: Server) {
+        super();
+
         let knexConfig = {
             client: this.knexClientName(),
             connection: this.knexConnectionDetails(),

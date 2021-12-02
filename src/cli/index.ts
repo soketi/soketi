@@ -1,7 +1,7 @@
 import { Cli } from './cli';
 
 let yargs = require('yargs')
-    .usage('Usage: pws <command> [options]')
+    .usage('Usage: soketi <command> [options]')
     .command('start', 'Start the server.', yargs => Cli.start(yargs))
     .demandCommand(1, 'Please provide a valid command.')
     .help('help')

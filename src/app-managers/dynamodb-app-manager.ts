@@ -1,11 +1,11 @@
 import { App } from '../app';
-import { AppManagerInterface } from './app-manager-interface';
 import { AttributeMap } from 'aws-sdk/clients/dynamodb';
+import { BaseAppManager } from './base-app-manager';
 import { boolean } from 'boolean';
 import { DynamoDB } from 'aws-sdk';
 import { Server } from '../server';
 
-export class DynamoDbAppManager implements AppManagerInterface {
+export class DynamoDbAppManager extends BaseAppManager {
     /**
      * The DynamoDB client.
      */
@@ -15,6 +15,8 @@ export class DynamoDbAppManager implements AppManagerInterface {
      * Create a new app manager instance.
      */
     constructor(protected server: Server) {
+        super();
+
         this.dynamodb = new DynamoDB({
             apiVersion: '2012-08-10',
             region: server.options.appManager.dynamodb.region,
@@ -34,7 +36,7 @@ export class DynamoDbAppManager implements AppManagerInterface {
         }).promise().then((response) => {
             let item = response.Item;
 
-            if (! item) {
+            if (!item) {
                 return null;
             }
 
@@ -60,7 +62,7 @@ export class DynamoDbAppManager implements AppManagerInterface {
         }).promise().then((response) => {
             let item = response.Items[0] || null;
 
-            if (! item) {
+            if (!item) {
                 return null;
             }
 

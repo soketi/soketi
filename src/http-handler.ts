@@ -1,5 +1,5 @@
 import async from 'async';
-import { HttpResponse } from 'uWebSockets.js';
+import { HttpResponse, RecognizedString } from 'uWebSockets.js';
 import { Server } from './server';
 import { Utils } from './utils';
 import { Log } from './log';
@@ -16,15 +16,27 @@ export class HttpHandler {
     /**
      * Initialize the HTTP handler.
      */
-     constructor(protected server: Server) {
+    constructor(protected server: Server) {
         //
+    }
+
+    ready(res: HttpResponse) {
+        this.attachMiddleware(res, [
+            this.corsMiddleware,
+        ]).then(res => {
+            if (this.server.closing) {
+                this.serverErrorResponse(res, 'The server is closing. Choose another server. :)');
+            } else {
+                this.send(res, 'OK');
+            }
+        });
     }
 
     healthCheck(res: HttpResponse) {
         this.attachMiddleware(res, [
             this.corsMiddleware,
         ]).then(res => {
-            res.writeStatus('200 OK').end('OK');
+            this.send(res, 'OK');
         });
     }
 
@@ -32,21 +44,26 @@ export class HttpHandler {
         this.attachMiddleware(res, [
             this.corsMiddleware,
         ]).then(res => {
-            let { rss, heapTotal, external, arrayBuffers } = process.memoryUsage();
+            let {
+                rss,
+                heapTotal,
+                external,
+                arrayBuffers,
+            } = process.memoryUsage();
 
             let totalSize = v8.getHeapStatistics().total_available_size;
             let usedSize = rss + heapTotal + external + arrayBuffers;
             let freeSize = totalSize - usedSize;
             let percentUsage = (usedSize / totalSize) * 100;
 
-            return res.writeStatus('200 OK').end(JSON.stringify({
+            return this.sendJson(res, {
                 memory: {
                     free: freeSize,
                     used: usedSize,
                     total: totalSize,
                     percent: percentUsage,
                 },
-            }));
+            });
         });
     }
 
@@ -54,23 +71,23 @@ export class HttpHandler {
         this.attachMiddleware(res, [
             this.corsMiddleware,
         ]).then(res => {
-            let metricsResponse = metrics => {
-                res.writeStatus('200 OK').end(res.query.json ? JSON.stringify(metrics) : metrics);
-            };
-
             let handleError = err => {
-                this.serverErrorResponse(res, 'A server error has occured.');
+                this.serverErrorResponse(res, 'A server error has occurred.');
             }
 
             if (res.query.json) {
                 this.server.metricsManager
                     .getMetricsAsJson()
-                    .then(metricsResponse)
+                    .then(metrics => {
+                        this.sendJson(res, metrics);
+                    })
                     .catch(handleError);
             } else {
                 this.server.metricsManager
                     .getMetricsAsPlaintext()
-                    .then(metricsResponse)
+                    .then(metrics => {
+                        this.send(res, metrics);
+                    })
                     .catch(handleError);
             }
         });
@@ -101,13 +118,13 @@ export class HttpHandler {
             }).catch(err => {
                 Log.error(err);
 
-                return this.serverErrorResponse(res, 'A server error has occured.');
+                return this.serverErrorResponse(res, 'A server error has occurred.');
             }).then(channels => {
                 let broadcastMessage = { channels };
 
                 this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
 
-                res.writeStatus('200 OK').end(JSON.stringify(broadcastMessage));
+                this.sendJson(res, broadcastMessage);
             });
         });
     }
@@ -136,18 +153,18 @@ export class HttpHandler {
                         this.server.adapter.getChannelMembersCount(res.params.appId, res.params.channel).then(membersCount => {
                             let broadcastMessage = {
                                 ...response,
-                                ... {
+                                ...{
                                     user_count: membersCount,
                                 },
                             };
 
                             this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
 
-                            res.writeStatus('200 OK').end(JSON.stringify(broadcastMessage));
+                            this.sendJson(res, broadcastMessage);
                         }).catch(err => {
                             Log.error(err);
 
-                            return this.serverErrorResponse(res, 'A server error has occured.');
+                            return this.serverErrorResponse(res, 'A server error has occurred.');
                         });
 
                         return;
@@ -156,11 +173,11 @@ export class HttpHandler {
 
                 this.server.metricsManager.markApiMessage(res.params.appId, {}, response);
 
-                return res.writeStatus('200 OK').end(JSON.stringify(response));
+                return this.sendJson(res, response);
             }).catch(err => {
                 Log.error(err);
 
-                return this.serverErrorResponse(res, 'A server error has occured.');
+                return this.serverErrorResponse(res, 'A server error has occurred.');
             });
         });
     }
@@ -172,7 +189,7 @@ export class HttpHandler {
             this.authMiddleware,
             this.readRateLimitingMiddleware,
         ]).then(res => {
-            if (! res.params.channel.startsWith('presence-')) {
+            if (!res.params.channel.startsWith('presence-')) {
                 return this.badResponse(res, 'The channel must be a presence channel.');
             }
 
@@ -183,7 +200,7 @@ export class HttpHandler {
 
                 this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
 
-                res.writeStatus('200 OK').end(JSON.stringify(broadcastMessage));
+                this.sendJson(res, broadcastMessage);
             });
         });
     }
@@ -199,9 +216,9 @@ export class HttpHandler {
             let message = res.body;
 
             if (
-                (! message.channels && ! message.channel) ||
-                ! message.name ||
-                ! message.data
+                (!message.channels && !message.channel) ||
+                !message.name ||
+                !message.data
             ) {
                 return this.badResponse(res, 'The received data is incorrect');
             }
@@ -235,52 +252,45 @@ export class HttpHandler {
 
             this.server.metricsManager.markApiMessage(res.params.appId, message, { ok: true });
 
-            res.writeStatus('200 OK').end(JSON.stringify({
+            this.sendJson(res, {
                 ok: true,
-            }));
+            });
         });
     }
 
-    protected badResponse(res: HttpResponse, message: string) {
-        return res.writeStatus('400 Invalid Request').end(JSON.stringify({
-            error: message,
-            code: 400,
-        }));
+    notFound(res: HttpResponse) {
+        //Send status before any headers.
+        res.writeStatus('404 Not Found');
+
+        this.attachMiddleware(res, [
+            this.corsMiddleware,
+        ]).then(res => {
+            this.send(res, '', '404 Not Found');
+        });
     }
 
-    protected notFoundResponse(res: HttpResponse, message: string) {
-        return res.writeStatus('404 Not Found').end(JSON.stringify({
-            error: message,
-            code: 404
-        }));
+    protected badResponse(res: HttpResponse, error: string) {
+        return this.sendJson(res, { error, code: 400 }, '400 Invalid Request');
     }
 
-    protected unauthorizedResponse(res: HttpResponse, message: string) {
-        return res.writeStatus('401 Unauthorized').end(JSON.stringify({
-            error: message,
-            code: 401,
-        }));
+    protected notFoundResponse(res: HttpResponse, error: string) {
+        return this.sendJson(res, { error, code: 404 }, '404 Not Found');
     }
 
-    protected entityTooLargeResponse(res: HttpResponse, message: string) {
-        return res.writeStatus('413 Payload Too Large').end(JSON.stringify({
-            error: message,
-            code: 413,
-        }));
+    protected unauthorizedResponse(res: HttpResponse, error: string) {
+        return this.sendJson(res, { error, code: 401 }, '401 Unauthorized');
+    }
+
+    protected entityTooLargeResponse(res: HttpResponse, error: string) {
+        return this.sendJson(res, { error, code: 413 }, '413 Payload Too Large');
     }
 
     protected tooManyRequestsResponse(res: HttpResponse) {
-        return res.writeStatus('429 Too Many Requests').end(JSON.stringify({
-            error: 'Too many requests.',
-            code: 429,
-        }));
+        return this.sendJson(res, { error: 'Too many requests.', code: 429 }, '429 Too Many Requests');
     }
 
-    protected serverErrorResponse(res: HttpResponse, message: string) {
-        return res.writeStatus('500 Internal Server Error').end(JSON.stringify({
-            error: message,
-            code: 500,
-        }));
+    protected serverErrorResponse(res: HttpResponse, error: string) {
+        return this.sendJson(res, { error, code: 500 }, '500 Internal Server Error');
     }
 
     protected jsonBodyMiddleware(res: HttpResponse, next: CallableFunction): any {
@@ -310,7 +320,7 @@ export class HttpHandler {
 
     protected appMiddleware(res: HttpResponse, next: CallableFunction): any {
         return this.server.appManager.findById(res.params.appId).then(validApp => {
-            if (! validApp) {
+            if (!validApp) {
                 return this.notFoundResponse(res, `The app ${res.params.appId} could not be found.`);
             }
 
@@ -379,7 +389,7 @@ export class HttpHandler {
                 ...functions.map(fn => fn.bind(this)),
             ], (err, res) => {
                 if (err) {
-                    this.serverErrorResponse(res, 'A server error has occured.');
+                    this.serverErrorResponse(res, 'A server error has occurred.');
                     Log.error(err);
 
                     return reject({ res, err });
@@ -395,6 +405,13 @@ export class HttpHandler {
      */
     protected readJson(res: HttpResponse, cb: CallableFunction, err: any) {
         let buffer;
+
+        let loggingAction = (payload) => {
+            if (this.server.options.debug) {
+                Log.infoTitle('⚡ HTTP Payload received:');
+                Log.info(payload);
+            }
+        };
 
         res.onData((ab, isLast) => {
             let chunk = Buffer.from(ab);
@@ -415,6 +432,7 @@ export class HttpHandler {
                     raw = Buffer.concat([buffer, chunk]).toString();
 
                     cb(json, raw);
+                    loggingAction(json);
                 } else {
                     try {
                         // @ts-ignore
@@ -426,6 +444,7 @@ export class HttpHandler {
                     }
 
                     cb(json, raw);
+                    loggingAction(json);
                 }
             } else {
                 if (buffer) {
@@ -442,10 +461,25 @@ export class HttpHandler {
     /**
      * Check is an incoming request can access the api.
      */
-     protected signatureIsValid(res: HttpResponse): Promise<boolean> {
+    protected signatureIsValid(res: HttpResponse): Promise<boolean> {
         return this.getSignedToken(res).then(token => {
             return token === res.query.auth_signature;
         });
+    }
+
+    protected sendJson(res: HttpResponse, data: any, status: RecognizedString = '200 OK') {
+        return res.writeStatus(status)
+            .writeHeader('Content-Type', 'application/json')
+            // TODO: Remove after uWS19.4
+            // @ts-ignore Remove after uWS 19.4 release
+            .end(JSON.stringify(data), true);
+    }
+
+    protected send(res: HttpResponse, data: RecognizedString, status: RecognizedString = '200 OK') {
+        return res.writeStatus(status)
+            // TODO: Remove after uWS19.4
+            // @ts-ignore Remove after uWS 19.4 release
+            .end(data, true);
     }
 
     /**

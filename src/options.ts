@@ -45,6 +45,7 @@ export interface Options {
         mysql: {
             table: string;
             version: string|number;
+            useMysql2: boolean;
         };
         postgres: {
             table: string;
@@ -80,9 +81,7 @@ export interface Options {
         requestLimitInMb: string|number;
     };
     instance: {
-        node_id: string|number|null;
         process_id: string|number;
-        pod_id: string|number|null;
     };
     metrics: {
         enabled: boolean;
@@ -90,8 +89,10 @@ export interface Options {
         prometheus: {
             prefix: string;
         };
+        port: number;
     },
     port: number;
+    pathPrefix: string;
     presence: {
         maxMembersPerChannel: string|number;
         maxMemberSizeInKb: string|number;

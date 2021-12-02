@@ -27,7 +27,7 @@ describe('http api test', () => {
 
     test('usage endpoint', done => {
         Utils.newServer({}, (server: Server) => {
-            axios.get('http://127.0.0.1:6001/usage').then(res => {
+            axios.get('http://127.0.0.1:9601/usage').then(res => {
                 done();
             }).catch(() => {
                 throw new Error('Usage endpoint failed');
@@ -443,6 +443,21 @@ describe('http api test', () => {
                         throw new Error('The request limit did not work.');
                     }
                 });
+        });
+    });
+
+    test('non existent route must return 404', done => {
+        Utils.newServer({}, (server: Server) => {
+
+            axios.get('http://127.0.0.1:6001/favicon.ico').then(res => {
+                throw new Error('Status must be 404');
+            },(e) => {
+                if (e.response.status !== 404) {
+                    throw new Error('Status must be 404');
+                }
+
+                done();
+            });
         });
     });
 });

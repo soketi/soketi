@@ -47,26 +47,28 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: localhost:5000/soketi/pws:latest-${{ matrix.node }}
+          tags: localhost:5000/soketi/soketi:latest-${{ matrix.node }}
           build-args: |
             VERSION=${{ matrix.node }}
 
       - name: Test
         run: |
-          docker run -d -p 6001:6001 -e DEBUG=1 localhost:5000/soketi/pws:latest-${{ matrix.node }}
+          docker run -d -p 6001:6001 -e DEBUG=1 localhost:5000/soketi/soketi:latest-${{ matrix.node }}
           sleep 5
           curl --silent -XGET --fail http://127.0.0.1:6001
 
-      - name: Login to DockerHub
+      - name: Login to Quay
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: quay.io
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
       - name: Build and Push
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: soketi/pws:latest-${{ matrix.node }}
+          context: .
+          tags: quay.io/soketi/soketi:latest-${{ matrix.node }}
           build-args: |
             VERSION=${{ matrix.node }}

@@ -12,7 +12,7 @@ export class PrivateChannelManager extends PublicChannelManager {
         let passedSignature = message?.data?.auth;
 
         return this.signatureIsValid(ws.app, ws.id, message, passedSignature).then(isValid => {
-            if (! isValid) {
+            if (!isValid) {
                 return {
                     ws,
                     success: false,

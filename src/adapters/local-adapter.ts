@@ -24,7 +24,7 @@ export class LocalAdapter implements AdapterInterface {
      * Get the app namespace.
      */
     getNamespace(appId: string): Namespace {
-        if (! this.namespaces.has(appId)) {
+        if (!this.namespaces.has(appId)) {
             this.namespaces.set(appId, new Namespace(appId));
         }
 
@@ -106,7 +106,7 @@ export class LocalAdapter implements AdapterInterface {
     send(appId: string, channel: string, data: string, exceptingId: string|null = null): any {
         let nsp = this.namespaces.get(appId);
 
-        if (! nsp) {
+        if (!nsp) {
             return;
         }
 
@@ -116,9 +116,7 @@ export class LocalAdapter implements AdapterInterface {
                     return;
                 }
 
-                ws.send(data);
-
-                this.server.metricsManager.markWsMessageSent(ws.app.id, data);
+                ws.sendJson(JSON.parse(data));
             });
         });
     }

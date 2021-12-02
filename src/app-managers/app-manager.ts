@@ -46,4 +46,11 @@ export class AppManager implements AppManagerInterface {
     findByKey(key: string): Promise<App|null> {
         return this.driver.findByKey(key);
     }
+
+    /**
+     * Get the app secret by ID.
+     */
+    getAppSecret(id: string): Promise<string|null> {
+        return this.driver.getAppSecret(id);
+    }
 }

@@ -21,7 +21,6 @@ jobs:
 
       matrix:
         node:
-          - 14.x
           - 16.x
         adapter:
           - local
@@ -45,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-node@v2.4.0
+      - uses: actions/setup-node@v2.4.1
         name: Installing Node.js v${{ matrix.node }}
         with:
           node-version: ${{ matrix.node }}
@@ -115,7 +114,7 @@ jobs:
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
 
-      - uses: codecov/codecov-action@v2.0.2
+      - uses: codecov/codecov-action@v2.1.0
         with:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}

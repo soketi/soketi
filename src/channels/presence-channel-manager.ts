@@ -22,7 +22,7 @@ export class PresenceChannelManager extends PrivateChannelManager {
 
             return super.join(ws, channel, message).then(response => {
                 // Make sure to forward the response in case an error occurs.
-                if (! response.success) {
+                if (!response.success) {
                     return response;
                 }
 

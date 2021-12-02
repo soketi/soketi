@@ -1,0 +1,12 @@
+{
+    "name": "soketi/soketi-benchmark",
+    "type": "package",
+    "license": "MIT",
+    "minimum-stability": "dev",
+    "require": {
+        "pusher/pusher-php-server": "^7.0",
+        "nesbot/carbon": "^2.0",
+        "ratchet/pawl": "dev-master",
+        "toolkit/pflag": "dev-main"
+    }
+}
