@@ -316,7 +316,7 @@ export class WsHandler {
                 data: {
                     type: 'LimitReached',
                     error: `The channel name is longer than the allowed ${this.server.options.channelLimits.maxNameLength} characters.`,
-                    code: 4009,
+                    status: 4009,
                 },
             };
 
