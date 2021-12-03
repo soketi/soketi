@@ -465,6 +465,11 @@ describe('http api test', () => {
         Utils.newServer({
             'appManager.array.apps.0.id': 40000
         }, (server: Server) => {
+            // Don't test database configs, because the APP-ID is hard coded (therefore this will always fail).
+            if (process.env.TEST_APP_MANAGER != 'array') {
+                done();
+            }
+
             let client = Utils.newClient();
             let backend = Utils.newBackend("40000");
             let channelName = Utils.randomChannelName();
