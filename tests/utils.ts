@@ -26,6 +26,7 @@ export class Utils {
             tcpPortUsed.waitUntilFree(6001, 500, 5 * 1000),
             tcpPortUsed.waitUntilFree(6002, 500, 5 * 1000),
             tcpPortUsed.waitUntilFree(3001, 500, 5 * 1000),
+            tcpPortUsed.waitUntilFree(9601, 500, 5 * 1000),
         ]);
     }
 
@@ -42,6 +43,7 @@ export class Utils {
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
             'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
             'metrics.enabled': true,
+            'appManager.mysql.useMysql2': true,
         };
 
         return Server.start(options, (server: Server) => {
@@ -71,10 +73,10 @@ export class Utils {
             next();
         });
 
-        webhooksApp.post('/webhook', requestHandler);
+        webhooksApp.post('*', requestHandler);
 
         let server = webhooksApp.listen(3001, () => {
-            Log.success('🎉 Webhook Server is up and running!');
+            Log.successTitle('🎉 Webhook Server is up and running!');
         });
 
         server.on('error', err => {

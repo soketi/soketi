@@ -24,9 +24,9 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v3.5.0
+        uses: docker/metadata-action@v3.6.0
         with:
-          images: quay.io/soketi/pws
+          images: quay.io/soketi/soketi
           tags: |
             type=semver,pattern={{version}}-${{ matrix.node }}
             type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}

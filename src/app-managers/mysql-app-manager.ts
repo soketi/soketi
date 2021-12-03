@@ -5,7 +5,9 @@ export class MysqlAppManager extends SqlAppManager {
      * Get the client name to be used by Knex.
      */
     protected knexClientName(): string {
-        return 'mysql';
+        return this.server.options.appManager.mysql.useMysql2
+            ? 'mysql2'
+            : 'mysql';
     }
 
     /**

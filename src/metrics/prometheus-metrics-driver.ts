@@ -5,14 +5,14 @@ import { Server } from '../server';
 import { Utils } from '../utils';
 
 interface PrometheusMetrics {
-    connectedSockets?: prom.Gauge<'app_id'|'node_id'|'pod_id'>;
-    newConnectionsTotal?: prom.Counter<'app_id'|'node_id'|'pod_id'>;
-    newDisconnectionsTotal?: prom.Counter<'app_id'|'node_id'|'pod_id'>;
-    socketBytesReceived?: prom.Counter<'app_id'|'node_id'|'pod_id'>;
-    socketBytesTransmitted?: prom.Counter<'app_id'|'node_id'|'pod_id'>;
-    httpBytesReceived?: prom.Counter<'app_id'|'node_id'|'pod_id'>;
-    httpBytesTransmitted?: prom.Counter<'app_id'|'node_id'|'pod_id'>;
-    httpCallsReceived?: prom.Counter<'app_id'|'node_id'|'pod_id'>;
+    connectedSockets?: prom.Gauge<'app_id'|'port'>;
+    newConnectionsTotal?: prom.Counter<'app_id'|'port'>;
+    newDisconnectionsTotal?: prom.Counter<'app_id'|'port'>;
+    socketBytesReceived?: prom.Counter<'app_id'|'port'>;
+    socketBytesTransmitted?: prom.Counter<'app_id'|'port'>;
+    httpBytesReceived?: prom.Counter<'app_id'|'port'>;
+    httpBytesTransmitted?: prom.Counter<'app_id'|'port'>;
+    httpCallsReceived?: prom.Counter<'app_id'|'port'>;
 }
 
 interface InfraMetadata {
@@ -59,8 +59,7 @@ export class PrometheusMetricsDriver implements MetricsInterface {
         this.registerMetrics();
 
         this.infraMetadata = {
-            node_id: server.options.instance.node_id,
-            pod_id: server.options.instance.pod_id,
+            port: server.options.port
         };
 
         prom.collectDefaultMetrics({
@@ -145,56 +144,55 @@ export class PrometheusMetricsDriver implements MetricsInterface {
     }
 
     protected registerMetrics(): void {
-        let port = this.server.options.port;
         let prefix = this.server.options.metrics.prometheus.prefix;
 
         this.metrics = {
             connectedSockets: new prom.Gauge({
-                name: `${prefix}${port}_connected`,
+                name: `${prefix}connected`,
                 help: 'The number of currently connected sockets.',
-                labelNames: ['app_id', 'node_id', 'pod_id'],
+                labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),
             newConnectionsTotal: new prom.Counter({
-                name: `${prefix}${port}_new_connections_total`,
-                help: 'Total amount of pWS connection requests.',
-                labelNames: ['app_id', 'node_id', 'pod_id'],
+                name: `${prefix}new_connections_total`,
+                help: 'Total amount of soketi connection requests.',
+                labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),
             newDisconnectionsTotal: new prom.Counter({
-                name: `${prefix}${port}_new_disconnections_total`,
-                help: 'Total amount of pWS disconnections.',
-                labelNames: ['app_id', 'node_id', 'pod_id'],
+                name: `${prefix}new_disconnections_total`,
+                help: 'Total amount of soketi disconnections.',
+                labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),
             socketBytesReceived: new prom.Counter({
-                name: `${prefix}${port}_socket_received_bytes`,
-                help: 'Total amount of bytes that pWS received.',
-                labelNames: ['app_id', 'node_id', 'pod_id'],
+                name: `${prefix}socket_received_bytes`,
+                help: 'Total amount of bytes that soketi received.',
+                labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),
             socketBytesTransmitted: new prom.Counter({
-                name: `${prefix}${port}_socket_transmitted_bytes`,
-                help: 'Total amount of bytes that pWS transmitted.',
-                labelNames: ['app_id', 'node_id', 'pod_id'],
+                name: `${prefix}socket_transmitted_bytes`,
+                help: 'Total amount of bytes that soketi transmitted.',
+                labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),
             httpBytesReceived: new prom.Counter({
-                name: `${prefix}${port}_http_received_bytes`,
-                help: 'Total amount of bytes that pWS\'s REST API received.',
-                labelNames: ['app_id', 'node_id', 'pod_id'],
+                name: `${prefix}http_received_bytes`,
+                help: 'Total amount of bytes that soketi\'s REST API received.',
+                labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),
             httpBytesTransmitted: new prom.Counter({
-                name: `${prefix}${port}_http_transmitted_bytes`,
-                help: 'Total amount of bytes that pWS\'s REST API sent back.',
-                labelNames: ['app_id', 'node_id', 'pod_id'],
+                name: `${prefix}http_transmitted_bytes`,
+                help: 'Total amount of bytes that soketi\'s REST API sent back.',
+                labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),
             httpCallsReceived: new prom.Counter({
-                name: `${prefix}${port}_http_calls_received_total`,
+                name: `${prefix}http_calls_received_total`,
                 help: 'Total amount of received REST API calls.',
-                labelNames: ['app_id', 'node_id', 'pod_id'],
+                labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),
         };

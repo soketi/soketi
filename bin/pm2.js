@@ -2,6 +2,6 @@
 
 const { Cli } = require('./../dist/cli/cli');
 
-process.title = 'pws-server';
+process.title = 'soketi-server';
 
 Cli.start();

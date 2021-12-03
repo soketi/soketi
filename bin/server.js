@@ -2,4 +2,4 @@
 
 require('./../dist/cli');
 
-process.title = 'pws-server';
+process.title = 'soketi-server';

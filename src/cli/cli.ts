@@ -23,6 +23,7 @@ export class Cli {
         APP_MANAGER_MYSQL_VERSION: 'appManager.mysql.version',
         APP_MANAGER_POSTGRES_TABLE: 'appManager.postgres.table',
         APP_MANAGER_POSTGRES_VERSION: 'appManager.postgres.version',
+        APP_MANAGER_MYSQL_USE_V2: 'appManager.mysql.useMysql2',
         CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength',
         DEBUG: 'debug',
         DEFAULT_APP_ID: 'appManager.array.apps.0.id',
@@ -63,8 +64,7 @@ export class Cli {
         METRICS_ENABLED: 'metrics.enabled',
         METRICS_DRIVER: 'metrics.driver',
         METRICS_PROMETHEUS_PREFIX: 'metrics.prometheus.prefix',
-        NODE_ID: 'instance.node_id',
-        POD_ID: 'instance.pod_id',
+        METRICS_SERVER_PORT: 'metrics.port',
         PORT: 'port',
         PATH_PREFIX: 'pathPrefix',
         PRESENCE_MAX_MEMBER_SIZE: 'presence.maxMemberSizeInKb',
@@ -91,8 +91,8 @@ export class Cli {
         require('dotenv').config();
 
         for (let envVar in this.envVariables) {
-            let value = process.env[envVar] || process.env[`PWS_${envVar}`] || null;
-            let optionKey = this.envVariables[envVar.replace('PWS_', '')];
+            let value = process.env[envVar] || process.env[`SOKETI_${envVar}`] || null;
+            let optionKey = this.envVariables[envVar.replace('SOKETI_', '')];
 
             if (value !== null) {
                 let json = null;

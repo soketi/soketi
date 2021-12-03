@@ -1,6 +1,6 @@
 import { HttpResponse } from 'uWebSockets.js';
+import { Lambda } from 'aws-sdk';
 
-const { createHmac } = require('crypto');
 const Pusher = require('pusher');
 const pusherUtil = require('pusher/lib/util');
 
@@ -11,15 +11,21 @@ export interface AppInterface {
     maxConnections: string|number;
     enableClientMessages: boolean;
     enabled: boolean;
-    maxBackendEventsPerSecond: string|number;
+    maxBackendEventsPerSecond?: string|number;
     maxClientEventsPerSecond: string|number;
-    maxReadRequestsPerSecond: string|number;
-    webhooks: WebhookInterface[];
+    maxReadRequestsPerSecond?: string|number;
+    webhooks?: WebhookInterface[];
 }
 
 export interface WebhookInterface {
-    url: string;
+    url?: string;
+    lambda_function?: string;
     event_types: string[];
+    lambda: {
+        async?: boolean;
+        region?: string;
+        client_options?: Lambda.Types.ClientConfiguration,
+    };
 }
 
 export class App implements AppInterface {
@@ -92,20 +98,20 @@ export class App implements AppInterface {
         this.maxBackendEventsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxBackendEventsPerSecond', 'MaxBackendEventsPerSecond', 'max_backend_events_per_sec'], -1));
         this.maxClientEventsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxClientEventsPerSecond', 'MaxClientEventsPerSecond', 'max_client_events_per_sec'], -1));
         this.maxReadRequestsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxReadRequestsPerSecond', 'MaxReadRequestsPerSecond', 'max_read_req_per_sec'], -1));
-        this.webhooks = this.extractFromPassedKeys(app, ['webhooks', 'Webhooks'], []);
-
-        if (!(this.webhooks instanceof Array)) {
-            this.webhooks = [];
-        }
+        this.webhooks = this.transformPotentialJsonToArray(this.extractFromPassedKeys(app, ['webhooks', 'Webhooks'], '[]'));
     }
 
     /**
-     * Create the HMAC for the given data.
+     * Stripe data off the app, usually the one that's not needed from the WS's perspective.
+     * Usually used when attached to WS connections, as they don't need these details.
      */
-    createWebhookHmac(data: string): string {
-        return createHmac('sha256', this.secret)
-            .update(data)
-            .digest('hex');
+     forWebSocket(): App {
+        // delete this.secret;
+        delete this.maxBackendEventsPerSecond;
+        delete this.maxReadRequestsPerSecond;
+        delete this.webhooks;
+
+        return this;
     }
 
     /**
@@ -153,7 +159,7 @@ export class App implements AppInterface {
      * This check is done with a typeof check over undefined, to make sure that false booleans or 0 values
      * are being parsed properly and are not being ignored.
      */
-    protected extractFromPassedKeys(app: { [key: string]: any; }, parameters: string[], defaultValue): any {
+    protected extractFromPassedKeys(app: { [key: string]: any; }, parameters: string[], defaultValue: any): any {
         let extractedValue = defaultValue;
 
         parameters.forEach(param => {
@@ -163,5 +169,27 @@ export class App implements AppInterface {
         });
 
         return extractedValue;
+    }
+
+    /**
+     * If it's already an array, it returns the array. For an invalid JSON, it returns an empty array.
+     * If it's a JSON-formatted string, it parses it and returns the value.
+     */
+    protected transformPotentialJsonToArray(potentialJson: any): any {
+        if (potentialJson instanceof Array) {
+            return potentialJson;
+        }
+
+        try {
+            let potentialArray = JSON.parse(potentialJson);
+
+            if (potentialArray instanceof Array) {
+                return potentialArray;
+            }
+        } catch (e) {
+            //
+        }
+
+        return [];
     }
 }
