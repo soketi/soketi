@@ -1,6 +1,6 @@
-ARG VERSION=lts-alpine
+ARG VERSION=lts
 
-FROM node:$VERSION
+FROM node:$VERSION-alpine
 
 LABEL maintainer="Renoki Co. <alex@renoki.org>"
 

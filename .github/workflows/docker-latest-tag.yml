@@ -21,8 +21,8 @@ jobs:
     strategy:
       matrix:
         node:
-          - 14-alpine
-          - 16-alpine
+          - '14'
+          - '16'
 
     services:
       registry:
@@ -43,17 +43,32 @@ jobs:
         with:
           driver-opts: network=host
 
-      - name: Build testing image
+      - name: Build testing alpine image
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: localhost:5000/soketi/soketi:latest-${{ matrix.node }}
+          tags: localhost:5000/soketi/soketi:latest-${{ matrix.node }}-alpine
           build-args: |
             VERSION=${{ matrix.node }}
 
-      - name: Test
+      - name: Build testing distroless image
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: localhost:5000/soketi/soketi:latest-${{ matrix.node }}-distroless
+          file: Dockerfile.distroless
+          build-args: |
+            VERSION=${{ matrix.node }}
+
+      - name: Test alpine
         run: |
-          docker run -d -p 6001:6001 -e DEBUG=1 localhost:5000/soketi/soketi:latest-${{ matrix.node }}
+          docker run -d -p 6001:6001 -e DEBUG=1 localhost:5000/soketi/soketi:latest-${{ matrix.node }}-alpine
+          sleep 5
+          curl --silent -XGET --fail http://127.0.0.1:6001
+
+      - name: Test distroless
+        run: |
+          docker run -d -p 6001:6001 -e DEBUG=1 localhost:5000/soketi/soketi:latest-${{ matrix.node }}-distroless
           sleep 5
           curl --silent -XGET --fail http://127.0.0.1:6001
 
@@ -64,11 +79,21 @@ jobs:
           username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
-      - name: Build and Push
+      - name: Build and Push Alpine
         uses: docker/build-push-action@v2
         with:
           push: true
           context: .
-          tags: quay.io/soketi/soketi:latest-${{ matrix.node }}
+          tags: quay.io/soketi/soketi:latest-${{ matrix.node }}-alpine
+          build-args: |
+            VERSION=${{ matrix.node }}
+
+      - name: Build and Push Distroless
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: .
+          tags: quay.io/soketi/soketi:latest-${{ matrix.node }}-distroless
+          file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}

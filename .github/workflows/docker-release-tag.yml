@@ -14,22 +14,31 @@ jobs:
     strategy:
       matrix:
         node:
-          - 14-alpine
-          - 16-alpine
+          - '14'
+          - '16'
 
     name: Tag Release (node:${{ matrix.node }})
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Docker meta
-        id: docker_meta
+      - name: Docker Alpine meta
+        id: docker_alpine_meta
         uses: docker/metadata-action@v3.6.0
         with:
           images: quay.io/soketi/soketi
           tags: |
-            type=semver,pattern={{version}}-${{ matrix.node }}
-            type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}
+            type=semver,pattern={{version}}-${{ matrix.node }}-alpine
+            type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}-alpine
+      
+      - name: Docker Distroless meta
+        id: docker_distroless_meta
+        uses: docker/metadata-action@v3.6.0
+        with:
+          images: quay.io/soketi/soketi
+          tags: |
+            type=semver,pattern={{version}}-${{ matrix.node }}-distroless
+            type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}-distroless
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -48,12 +57,23 @@ jobs:
           username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
-      - name: Build and push (node:${{ matrix.node }})
+      - name: Build and push Alpine (node:${{ matrix.node }})
         uses: docker/build-push-action@v2
         with:
           push: true
           context: .
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
+          tags: ${{ steps.docker_alpine_meta.outputs.tags }}
+          labels: ${{ steps.docker_alpine_meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ matrix.node }}
+
+      - name: Build and push Distroless (node:${{ matrix.node }})
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: .
+          tags: ${{ steps.docker_distroless_meta.outputs.tags }}
+          labels: ${{ steps.docker_distroless_meta.outputs.labels }}
+          file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}
