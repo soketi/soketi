@@ -214,13 +214,7 @@ export class Server {
      * Initialize the server.
      */
     constructor() {
-        this.setAppManager(new AppManager(this));
-        this.setAdapter(new Adapter(this));
-        this.setMetricsManager(new Metrics(this));
-        this.setRateLimiter(new RateLimiter(this));
-        this.setQueueManager(new Queue(this));
-        // TODO: Make webhook sender extendable.
-        this.webhookSender = new WebhookSender(this);
+        this.initializeDrivers();
     }
 
     /**
@@ -335,6 +329,21 @@ export class Server {
         for (let optionKey in options) {
             this.options = dot.set(this.options, optionKey, options[optionKey]);
         }
+
+        this.initializeDrivers();
+    }
+
+    /**
+     * Initialize the drivers for the server.
+     */
+    initializeDrivers(): void {
+        this.setAppManager(new AppManager(this));
+        this.setAdapter(new Adapter(this));
+        this.setMetricsManager(new Metrics(this));
+        this.setRateLimiter(new RateLimiter(this));
+        this.setQueueManager(new Queue(this));
+        // TODO: Make webhook sender extendable.
+        this.webhookSender = new WebhookSender(this);
     }
 
     /**

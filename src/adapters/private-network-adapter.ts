@@ -78,7 +78,7 @@ export class PrivateNetworkAdapter extends LocalAdapter {
     /**
      * The channel to broadcast the information.
      */
-    protected channel: string;
+    protected channel = 'private-network-adapter';
 
     /**
      * The list of current request made by this instance.
@@ -98,7 +98,7 @@ export class PrivateNetworkAdapter extends LocalAdapter {
     /**
       * The time (in ms) for the request to be fulfilled.
       */
-    public readonly requestsTimeout: number;
+    public readonly requestsTimeout: number = 2_000;
 
     /**
      * The Discover instance.
@@ -111,8 +111,6 @@ export class PrivateNetworkAdapter extends LocalAdapter {
     constructor(server: Server) {
         super(server);
 
-        this.requestsTimeout = 2000;
-        this.channel = 'private-network-adapter';
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
 

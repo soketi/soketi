@@ -75,7 +75,7 @@ export class RedisAdapter extends LocalAdapter {
     /**
      * The channel to broadcast the information.
      */
-    protected channel: string;
+    protected channel = 'redis-adapter';
 
     /**
      * The list of current request made by this instance.
@@ -95,16 +95,13 @@ export class RedisAdapter extends LocalAdapter {
     /**
      * The time (in ms) for the request to be fulfilled.
      */
-    public readonly requestsTimeout: number;
+    public readonly requestsTimeout: number = 5_000;
 
     /**
      * Initialize the adapter.
      */
     constructor(server: Server) {
         super(server);
-
-        this.requestsTimeout = 5000;
-        this.channel = 'redis-adapter';
 
         if (server.options.adapter.redis.prefix) {
             this.channel = server.options.adapter.redis.prefix + '#' + this.channel;
