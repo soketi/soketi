@@ -17,7 +17,7 @@ jobs:
           - '14'
           - '16'
 
-    name: Tag Release (node:${{ matrix.node }})
+    name: Tag Distroless Release (node:${{ matrix.node }})
 
     steps:
       - uses: actions/checkout@v2
@@ -28,8 +28,8 @@ jobs:
         with:
           images: quay.io/soketi/soketi
           tags: |
-            type=semver,pattern={{version}}-${{ matrix.node }}-alpine
-            type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}-alpine
+            type=semver,pattern={{version}}-${{ matrix.node }}-distroless
+            type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}-distroless
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -55,5 +55,6 @@ jobs:
           context: .
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
+          file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}
