@@ -1,0 +1,151 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        node:
+          - 16.x
+        adapter:
+          - local
+          - redis
+          - private-network
+        app_manager:
+          - array
+          - dynamodb
+          - mysql
+          - postgres
+
+        include:
+          - adapter: local
+            rate_limiter: local
+            queue_driver: sync
+          - adapter: private-network
+            rate_limiter: redis
+            queue_driver: redis
+          - adapter: redis
+            rate_limiter: redis
+            queue_driver: redis
+
+    name: Benchmark Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2.4.1
+        name: Installing Node.js v${{ matrix.node }}
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.0"
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, yaml
+          coverage: pcov
+
+      - uses: zhulik/redis-action@1.1.0
+        name: Installing Redis 6.x
+        with:
+          redis version: 6
+          number of databases: 100
+
+      - name: Setup DynamoDB
+        run: |
+          java -Djava.library.path=./DynamoDBLocal_lib -jar tests/fixtures/dynamodb/DynamoDBLocal.jar --port 8000 &
+          sleep 5
+
+      - name: Setup MySQL
+        uses: haltuf/mysql-action@master
+        with:
+          host port: 3306
+          container port: 3306
+          character set server: utf8mb4
+          collation server: utf8mb4_unicode_ci
+          mysql version: 8.0
+          mysql database: main
+          mysql root password: password
+
+      - name: Setup PostgreSQL
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql version: 13.3
+          postgresql db: main
+          postgresql user: postgres
+          postgresql password: password
+
+      - name: Load SQL into databases
+        run: |
+          sleep 15
+          mysql --host=127.0.0.1 --user=root --password=password --database=main < tests/fixtures/app_mysql.sql
+          psql --host=127.0.0.1 --username=postgres main < tests/fixtures/app_postgres.sql
+        env:
+          PGPASSWORD: password
+
+      - uses: actions/cache@v2.1.7
+        name: Cache dependencies
+        with:
+          path: ~/.composer/cache/files
+          key: composer-php-${{ hashFiles('benchmark/composer.json') }}
+
+      - name: Installing dependencies
+        run: |
+          npm install
+
+      - name: Installing PHP dependencies for benchmark
+        run: |
+          cd benchmark/
+          composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Lint & Compile
+        run: |
+          npm run lint
+          npm run build
+
+      - name: Running DynamoDB schema
+        run: |
+          node .dynamodb-schema.js
+        env:
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
+
+      - name: Run the server
+        run: |
+          node bin/server.js &
+        env:
+          ADAPTER_DRIVER: ${{ matrix.adapter }}
+          APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
+          QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
+
+      - name: Run the message sender
+        run: |
+          php send --interval 0.5 &
+
+      - name: Run benchmarks
+        uses: k6io/action@v0.1
+        with:
+          filename: benchmark/k6-big.js
+
+      - uses: codecov/codecov-action@v2.1.0
+        with:
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
