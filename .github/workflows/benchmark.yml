@@ -127,7 +127,7 @@ jobs:
 
       - name: Run the server
         run: |
-          node bin/server.js &
+          node bin/server.js start &
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
