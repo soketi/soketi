@@ -18,8 +18,9 @@ RUN apk add --no-cache --update git python3 gcompat && \
     cd /tmp/build && \
     mv production-app/* /app/ && \
     chgrp -R 0 /app/ && \
-    chmod -R g+rx /app/
-
+    chmod -R g+rx /app/ && \
+    rm -rf /tmp/* /var/cache/* /usr/lib/python* && \
+    apk --purge del build-dependencies build-base gcc
 
 FROM gcr.io/distroless/nodejs:$VERSION
 
