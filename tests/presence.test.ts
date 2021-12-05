@@ -1,4 +1,3 @@
-import { assert } from 'console';
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
