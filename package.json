@@ -42,7 +42,7 @@
     "prometheus-query": "^3.0.3",
     "pusher": "^5.0.0",
     "query-string": "^7.0.0",
-    "rate-limiter-flexible": "^2.3.5",
+    "rate-limiter-flexible": "^2.3.6",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.4.0",
     "uuid": "^8.3.2",
     "yargs": "^17.2.1"
