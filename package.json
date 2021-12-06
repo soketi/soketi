@@ -45,7 +45,7 @@
     "rate-limiter-flexible": "^2.3.6",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.4.0",
     "uuid": "^8.3.2",
-    "yargs": "^17.2.1"
+    "yargs": "^17.3.0"
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.16.4",
