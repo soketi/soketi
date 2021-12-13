@@ -55,7 +55,7 @@
     "@babel/plugin-proposal-throw-expressions": "^7.16.0",
     "@babel/plugin-transform-object-assign": "^7.16.0",
     "@babel/preset-env": "^7.16.4",
-    "@types/bull": "^3.15.6",
+    "@types/bull": "^3.15.7",
     "@types/express": "^4.17.13",
     "@types/jest": "^26.0.19",
     "@types/node": "^16.11.11",
