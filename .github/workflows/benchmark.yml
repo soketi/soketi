@@ -108,11 +108,6 @@ jobs:
         run: |
           npm install
 
-      - name: Installing PHP dependencies for benchmark
-        run: |
-          cd benchmark/
-          composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
-
       - name: Lint & Compile
         run: |
           npm run lint
@@ -131,13 +126,18 @@ jobs:
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
+          APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
+          APP_MANAGER_MYSQL_USE_V2: true
+          METRICS_ENABLED: true
           QUEUE_DRIVER: ${{ matrix.queue_driver }}
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
 
-      - name: Run the message sender
+      - name: Install and run the message sender
         run: |
+          cd benchmark/
+          composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
           php send --interval 0.5 &
 
       - name: Run benchmarks
