@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.16.4",
-    "@babel/plugin-proposal-export-namespace-from": "^7.16.0",
+    "@babel/plugin-proposal-export-namespace-from": "^7.16.5",
     "@babel/plugin-proposal-function-sent": "^7.16.0",
     "@babel/plugin-proposal-numeric-separator": "^7.16.0",
     "@babel/plugin-proposal-throw-expressions": "^7.16.0",
