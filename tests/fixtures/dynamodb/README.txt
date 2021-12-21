@@ -6,6 +6,19 @@ For an overview of DynamoDB Local please refer to the documentation at http://do
 
 Release Notes
 -----------------------------
+2021-12-16 (1.17.2)
+
+ * Updated log4j-core dependency to version 2.16.
+
+2021-12-10 (1.17.1)
+
+ * Updated log4j-core dependency to patch zero-day exploit to prevent remote code execution - Log4Shell: RCE 0-day. Applied internal patch for 2.13.3 for log4j-core by removing JndiLookup class.
+
+2021-10-08 (1.17.0)
+
+ * Update the AWS SDK dependency to AWS SDK for Java 1.12.x
+ * Update License.txt file
+
 2021-05-03 (1.16.0)
 
  * Improve the performance of DynamoDbLocal by reducing buffer size to 1KB from 16MB which reduces overall heap memory usage
