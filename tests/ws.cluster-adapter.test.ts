@@ -3,7 +3,7 @@ import { Utils } from './utils';
 
 jest.retryTimes(2);
 
-describe('ws test for private-network adapter', () => {
+describe('ws test for cluster adapter', () => {
     beforeEach(() => {
         jest.resetModules();
 
@@ -14,7 +14,7 @@ describe('ws test for private-network adapter', () => {
         return Utils.flushServers();
     });
 
-    Utils.shouldRun(Utils.adapterIs('private-network') && Utils.appManagerIs('array'))('client events with private-network adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('cluster') && Utils.appManagerIs('array'))('client events with cluster adapter', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.enableClientMessages': true, port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel();
@@ -48,7 +48,7 @@ describe('ws test for private-network adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('private-network') && Utils.appManagerIs('array'))('client events dont get emitted when client messaging is disabled with private-network adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('cluster') && Utils.appManagerIs('array'))('client events dont get emitted when client messaging is disabled with cluster adapter', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': false }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.enableClientMessages': false, port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel();
@@ -86,7 +86,7 @@ describe('ws test for private-network adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('private-network') && Utils.appManagerIs('array'))('client events dont get emitted when event name is big with private-network adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('cluster') && Utils.appManagerIs('array'))('client events dont get emitted when event name is big with cluster adapter', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxNameLength': 25 }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxNameLength': 25, port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel();
@@ -125,7 +125,7 @@ describe('ws test for private-network adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('private-network') && Utils.appManagerIs('array'))('client events dont get emitted when event payload is big with private-network adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('cluster') && Utils.appManagerIs('array'))('client events dont get emitted when event payload is big with cluster adapter', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxPayloadInKb': 1/1024/1024 }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxPayloadInKb': 1/1024/1024, port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel();
@@ -163,7 +163,7 @@ describe('ws test for private-network adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('private-network') && Utils.appManagerIs('array'))('throw over quota error if reached connection limit for private-network adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('cluster') && Utils.appManagerIs('array'))('throw over quota error if reached connection limit for cluster adapter', done => {
         Utils.newServer({ 'appManager.array.apps.0.maxConnections': 1, port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.maxConnections': 1, port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient({}, 6001, 'app-key', false);
@@ -183,7 +183,7 @@ describe('ws test for private-network adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('private-network'))('should check for presence.maxMembersPerChannel for private-network adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('cluster'))('should check for presence.maxMembersPerChannel for cluster adapter', done => {
         Utils.newServer({ 'presence.maxMembersPerChannel': 1, port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'presence.maxMembersPerChannel': 1, port: 6002 }, (server2: Server) => {
                 let user1 = {
@@ -227,7 +227,7 @@ describe('ws test for private-network adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('private-network'))('adapter getSockets works with private-network adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('cluster'))('adapter getSockets works with cluster adapter', done => {
         Utils.newServer({}, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();
@@ -250,7 +250,7 @@ describe('ws test for private-network adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('private-network'))('adapter getChannelSockets works with private-network adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('cluster'))('adapter getChannelSockets works with cluster adapter', done => {
         Utils.newServer({}, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();

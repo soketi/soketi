@@ -64,7 +64,7 @@ interface Response {
     exists?: boolean;
 }
 
-export class PrivateNetworkAdapter extends LocalAdapter {
+export class Clusteradapter extends LocalAdapter {
     /**
      * The UUID assigned for the current instance.
      */
@@ -78,7 +78,7 @@ export class PrivateNetworkAdapter extends LocalAdapter {
     /**
      * The channel to broadcast the information.
      */
-    protected channel = 'private-network-adapter';
+    protected channel = 'cluster-adapter';
 
     /**
      * The list of current request made by this instance.

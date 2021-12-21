@@ -76,7 +76,7 @@ describe('presence channel test for redis adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('private-network'))('handles joins and leaves for private-network adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('cluster'))('handles joins and leaves for cluster adapter', done => {
         Utils.newServer({ port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let john = {
