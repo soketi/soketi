@@ -22,6 +22,7 @@ export class HttpHandler {
 
     ready(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             if (this.server.closing) {
@@ -34,6 +35,7 @@ export class HttpHandler {
 
     healthCheck(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             this.send(res, 'OK');
@@ -42,6 +44,7 @@ export class HttpHandler {
 
     usage(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             let {
@@ -69,6 +72,7 @@ export class HttpHandler {
 
     metrics(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             let handleError = err => {
@@ -95,6 +99,7 @@ export class HttpHandler {
 
     channels(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
@@ -131,6 +136,7 @@ export class HttpHandler {
 
     channel(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
@@ -184,6 +190,7 @@ export class HttpHandler {
 
     channelUsers(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
@@ -207,6 +214,7 @@ export class HttpHandler {
 
     events(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.jsonBodyMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
@@ -260,9 +268,9 @@ export class HttpHandler {
 
     notFound(res: HttpResponse) {
         //Send status before any headers.
-        res.writeStatus('404 Not Found');
 
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             this.send(res, '', '404 Not Found');
@@ -308,6 +316,10 @@ export class HttpHandler {
         }, err => {
             return this.badResponse(res, 'The received data is incorrect.');
         });
+    }
+
+    protected corkMiddleware(res: HttpResponse, next: CallableFunction): any {
+        res.cork(() => next(null, res));
     }
 
     protected corsMiddleware(res: HttpResponse, next: CallableFunction): any {
@@ -470,16 +482,11 @@ export class HttpHandler {
     protected sendJson(res: HttpResponse, data: any, status: RecognizedString = '200 OK') {
         return res.writeStatus(status)
             .writeHeader('Content-Type', 'application/json')
-            // TODO: Remove after uWS19.4
-            // @ts-ignore Remove after uWS 19.4 release
             .end(JSON.stringify(data), true);
     }
 
     protected send(res: HttpResponse, data: RecognizedString, status: RecognizedString = '200 OK') {
-        return res.writeStatus(status)
-            // TODO: Remove after uWS19.4
-            // @ts-ignore Remove after uWS 19.4 release
-            .end(data, true);
+        return res.writeStatus(status).end(data, true);
     }
 
     /**
