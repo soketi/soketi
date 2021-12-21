@@ -39,6 +39,7 @@
     "mysql2": "^2.3.3",
     "node-discover": "^1.2.1",
     "pg": "^8.7.1",
+    "pm2": "^5.1.2",
     "prom-client": "^14.0.1",
     "prometheus-query": "^3.0.3",
     "pusher": "^5.0.0",

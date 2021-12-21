@@ -64,11 +64,11 @@ interface Response {
     exists?: boolean;
 }
 
-export class Clusteradapter extends LocalAdapter {
+export class ClusterAdapter extends LocalAdapter {
     /**
      * The UUID assigned for the current instance.
      */
-     protected uuid: string = uuidv4();
+    protected uuid: string = uuidv4();
 
     /**
      * The list of nodes in the current private network.
@@ -103,7 +103,7 @@ export class Clusteradapter extends LocalAdapter {
     /**
      * The Discover instance.
      */
-    protected discover: typeof Discover;
+    public discover: typeof Discover;
 
     /**
      * Initialize the adapter.

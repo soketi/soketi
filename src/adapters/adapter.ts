@@ -1,5 +1,5 @@
 import { AdapterInterface } from './adapter-interface';
-import { Clusteradapter } from './cluster-adapter';
+import { ClusterAdapter } from './cluster-adapter';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { Namespace } from '../namespace';

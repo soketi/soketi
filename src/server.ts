@@ -211,6 +211,11 @@ export class Server {
     public webhookSender: WebhookSender;
 
     /**
+     * Wether the server is running under PM2.
+     */
+    public pm2 = false;
+
+    /**
      * Initialize the server.
      */
     constructor() {

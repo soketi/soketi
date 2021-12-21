@@ -80,8 +80,9 @@ export class Cli {
     /**
      * Create new CLI instance.
      */
-    constructor() {
+    constructor(protected pm2 = false) {
         this.server = new Server;
+        this.server.pm2 = true;
     }
 
     /**
@@ -122,6 +123,13 @@ export class Cli {
      */
     static async start(yargs: any): Promise<any> {
         return (new Cli).start(yargs);
+    }
+
+    /**
+     * Start the server with PM2 support.
+     */
+     static async startWithPm2(yargs: any): Promise<any> {
+        return (new Cli(true)).start(yargs);
     }
 
     /**
