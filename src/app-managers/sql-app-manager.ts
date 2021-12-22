@@ -81,7 +81,7 @@ export abstract class SqlAppManager extends BaseAppManager {
     /**
      * Get the client name to be used by Knex.
      */
-     protected abstract knexClientName(): string;
+    protected abstract knexClientName(): string;
 
      /**
       * Get the object connection details for Knex.

@@ -46,7 +46,7 @@ export class WebhookSender {
 
             server.appManager.findByKey(appKey).then(app => {
                 app.webhooks.forEach((webhook: WebhookInterface) => {
-                    if (! webhook.event_types.includes(payload.events[0].name)) {
+                    if (!webhook.event_types.includes(payload.events[0].name)) {
                         return;
                     }
 
