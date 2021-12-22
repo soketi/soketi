@@ -72,6 +72,7 @@ export class Cli {
         QUEUE_DRIVER: 'queue.driver',
         QUEUE_REDIS_CONCURRENCY: 'queue.redis.concurrency',
         RATE_LIMITER_DRIVER: 'rateLimiter.driver',
+        SHUTDOWN_GRACE_PERIOD: 'shutdownGracePeriod',
         SSL_CERT: 'ssl.certPath',
         SSL_KEY: 'ssl.keyPath',
         SSL_PASS: 'ssl.passphrase',

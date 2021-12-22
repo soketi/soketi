@@ -106,6 +106,7 @@ export interface Options {
     rateLimiter: {
         driver: string;
     };
+    shutdownGracePeriod: number;
     ssl: {
         certPath: string;
         keyPath: string;

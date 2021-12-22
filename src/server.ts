@@ -148,6 +148,7 @@ export class Server {
         rateLimiter: {
             driver: 'local',
         },
+        shutdownGracePeriod: 3_000,
         ssl: {
             certPath: '',
             keyPath: '',
@@ -328,7 +329,7 @@ export class Server {
                     uWS.us_listen_socket_close(this.metricsServerProcess);
                 }
 
-                return new Promise(resolve => setTimeout(resolve, 3000));
+                return new Promise(resolve => setTimeout(resolve, this.options.shutdownGracePeriod));
             });
         });
     }
