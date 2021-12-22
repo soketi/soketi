@@ -140,10 +140,13 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         return resolve(localSockets);
                     }
 
-                    this.sendRequest(appId, RequestType.SOCKETS, resolve, reject, {
-                        numSub,
-                        sockets: localSockets,
-                    });
+                    this.sendRequest(
+                        appId,
+                        RequestType.SOCKETS,
+                        resolve,
+                        reject,
+                        { numSub, sockets: localSockets },
+                    );
                 });
             });
         });
@@ -164,10 +167,13 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         return resolve(wsCount);
                     }
 
-                    this.sendRequest(appId, RequestType.SOCKETS_COUNT, resolve, reject, {
-                        numSub,
-                        totalCount: wsCount,
-                    });
+                    this.sendRequest(
+                        appId,
+                        RequestType.SOCKETS_COUNT,
+                        resolve,
+                        reject,
+                        { numSub, totalCount: wsCount },
+                    );
                 });
             });
         });
@@ -188,10 +194,13 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         return resolve(localChannels);
                     }
 
-                    this.sendRequest(appId, RequestType.CHANNELS, resolve, reject, {
-                        numSub,
-                        channels: localChannels,
-                    });
+                    this.sendRequest(
+                        appId,
+                        RequestType.CHANNELS,
+                        resolve,
+                        reject,
+                        { numSub, channels: localChannels },
+                    );
                 });
             });
         });
@@ -212,10 +221,14 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         return resolve(localSockets);
                     }
 
-                    this.sendRequest(appId, RequestType.CHANNEL_SOCKETS, resolve, reject, {
-                        numSub,
-                        sockets: localSockets,
-                    }, { opts: { channel } });
+                    this.sendRequest(
+                        appId,
+                        RequestType.CHANNEL_SOCKETS,
+                        resolve,
+                        reject,
+                        { numSub, sockets: localSockets },
+                        { opts: { channel } },
+                    );
                 });
             });
         });
@@ -236,10 +249,14 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         return resolve(wsCount);
                     }
 
-                    this.sendRequest(appId, RequestType.CHANNEL_SOCKETS_COUNT, resolve, reject, {
-                        numSub,
-                        totalCount: wsCount,
-                    }, { opts: { channel } });
+                    this.sendRequest(
+                        appId,
+                        RequestType.CHANNEL_SOCKETS_COUNT,
+                        resolve,
+                        reject,
+                        { numSub, totalCount: wsCount },
+                        { opts: { channel } },
+                    );
                 });
             });
         });
@@ -260,10 +277,14 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         return resolve(localMembers);
                     }
 
-                    return this.sendRequest(appId, RequestType.CHANNEL_MEMBERS, resolve, reject, {
-                        numSub,
-                        members: localMembers,
-                    }, { opts: { channel } });
+                    return this.sendRequest(
+                        appId,
+                        RequestType.CHANNEL_MEMBERS,
+                        resolve,
+                        reject,
+                        { numSub, members: localMembers },
+                        { opts: { channel } },
+                    );
                 });
             });
         });
@@ -284,10 +305,14 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         return resolve(localMembersCount);
                     }
 
-                    this.sendRequest(appId, RequestType.CHANNEL_MEMBERS_COUNT, resolve, reject, {
-                        numSub,
-                        totalCount: localMembersCount,
-                    }, { opts: { channel } });
+                    this.sendRequest(
+                        appId,
+                        RequestType.CHANNEL_MEMBERS_COUNT,
+                        resolve,
+                        reject,
+                        { numSub, totalCount: localMembersCount },
+                        { opts: { channel } },
+                    );
                 });
             });
         });
@@ -445,13 +470,10 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             case RequestType.CHANNEL_SOCKETS:
                 this.processReceivedResponse(
                     response,
-                    request,
-                    async (response, request) => {
+                    (request: Request) => {
                         if (response.sockets) {
                             response.sockets.forEach(ws => request.sockets.set(ws.id, ws));
                         }
-
-                        return Promise.resolve({ request, response });
                     },
                     async (response: Response, request: Request) => request.sockets,
                 );
@@ -460,8 +482,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             case RequestType.CHANNELS:
                 this.processReceivedResponse(
                     response,
-                    request,
-                    async (response, request) => {
+                    (request: Request) => {
                         if (response.channels) {
                             response.channels.forEach(([channel, connections]) => {
                                 if (request.channels.has(channel)) {
@@ -473,8 +494,6 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                                 }
                             });
                         }
-
-                        return Promise.resolve({ request, response });
                     },
                     async (response: Response, request: Request) => request.channels,
                 );
@@ -483,13 +502,10 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             case RequestType.CHANNEL_MEMBERS:
                 this.processReceivedResponse(
                     response,
-                    request,
-                    async (response, request) => {
+                    (request: Request) => {
                         if (response.members) {
                             response.members.forEach(([id, member]) => request.members.set(id, member));
                         }
-
-                        return Promise.resolve({ request, response });
                     },
                     async (response: Response, request: Request) => request.members,
                 );
@@ -500,13 +516,10 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             case RequestType.CHANNEL_SOCKETS_COUNT:
                 this.processReceivedResponse(
                     response,
-                    request,
-                    async (response, request) => {
+                    (request: Request) => {
                         if (typeof response.totalCount !== 'undefined') {
                             request.totalCount += response.totalCount;
                         }
-
-                        return Promise.resolve({ request, response });
                     },
                     async (response: Response, request: Request) => request.totalCount,
                 );
@@ -515,13 +528,10 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             case RequestType.SOCKET_EXISTS_IN_CHANNEL:
                 this.processReceivedResponse(
                     response,
-                    request,
-                    async (response, request) => {
+                    (request: Request) => {
                         if (typeof response.exists !== 'undefined' && response.exists === true) {
                             request.exists = true;
                         }
-
-                        return Promise.resolve({ request, response });
                     },
                     async (response: Response, request: Request) => request.exists || false,
                 );
@@ -590,22 +600,23 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      */
     protected async processReceivedResponse(
         response: Response,
-        request: Request,
         callbackResolver: CallableFunction,
         promiseResolver: CallableFunction,
     ) {
+        const request = this.requests.get(response.requestId);
+
         request.msgCount++;
 
-        callbackResolver(response, request).then(({ response, request }: { response: Response, request: Request }) => {
-            if (request.msgCount === request.numSub) {
-                clearTimeout(request.timeout);
+        callbackResolver(request);
 
-                if (request.resolve) {
-                    request.resolve(promiseResolver(response, request));
-                    this.requests.delete(response.requestId);
-                }
+        if (request.msgCount === request.numSub) {
+            clearTimeout(request.timeout);
+
+            if (request.resolve) {
+                request.resolve(promiseResolver(response, request));
+                this.requests.delete(response.requestId);
             }
-        });
+        }
     }
 
     /**
