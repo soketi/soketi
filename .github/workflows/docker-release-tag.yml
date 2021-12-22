@@ -14,8 +14,7 @@ jobs:
     strategy:
       matrix:
         node:
-          - 14-alpine
-          - 16-alpine
+          - '16'
 
     name: Tag Release (node:${{ matrix.node }})
 
@@ -24,12 +23,12 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v3.6.0
+        uses: docker/metadata-action@v3.6.2
         with:
           images: quay.io/soketi/soketi
           tags: |
-            type=semver,pattern={{version}}-${{ matrix.node }}
-            type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}
+            type=semver,pattern={{version}}-${{ matrix.node }}-alpine
+            type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}-alpine
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
