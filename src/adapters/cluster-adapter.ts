@@ -104,7 +104,7 @@ export class ClusterAdapter extends HorizontalAdapter {
     }
 
     /**
-     * Respond to a specific node when requested data.
+     * Handle a response from another node.
      */
     protected async onResponse(msg: any) {
         if (typeof msg === 'object') {
@@ -125,7 +125,7 @@ export class ClusterAdapter extends HorizontalAdapter {
             return;
         }
 
-        super.send(appId, channel, data, exceptingId);
+        super.sendLocally(appId, channel, data, exceptingId);
     }
 
     /**

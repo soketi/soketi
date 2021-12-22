@@ -6,6 +6,11 @@ const Redis = require('ioredis');
 
 export class RedisAdapter extends HorizontalAdapter {
     /**
+     * The channel to broadcast the information.
+     */
+    protected channel = 'redis-adapter';
+
+    /**
      * The subscription client.
      */
     protected subClient: typeof Redis;
@@ -45,7 +50,7 @@ export class RedisAdapter extends HorizontalAdapter {
         this.subClient.psubscribe(`${this.channel}*`, onError);
 
         this.subClient.on('pmessageBuffer', this.onMessage.bind(this));
-        this.subClient.on('messageBuffer', this.onRequest.bind(this));
+        this.subClient.on('messageBuffer', this.processMessage.bind(this));
 
         this.subClient.subscribe([this.requestChannel, this.responseChannel], onError);
 
@@ -61,17 +66,34 @@ export class RedisAdapter extends HorizontalAdapter {
     }
 
     /**
+     * Process the incoming message and redirect it to the right processor.
+     */
+    protected processMessage(redisChannel: string, msg: Buffer|string) {
+        redisChannel = redisChannel.toString();
+        msg = msg.toString();
+
+        if (redisChannel.startsWith(this.responseChannel)) {
+            this.onResponse(redisChannel, msg);
+        } else if (redisChannel.startsWith(this.requestChannel)) {
+            this.onRequest(redisChannel, msg);
+        }
+    }
+
+    /**
      * Listen for message coming from other nodes to broadcast
      * a specific message to the local sockets.
      */
-    protected onMessage(pattern: string, redisChannel: string, msg: Buffer) {
+    protected onMessage(pattern: string, redisChannel: string, msg: Buffer|string) {
         redisChannel = redisChannel.toString();
+        msg = msg.toString();
 
+        // This channel is just for the en-masse broadcasting, not for processing
+        // the request-response cycle to gather info across multiple nodes.
         if (!redisChannel.startsWith(this.channel)) {
             return;
         }
 
-        let decodedMessage: PubsubBroadcastedMessage = JSON.parse(msg.toString());
+        let decodedMessage: PubsubBroadcastedMessage = JSON.parse(msg);
 
         if (typeof decodedMessage !== 'object') {
             return;
@@ -83,7 +105,7 @@ export class RedisAdapter extends HorizontalAdapter {
             return;
         }
 
-        super.send(appId, channel, data, exceptingId);
+        super.sendLocally(appId, channel, data, exceptingId);
     }
 
     /**
