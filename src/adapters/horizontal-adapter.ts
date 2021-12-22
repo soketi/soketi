@@ -25,6 +25,7 @@ export enum RequestType {
 export interface Request {
     type: RequestType;
     resolve: Function;
+    reject: Function;
     timeout: any;
     numSub?: number;
     msgCount?: number;
@@ -128,19 +129,21 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * Get all sockets from the namespace.
      */
     async getSockets(appId: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
-        return super.getSockets(appId, true).then(localSockets => {
-            if (onlyLocal) {
-                return Promise.resolve(localSockets);
-            }
-
-            return this.getNumSub().then(numSub => {
-                if (numSub <= 1) {
-                    return localSockets;
+        return new Promise((resolve, reject) => {
+            super.getSockets(appId, true).then(localSockets => {
+                if (onlyLocal) {
+                    return resolve(localSockets);
                 }
 
-                return this.sendRequest(appId, RequestType.SOCKETS, {
-                    numSub,
-                    sockets: localSockets,
+                this.getNumSub().then(numSub => {
+                    if (numSub <= 1) {
+                        return resolve(localSockets);
+                    }
+
+                    this.sendRequest(appId, RequestType.SOCKETS, resolve, reject, {
+                        numSub,
+                        sockets: localSockets,
+                    });
                 });
             });
         });
@@ -150,19 +153,21 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * Get total sockets count.
      */
     async getSocketsCount(appId: string, onlyLocal?: boolean): Promise<number> {
-        return super.getSocketsCount(appId).then(wsCount => {
-            if (onlyLocal) {
-                return Promise.resolve(wsCount);
-            }
-
-            return this.getNumSub().then(numSub => {
-                if (numSub <= 1) {
-                    return Promise.resolve(wsCount);
+        return new Promise((resolve, reject) => {
+            super.getSocketsCount(appId).then(wsCount => {
+                if (onlyLocal) {
+                    return resolve(wsCount);
                 }
 
-                return this.sendRequest(appId, RequestType.SOCKETS_COUNT, {
-                    numSub,
-                    totalCount: wsCount,
+                this.getNumSub().then(numSub => {
+                    if (numSub <= 1) {
+                        return resolve(wsCount);
+                    }
+
+                    this.sendRequest(appId, RequestType.SOCKETS_COUNT, resolve, reject, {
+                        numSub,
+                        totalCount: wsCount,
+                    });
                 });
             });
         });
@@ -172,19 +177,21 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * Get all sockets from the namespace.
      */
     async getChannels(appId: string, onlyLocal = false): Promise<Map<string, Set<string>>> {
-        return super.getChannels(appId).then(localChannels => {
-            if (onlyLocal) {
-                return Promise.resolve(localChannels);
-            }
-
-            return this.getNumSub().then(numSub => {
-                if (numSub <= 1) {
-                    return Promise.resolve(localChannels);
+        return new Promise((resolve, reject) => {
+            super.getChannels(appId).then(localChannels => {
+                if (onlyLocal) {
+                    resolve(localChannels);
                 }
 
-                return this.sendRequest(appId, RequestType.CHANNELS, {
-                    numSub,
-                    channels: localChannels,
+                this.getNumSub().then(numSub => {
+                    if (numSub <= 1) {
+                        return resolve(localChannels);
+                    }
+
+                    this.sendRequest(appId, RequestType.CHANNELS, resolve, reject, {
+                        numSub,
+                        channels: localChannels,
+                    });
                 });
             });
         });
@@ -194,20 +201,22 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * Get all the channel sockets associated with a namespace.
      */
     async getChannelSockets(appId: string, channel: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
-        return super.getChannelSockets(appId, channel).then(localSockets => {
-            if (onlyLocal) {
-                return Promise.resolve(localSockets);
-            }
-
-            return this.getNumSub().then(numSub => {
-                if (numSub <= 1) {
-                    return Promise.resolve(localSockets);
+        return new Promise((resolve, reject) => {
+            super.getChannelSockets(appId, channel).then(localSockets => {
+                if (onlyLocal) {
+                    return resolve(localSockets);
                 }
 
-                return this.sendRequest(appId, RequestType.CHANNEL_SOCKETS, {
-                    numSub,
-                    sockets: localSockets,
-                }, { opts: { channel } });
+                this.getNumSub().then(numSub => {
+                    if (numSub <= 1) {
+                        return resolve(localSockets);
+                    }
+
+                    this.sendRequest(appId, RequestType.CHANNEL_SOCKETS, resolve, reject, {
+                        numSub,
+                        sockets: localSockets,
+                    }, { opts: { channel } });
+                });
             });
         });
     }
@@ -216,20 +225,22 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * Get a given channel's total sockets count.
      */
     async getChannelSocketsCount(appId: string, channel: string, onlyLocal?: boolean): Promise<number> {
-        return super.getChannelSocketsCount(appId, channel).then(wsCount => {
-            if (onlyLocal) {
-                return Promise.resolve(wsCount);
-            }
-
-            return this.getNumSub().then(numSub => {
-                if (numSub <= 1) {
-                    return Promise.resolve(wsCount);
+        return new Promise((resolve, reject) => {
+            super.getChannelSocketsCount(appId, channel).then(wsCount => {
+                if (onlyLocal) {
+                    return resolve(wsCount);
                 }
 
-                return this.sendRequest(appId, RequestType.CHANNEL_SOCKETS_COUNT, {
-                    numSub,
-                    totalCount: wsCount,
-                }, { opts: { channel } });
+                this.getNumSub().then(numSub => {
+                    if (numSub <= 1) {
+                        return resolve(wsCount);
+                    }
+
+                    this.sendRequest(appId, RequestType.CHANNEL_SOCKETS_COUNT, resolve, reject, {
+                        numSub,
+                        totalCount: wsCount,
+                    }, { opts: { channel } });
+                });
             });
         });
     }
@@ -238,20 +249,22 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * Get all the channel sockets associated with a namespace.
      */
     async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
-        return super.getChannelMembers(appId, channel).then(localMembers => {
-            if (onlyLocal) {
-                return Promise.resolve(localMembers);
-            }
-
-            return this.getNumSub().then(numSub => {
-                if (numSub <= 1) {
-                    return Promise.resolve(localMembers);
+        return new Promise((resolve, reject) => {
+            super.getChannelMembers(appId, channel).then(localMembers => {
+                if (onlyLocal) {
+                    return resolve(localMembers);
                 }
 
-                return this.sendRequest(appId, RequestType.CHANNEL_MEMBERS, {
-                    numSub,
-                    members: localMembers,
-                }, { opts: { channel } });
+                this.getNumSub().then(numSub => {
+                    if (numSub <= 1) {
+                        return resolve(localMembers);
+                    }
+
+                    return this.sendRequest(appId, RequestType.CHANNEL_MEMBERS, resolve, reject, {
+                        numSub,
+                        members: localMembers,
+                    }, { opts: { channel } });
+                });
             });
         });
     }
@@ -260,20 +273,22 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * Get a given presence channel's members count
      */
     async getChannelMembersCount(appId: string, channel: string, onlyLocal?: boolean): Promise<number> {
-        return super.getChannelMembersCount(appId, channel).then(localMembersCount => {
-            if (onlyLocal) {
-                return Promise.resolve(localMembersCount);
-            }
-
-            return this.getNumSub().then(numSub => {
-                if (numSub <= 1) {
-                    return Promise.resolve(localMembersCount);
+        return new Promise((resolve, reject) => {
+            super.getChannelMembersCount(appId, channel).then(localMembersCount => {
+                if (onlyLocal) {
+                    return resolve(localMembersCount);
                 }
 
-                return this.sendRequest(appId, RequestType.CHANNEL_MEMBERS_COUNT, {
-                    numSub,
-                    totalCount: localMembersCount,
-                }, { opts: { channel } });
+                this.getNumSub().then(numSub => {
+                    if (numSub <= 1) {
+                        return resolve(localMembersCount);
+                    }
+
+                    this.sendRequest(appId, RequestType.CHANNEL_MEMBERS_COUNT, resolve, reject, {
+                        numSub,
+                        totalCount: localMembersCount,
+                    }, { opts: { channel } });
+                });
             });
         });
     }
@@ -282,22 +297,26 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * Check if a given connection ID exists in a channel.
      */
     async isInChannel(appId: string, channel: string, wsId: string, onlyLocal?: boolean): Promise<boolean> {
-        return super.isInChannel(appId, channel, wsId).then(existsLocally => {
-            if (onlyLocal || existsLocally) {
-                return Promise.resolve(existsLocally);
-            }
-
-            return this.getNumSub().then(numSub => {
-                if (numSub <= 1) {
-                    return Promise.resolve(existsLocally);
+        return new Promise((resolve, reject) => {
+            super.isInChannel(appId, channel, wsId).then(existsLocally => {
+                if (onlyLocal || existsLocally) {
+                    return resolve(existsLocally);
                 }
 
-                return this.sendRequest(
-                    appId,
-                    RequestType.SOCKET_EXISTS_IN_CHANNEL,
-                    { numSub },
-                    { opts: { channel, wsId } },
-                );
+                this.getNumSub().then(numSub => {
+                    if (numSub <= 1) {
+                        return resolve(existsLocally);
+                    }
+
+                    return this.sendRequest(
+                        appId,
+                        RequestType.SOCKET_EXISTS_IN_CHANNEL,
+                        resolve,
+                        reject,
+                        { numSub },
+                        { opts: { channel, wsId } },
+                    );
+                });
             });
         });
     }
@@ -505,9 +524,11 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     protected sendRequest(
         appId: string,
         type: number,
+        resolve: CallableFunction,
+        reject: CallableFunction,
         extra: { [key: string]: any },
         requestExtra: { [key: string]: any } = {},
-    ): Promise<any> {
+    ) {
         const requestId = uuidv4();
 
         const request = JSON.stringify({
@@ -517,24 +538,23 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             ...requestExtra,
         });
 
-        return new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                if (this.requests.has(requestId)) {
-                    reject(new Error(`timeout reached while waiting for response in type ${type}`));
-                    this.requests.delete(requestId);
-                }
-            }, this.requestsTimeout);
+        const timeout = setTimeout(() => {
+            if (this.requests.has(requestId)) {
+                reject(new Error(`timeout reached while waiting for response in type ${type}`));
+                this.requests.delete(requestId);
+            }
+        }, this.requestsTimeout);
 
-            this.requests.set(requestId, {
-                type,
-                resolve,
-                timeout,
-                msgCount: 1,
-                ...extra,
-            });
-
-            this.sendToRequestChannel(request);
+        this.requests.set(requestId, {
+            type,
+            timeout,
+            msgCount: 1,
+            resolve,
+            reject,
+            ...extra,
         });
+
+        this.sendToRequestChannel(request);
     }
 
     /**
