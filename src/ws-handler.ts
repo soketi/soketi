@@ -468,8 +468,6 @@ export class WsHandler {
                 if (response.remainingConnections === 0) {
                     this.server.webhookSender.sendChannelVacated(ws.app, channel);
                 }
-
-
             }
 
             // ws.send(JSON.stringify({
