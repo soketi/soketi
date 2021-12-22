@@ -42,7 +42,6 @@ export class Utils {
             'queue.driver': process.env.TEST_QUEUE_DRIVER || 'sync',
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
             'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
-            'debug': true,
             'metrics.enabled': true,
             'appManager.mysql.useMysql2': true,
         };
