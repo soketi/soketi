@@ -13,6 +13,11 @@ export class Cli {
      */
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
+        ADAPTER_CLUSTER_CHECK_INTERVAL: 'adapter.cluster.checkInterval',
+        ADAPTER_CLUSTER_KEEPALIVE_INTERVAL: 'adapter.cluster.keepaliveInterval',
+        ADAPTER_CLUSTER_MASTER_TIMEOUT: 'adapter.cluster.masterTimeout',
+        ADAPTER_CLUSTER_NODE_TIMEOUT: 'adapter.cluster.nodeTimeout',
+        ADAPTER_CLUSTER_PORT: 'adapter.cluster.port',
         ADAPTER_CLUSTER_PREFIX: 'adapter.cluster.prefix',
         ADAPTER_REDIS_PREFIX: 'adapter.redis.prefix',
         APP_MANAGER_DRIVER: 'appManager.driver',

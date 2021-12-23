@@ -41,13 +41,12 @@ export class ClusterAdapter extends HorizontalAdapter {
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
 
-        // TODO: Make them configurable.
         this.discover = Discover({
-            checkInterval: 500,
-            nodeTimeout: 2000,
-            masterTimeout: 2000,
-            port: 9602,
-            // key: 'encryption-key',
+            helloInterval: server.options.adapter.cluster.keepaliveInterval,
+            checkInterval: server.options.adapter.cluster.checkInterval,
+            nodeTimeout: server.options.adapter.cluster.nodeTimeout,
+            masterTimeout: server.options.adapter.cluster.masterTimeout,
+            port: server.options.adapter.cluster.port,
         });
 
         this.discover.on('promotion', () => {

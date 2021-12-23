@@ -32,6 +32,11 @@ export interface Options {
             prefix: string;
         };
         cluster: {
+            keepaliveInterval: number;
+            checkInterval: number;
+            nodeTimeout: number,
+            masterTimeout: number;
+            port: number;
             prefix: string;
         };
     };

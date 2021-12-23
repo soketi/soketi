@@ -29,6 +29,11 @@ export class Server {
                 prefix: '',
             },
             cluster: {
+                keepaliveInterval: 500,
+                checkInterval: 500,
+                nodeTimeout: 2000,
+                masterTimeout: 2000,
+                port: 9602,
                 prefix: '',
             },
         },
