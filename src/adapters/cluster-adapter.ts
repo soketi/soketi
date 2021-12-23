@@ -132,11 +132,7 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: any): void {
-        try {
-            this.discover.send(channel, data);
-        } catch (e) {
-            //
-        }
+        this.discover.send(channel, data);
     }
 
     /**
