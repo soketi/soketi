@@ -129,6 +129,7 @@ export class WsHandler {
                         // See: https://www.iana.org/assignments/websocket/websocket.xhtml
                         ws.end(1013);
                     } else {
+                        // Make sure to update the socket after new data was pushed in.
                         this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
                         let broadcastMessage = {
@@ -358,6 +359,7 @@ export class WsHandler {
                 ws.subscribedChannels.add(channel);
             }
 
+            // Make sure to update the socket after new data was pushed in.
             this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
             // If the connection freshly joined, send the webhook:
@@ -448,6 +450,9 @@ export class WsHandler {
                 if (channelManager instanceof PresenceChannelManager && ws.presence.has(channel)) {
                     ws.presence.delete(channel);
 
+                    // Make sure to update the socket after new data was pushed in.
+                    this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+
                     this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
                         if (!members.has(member.user_id as string)) {
                             this.server.webhookSender.sendMemberRemoved(ws.app, channel, member.user_id);
@@ -464,6 +469,9 @@ export class WsHandler {
                 }
 
                 ws.subscribedChannels.delete(channel);
+
+                // Make sure to update the socket after new data was pushed in.
+                this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
                 if (response.remainingConnections === 0) {
                     this.server.webhookSender.sendChannelVacated(ws.app, channel);

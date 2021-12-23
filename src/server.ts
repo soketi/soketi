@@ -234,16 +234,7 @@ export class Server {
      * Start the server.
      */
     async start(options: any = {}, callback?: CallableFunction) {
-        for (let path in options) {
-            // Make sure none of the id's are int.
-            if (path.match("^appManager.array.apps.\\d+.id")) {
-                if (Number.isInteger(options[path])) {
-                    options[path] = options[path].toString();
-                }
-            }
-
-            this.options = dot.set(this.options, path, options[path]);
-        }
+        this.setOptions(options);
 
         if (this.options.debug) {
             console.dir(this.options, { depth: 100 });
@@ -340,6 +331,13 @@ export class Server {
      */
     setOptions(options: { [key: string]: any; }): void {
         for (let optionKey in options) {
+            // Make sure none of the id's are int.
+            if (optionKey.match("^appManager.array.apps.\\d+.id")) {
+                if (Number.isInteger(options[optionKey])) {
+                    options[optionKey] = options[optionKey].toString();
+                }
+            }
+
             this.options = dot.set(this.options, optionKey, options[optionKey]);
         }
 
