@@ -1,4 +1,3 @@
-import * as dot from 'dot-wild';
 import { Server } from './../server';
 
 export class Cli {
