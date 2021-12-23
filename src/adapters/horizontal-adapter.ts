@@ -473,7 +473,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                             response.sockets.forEach(ws => request.sockets.set(ws.id, ws));
                         }
                     },
-                    async (response: Response, request: Request) => request.sockets,
+                    (response: Response, request: Request) => request.sockets,
                 );
                 break;
 
@@ -493,7 +493,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                             });
                         }
                     },
-                    async (response: Response, request: Request) => request.channels,
+                    (response: Response, request: Request) => request.channels,
                 );
                 break;
 
@@ -505,7 +505,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                             response.members.forEach(([id, member]) => request.members.set(id, member));
                         }
                     },
-                    async (response: Response, request: Request) => request.members,
+                    (response: Response, request: Request) => request.members,
                 );
                 break;
 
@@ -519,7 +519,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                             request.totalCount += response.totalCount;
                         }
                     },
-                    async (response: Response, request: Request) => request.totalCount,
+                    (response: Response, request: Request) => request.totalCount,
                 );
                 break;
 
@@ -531,7 +531,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                             request.exists = true;
                         }
                     },
-                    async (response: Response, request: Request) => request.exists || false,
+                    (response: Response, request: Request) => request.exists || false,
                 );
                 break;
         }
