@@ -33,7 +33,7 @@ export class Server {
                 checkInterval: 500,
                 nodeTimeout: 2000,
                 masterTimeout: 2000,
-                port: 9602,
+                port: 11002,
                 prefix: '',
             },
         },
