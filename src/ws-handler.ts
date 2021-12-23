@@ -450,8 +450,8 @@ export class WsHandler {
                 if (channelManager instanceof PresenceChannelManager && ws.presence.has(channel)) {
                     ws.presence.delete(channel);
 
-                    // Make sure to update the socket after new data was pushed in.
-                    this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+                    // TODO: Make sure to update the socket after new data was pushed in.
+                    // this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
                     this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
                         if (!members.has(member.user_id as string)) {
@@ -470,8 +470,8 @@ export class WsHandler {
 
                 ws.subscribedChannels.delete(channel);
 
-                // Make sure to update the socket after new data was pushed in.
-                this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+                // TODO: Make sure to update the socket after new data was pushed in.
+                // this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
                 if (response.remainingConnections === 0) {
                     this.server.webhookSender.sendChannelVacated(ws.app, channel);
