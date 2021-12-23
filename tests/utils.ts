@@ -23,10 +23,10 @@ export class Utils {
 
     static waitForPortsToFreeUp(): Promise<any> {
         return Promise.all([
-            tcpPortUsed.waitUntilFree(6001, 100, 5 * 1000),
-            tcpPortUsed.waitUntilFree(6002, 100, 5 * 1000),
-            tcpPortUsed.waitUntilFree(3001, 100, 5 * 1000),
-            tcpPortUsed.waitUntilFree(9601, 100, 5 * 1000),
+            tcpPortUsed.waitUntilFree(6001, 500, 5 * 1000),
+            tcpPortUsed.waitUntilFree(6002, 500, 5 * 1000),
+            tcpPortUsed.waitUntilFree(3001, 500, 5 * 1000),
+            tcpPortUsed.waitUntilFree(9601, 500, 5 * 1000),
         ]);
     }
 
@@ -44,7 +44,7 @@ export class Utils {
             'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
             'metrics.enabled': true,
             'appManager.mysql.useMysql2': true,
-            'shutdownGracePeriod': 1_000,
+            'shutdownGracePeriod': 3_000,
         };
 
         return Server.start(options, (server: Server) => {
@@ -148,11 +148,6 @@ export class Utils {
                 }
             });
         }
-
-        client.connection.bind('error', err => {
-            console.error('Client error');
-            console.dir({ err });
-        });
 
         return client;
     }
