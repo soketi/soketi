@@ -109,7 +109,7 @@ export class Adapter implements AdapterInterface {
     /**
      * Clear the local namespaces.
      */
-    clear(namespaceId?: string): void {
-        this.driver.clear(namespaceId);
+    clear(namespaceId?: string): Promise<void> {
+        return this.driver.clear(namespaceId);
     }
 }

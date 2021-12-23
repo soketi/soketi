@@ -124,11 +124,13 @@ export class LocalAdapter implements AdapterInterface {
     /**
      * Clear the local namespaces.
      */
-    clear(namespaceId?: string): void {
+    clear(namespaceId?: string): Promise<void> {
         if (namespaceId) {
             this.namespaces.set(namespaceId, new Namespace(namespaceId));
         } else {
             this.namespaces = new Map<string, Namespace>();
         }
+
+        return Promise.resolve();
     }
 }

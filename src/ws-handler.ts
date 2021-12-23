@@ -240,8 +240,9 @@ export class WsHandler {
 
                     wsCallback();
                 }).then(() => {
-                    this.server.adapter.clear(namespaceId);
-                    nsCallback();
+                    this.server.adapter.clear(namespaceId).then(() => {
+                        nsCallback();
+                    });
                 });
             });
         }).then(() => {
