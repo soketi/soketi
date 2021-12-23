@@ -382,7 +382,11 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     let localSockets: WebSocket[] = Array.from(sockets.values());
 
                     return {
-                        sockets: localSockets.map(ws => ({ id: ws.id })),
+                        sockets: localSockets.map(ws => ({
+                            id: ws.id,
+                            subscribedChannels: ws.subscribedChannels,
+                            presence: ws.presence,
+                        })),
                     };
                 }));
                 break;
