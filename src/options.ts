@@ -31,6 +31,9 @@ export interface Options {
         redis: {
             prefix: string;
         };
+        cluster: {
+            prefix: string;
+        };
     };
     appManager: {
         driver: string;

@@ -32,6 +32,7 @@ export class Utils {
 
     static newServer(options = {}, callback): any {
         options = {
+            'adapter.cluster.prefix': uuidv4(),
             'adapter.redis.prefix': uuidv4(),
             'appManager.array.apps.0.maxBackendEventsPerSecond': 200,
             'appManager.array.apps.0.maxClientEventsPerSecond': 200,
@@ -44,7 +45,6 @@ export class Utils {
             'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
             'metrics.enabled': true,
             'appManager.mysql.useMysql2': true,
-            'shutdownGracePeriod': 3_000,
         };
 
         return (new Server(options)).start((server: Server) => {

@@ -13,6 +13,7 @@ export class Cli {
      */
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
+        ADAPTER_CLUSTER_PREFIX: 'adapter.cluster.prefix',
         ADAPTER_REDIS_PREFIX: 'adapter.redis.prefix',
         APP_MANAGER_DRIVER: 'appManager.driver',
         APP_MANAGER_DYNAMODB_TABLE: 'appManager.dynamodb.table',

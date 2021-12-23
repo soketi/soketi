@@ -28,6 +28,9 @@ export class Server {
             redis: {
                 prefix: '',
             },
+            cluster: {
+                prefix: '',
+            },
         },
         appManager: {
             driver: 'array',

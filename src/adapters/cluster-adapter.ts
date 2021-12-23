@@ -34,6 +34,10 @@ export class ClusterAdapter extends HorizontalAdapter {
     constructor(server: Server) {
         super(server);
 
+        if (server.options.adapter.cluster.prefix) {
+            this.channel = server.options.adapter.cluster.prefix + '#' + this.channel;
+        }
+
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
 
@@ -145,8 +149,9 @@ export class ClusterAdapter extends HorizontalAdapter {
     /**
      * Clear the local namespaces.
      */
-     clear(namespaceId?: string): void {
-        super.clear(namespaceId);
-        this.discover.stop();
+     clear(namespaceId?: string): Promise<void> {
+        return super.clear(namespaceId).then(() => {
+            return this.discover.stop();
+        });
     }
 }
