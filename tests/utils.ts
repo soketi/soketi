@@ -47,7 +47,7 @@ export class Utils {
             'shutdownGracePeriod': 3_000,
         };
 
-        return Server.start(options, (server: Server) => {
+        return (new Server(options)).start((server: Server) => {
             this.wsServers.push(server);
 
             callback(server);

@@ -219,22 +219,22 @@ export class Server {
     /**
      * Initialize the server.
      */
-    constructor() {
-        this.initializeDrivers();
+    constructor(options = {}) {
+        this.setOptions(options);
     }
 
     /**
      * Start the server statically.
      */
     static async start(options: any = {}, callback?: CallableFunction) {
-        return (new Server).start(options, callback);
+        return (new Server(options)).start(callback);
     }
 
     /**
      * Start the server.
      */
-    async start(options: any = {}, callback?: CallableFunction) {
-        this.setOptions(options);
+    async start(callback?: CallableFunction) {
+        this.initializeDrivers();
 
         if (this.options.debug) {
             console.dir(this.options, { depth: 100 });
@@ -340,8 +340,6 @@ export class Server {
 
             this.options = dot.set(this.options, optionKey, options[optionKey]);
         }
-
-        this.initializeDrivers();
     }
 
     /**
