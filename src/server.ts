@@ -315,6 +315,7 @@ export class Server {
             return Promise.all([
                 this.metricsManager.clear(),
                 this.queueManager.clear(),
+                this.rateLimiter.clear(this.closing),
             ]).then(() => {
                 if (this.options.debug) {
                     Log.warningTitle('⚡ All sockets were closed. Now closing the server.');

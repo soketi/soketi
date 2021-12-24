@@ -58,4 +58,11 @@ export class RateLimiter implements RateLimiterInterface {
     createNewRateLimiter(appId: string, maxPoints: number): RateLimiterAbstract {
         return this.driver.createNewRateLimiter(appId, maxPoints);
     }
+
+    /**
+     * Clear the rate limiter or active connections.
+     */
+    clear(closeConnections?: boolean): Promise<void> {
+        return this.driver.clear(closeConnections);
+    }
 }

@@ -64,6 +64,13 @@ export class LocalRateLimiter implements RateLimiterInterface {
     }
 
     /**
+     * Clear the rate limiter or active connections.
+     */
+    clear(closeConnections = false): Promise<void> {
+        return Promise.resolve();
+    }
+
+    /**
      * Initialize a new rate limiter for the given app and event key.
      */
     protected initializeRateLimiter(appId: string, eventKey: string, maxPoints: number): Promise<RateLimiterAbstract> {

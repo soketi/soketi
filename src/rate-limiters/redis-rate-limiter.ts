@@ -20,6 +20,19 @@ export class RedisRateLimiter extends LocalRateLimiter {
     }
 
     /**
+     * Clear the rate limiter or active connections.
+     */
+    clear(closeConnections = false): Promise<void> {
+        return new Promise(resolve => {
+            if (closeConnections) {
+                this.redisConnection.disconnect();
+            }
+
+            resolve();
+        });
+    }
+
+    /**
      * Initialize a new rate limiter for the given app and event key.
      */
     protected initializeRateLimiter(appId: string, eventKey: string, maxPoints: number): Promise<RateLimiterAbstract> {
