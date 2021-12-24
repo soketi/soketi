@@ -46,7 +46,7 @@ export class Utils {
             'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
             'metrics.enabled': true,
             'appManager.mysql.useMysql2': true,
-            'adapter.cluster.port': Math.random() * (20000 - 10000) + 10000, // random: 10000-20000
+            'adapter.cluster.port': parseInt((Math.random() * (20000 - 10000) + 10000).toString()), // random: 10000-20000
         };
 
         return (new Server(options)).start((server: Server) => {
