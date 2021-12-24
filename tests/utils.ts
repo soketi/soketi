@@ -38,15 +38,16 @@ export class Utils {
             'appManager.array.apps.0.maxBackendEventsPerSecond': 200,
             'appManager.array.apps.0.maxClientEventsPerSecond': 200,
             'appManager.array.apps.0.maxReadRequestsPerSecond': 200,
+            'metrics.enabled': true,
+            'appManager.mysql.useMysql2': true,
+            'adapter.cluster.port': parseInt((Math.random() * (20000 - 10000) + 10000).toString()), // random: 10000-20000
+            'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
+            'adapter.cluster.ignoreProcess': false,
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
             'queue.driver': process.env.TEST_QUEUE_DRIVER || 'sync',
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
-            'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
-            'metrics.enabled': true,
-            'appManager.mysql.useMysql2': true,
-            'adapter.cluster.port': parseInt((Math.random() * (20000 - 10000) + 10000).toString()), // random: 10000-20000
         };
 
         return (new Server(options)).start((server: Server) => {
@@ -60,6 +61,8 @@ export class Utils {
         return this.newServer({
             // Make sure the same prefixes exists so that they can communicate
             'adapter.redis.prefix': server.options.adapter.redis.prefix,
+            'adapter.cluster.prefix': server.options.adapter.cluster.prefix,
+            'adapter.cluster.port': server.options.adapter.cluster.port,
             ...options,
         }, callback);
     }

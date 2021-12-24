@@ -47,6 +47,7 @@ export class ClusterAdapter extends HorizontalAdapter {
             nodeTimeout: server.options.adapter.cluster.nodeTimeout,
             masterTimeout: server.options.adapter.cluster.masterTimeout,
             port: server.options.adapter.cluster.port,
+            ignoreProcess: server.options.adapter.cluster.ignoreProcess,
         });
 
         this.nodes.set('self', this.discover.me);

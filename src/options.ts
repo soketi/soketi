@@ -38,6 +38,7 @@ export interface Options {
             masterTimeout: number;
             port: number;
             prefix: string;
+            ignoreProcess: boolean;
         };
     };
     appManager: {

@@ -35,6 +35,7 @@ export class Server {
                 masterTimeout: 2000,
                 port: 11002,
                 prefix: '',
+                ignoreProcess: true,
             },
         },
         appManager: {
