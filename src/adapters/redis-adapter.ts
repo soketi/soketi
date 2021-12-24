@@ -142,16 +142,4 @@ export class RedisAdapter extends HorizontalAdapter {
             });
         }
     }
-
-    /**
-     * Clear the local namespaces.
-     */
-    clear(namespaceId?: string, closeConnections = false): Promise<void> {
-        return super.clear(namespaceId, closeConnections).then(() => {
-            if (closeConnections) {
-                this.pubClient.disconnect();
-                this.subClient.disconnect();
-            }
-        });
-    }
 }
