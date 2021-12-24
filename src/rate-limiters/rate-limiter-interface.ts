@@ -14,6 +14,11 @@ export interface ConsumptionResponse {
 
 export interface RateLimiterInterface {
     /**
+     * Rate Limiter driver.
+     */
+    driver?: RateLimiterInterface;
+
+    /**
      * Consume the points for backend-received events.
      */
     consumeBackendEventPoints(points: number, app?: App, ws?: WebSocket): Promise<ConsumptionResponse>;

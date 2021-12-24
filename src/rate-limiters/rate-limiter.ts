@@ -11,10 +11,8 @@ import { WebSocket } from 'uWebSockets.js';
 export class RateLimiter implements RateLimiterInterface {
     /**
      * Rate Limiter driver.
-     *
-     * @type {RateLimiterInterface}
      */
-    protected driver: RateLimiterInterface;
+    public driver: RateLimiterInterface;
 
     /**
      * Initialize the rate limiter driver.

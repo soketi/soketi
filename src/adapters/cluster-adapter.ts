@@ -16,7 +16,7 @@ export class ClusterAdapter extends HorizontalAdapter {
     /**
      * The list of nodes in the current private network.
      */
-    protected nodes: Map<string, Node> = new Map<string, Node>();
+    public nodes: Map<string, Node> = new Map<string, Node>();
 
     /**
      * The channel to broadcast the information.

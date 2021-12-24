@@ -3,6 +3,11 @@ import { WebSocket } from 'uWebSockets.js';
 
 export interface MetricsInterface {
     /**
+     * The Metrics driver.
+     */
+    driver?: MetricsInterface;
+
+    /**
      * Handle a new connection.
      */
     markNewConnection(ws: WebSocket): void;

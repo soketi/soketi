@@ -12,7 +12,7 @@ export class Adapter implements AdapterInterface {
     /**
      * The adapter driver.
      */
-    protected driver: AdapterInterface;
+    public driver: AdapterInterface;
 
     /**
      * Initialize adapter scaling.

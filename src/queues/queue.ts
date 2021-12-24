@@ -8,7 +8,7 @@ export class Queue implements QueueInterface {
     /**
      * The Queue driver.
      */
-    protected driver: QueueInterface;
+    public driver: QueueInterface;
 
     /**
      * Initialize the queue exporter.

@@ -9,7 +9,7 @@ export class Metrics implements MetricsInterface {
     /**
      * The Metrics driver.
      */
-    protected driver: MetricsInterface;
+    public driver: MetricsInterface;
 
     /**
      * Initialize the Prometheus exporter.
