@@ -247,7 +247,7 @@ export class WsHandler {
             });
         }).then(() => {
             // One last clear to make sure everything went away.
-            return this.server.adapter.clear();
+            return this.server.adapter.clear(null, this.server.closing);
         });
     }
 

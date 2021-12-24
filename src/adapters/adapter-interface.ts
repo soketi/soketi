@@ -33,7 +33,7 @@ export interface AdapterInterface {
     /**
      * Clear the local namespaces.
      */
-    clear(namespaceId?: string): Promise<void>;
+    clear(namespaceId?: string, closeConnections?: boolean): Promise<void>;
 
     /**
      * Get all sockets from the namespace.

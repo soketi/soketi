@@ -148,9 +148,15 @@ export class ClusterAdapter extends HorizontalAdapter {
     /**
      * Clear the local namespaces.
      */
-     clear(namespaceId?: string): Promise<void> {
-        return super.clear(namespaceId).then(() => {
-            return this.discover.stop();
+    clear(namespaceId?: string, closeConnections = false): Promise<void> {
+        return new Promise(resolve => {
+            super.clear(namespaceId).then(() => {
+                if (closeConnections) {
+                    this.discover.stop(() => resolve());
+                } else {
+                    resolve();
+                }
+            });
         });
     }
 }
