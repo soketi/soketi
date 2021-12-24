@@ -649,7 +649,7 @@ export class WsHandler {
     /**
      * Clear WebSocket timeout.
      */
-    protected clearTimeout(ws: WebSocket) {
+    protected clearTimeout(ws: WebSocket): void {
         if(ws.timeout) {
             clearTimeout(ws.timeout);
         }
@@ -658,7 +658,7 @@ export class WsHandler {
     /**
      * Update WebSocket timeout.
      */
-    protected updateTimeout(ws: WebSocket) {
+    protected updateTimeout(ws: WebSocket): void {
         this.clearTimeout(ws);
 
         ws.timeout = setTimeout(() => {

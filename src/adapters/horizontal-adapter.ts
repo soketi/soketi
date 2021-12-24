@@ -355,7 +355,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Listen for requests coming from other nodes.
      */
-    protected onRequest(channel: string, msg: string) {
+    protected onRequest(channel: string, msg: string): void {
         let request: Request;
 
         try {
@@ -457,7 +457,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Handle a response from another node.
      */
-    protected onResponse(channel: string, msg: string) {
+    protected onResponse(channel: string, msg: string): void {
         let response: Response;
 
         try {
@@ -601,7 +601,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Process the incoming request from other subscriber.
      */
-    protected processRequestFromAnotherInstance(request: Request, callbackResolver: Function) {
+    protected processRequestFromAnotherInstance(request: Request, callbackResolver: Function): void {
         let { requestId } = request;
 
         // Do not process requests for the same node that created the request.

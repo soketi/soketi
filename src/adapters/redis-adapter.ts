@@ -68,7 +68,7 @@ export class RedisAdapter extends HorizontalAdapter {
     /**
      * Process the incoming message and redirect it to the right processor.
      */
-    protected processMessage(redisChannel: string, msg: Buffer|string) {
+    protected processMessage(redisChannel: string, msg: Buffer|string): void {
         redisChannel = redisChannel.toString();
         msg = msg.toString();
 
@@ -83,7 +83,7 @@ export class RedisAdapter extends HorizontalAdapter {
      * Listen for message coming from other nodes to broadcast
      * a specific message to the local sockets.
      */
-    protected onMessage(pattern: string, redisChannel: string, msg: Buffer|string) {
+    protected onMessage(pattern: string, redisChannel: string, msg: Buffer|string): void {
         redisChannel = redisChannel.toString();
         msg = msg.toString();
 

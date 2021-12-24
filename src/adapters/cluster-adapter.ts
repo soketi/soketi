@@ -107,7 +107,7 @@ export class ClusterAdapter extends HorizontalAdapter {
     /**
      * Listen for requests coming from other nodes.
      */
-    protected onRequest(msg: any) {
+    protected onRequest(msg: any): void {
         if (typeof msg === 'object') {
             msg = JSON.stringify(msg);
         }
@@ -118,7 +118,7 @@ export class ClusterAdapter extends HorizontalAdapter {
     /**
      * Handle a response from another node.
      */
-    protected onResponse(msg: any) {
+    protected onResponse(msg: any): void {
         if (typeof msg === 'object') {
             msg = JSON.stringify(msg);
         }
@@ -130,7 +130,7 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Listen for message coming from other nodes to broadcast
      * a specific message to the local sockets.
      */
-    protected onMessage(msg: any) {
+    protected onMessage(msg: any): void {
         if (typeof msg === 'string') {
             msg = JSON.parse(msg);
         }
