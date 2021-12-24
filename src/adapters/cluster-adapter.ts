@@ -49,7 +49,11 @@ export class ClusterAdapter extends HorizontalAdapter {
             port: server.options.adapter.cluster.port,
         });
 
+        this.nodes.set('self', this.discover.me);
+
         this.discover.on('promotion', () => {
+            this.nodes.set('self', this.discover.me);
+
             if (server.options.debug) {
                 Log.infoTitle('Promoted from node to master.');
                 Log.info(this.discover.me);
@@ -57,6 +61,8 @@ export class ClusterAdapter extends HorizontalAdapter {
         });
 
         this.discover.on('demotion', () => {
+            this.nodes.set('self', this.discover.me);
+
             if (server.options.debug) {
                 Log.infoTitle('Demoted from master to node.');
                 Log.info(this.discover.me);
@@ -64,6 +70,7 @@ export class ClusterAdapter extends HorizontalAdapter {
         })
 
         this.discover.on('added', (node: Node) => {
+            this.nodes.set('self', this.discover.me);
             this.nodes.set(node.id, node);
 
             if (server.options.debug) {
@@ -73,6 +80,7 @@ export class ClusterAdapter extends HorizontalAdapter {
         });
 
         this.discover.on('removed', (node: Node) => {
+            this.nodes.set('self', this.discover.me);
             this.nodes.delete(node.id);
 
             if (server.options.debug) {
@@ -82,6 +90,7 @@ export class ClusterAdapter extends HorizontalAdapter {
         });
 
         this.discover.on('master', (node: Node) => {
+            this.nodes.set('self', this.discover.me);
             this.nodes.set(node.id, node);
 
             if (server.options.debug) {
@@ -98,7 +107,7 @@ export class ClusterAdapter extends HorizontalAdapter {
     /**
      * Listen for requests coming from other nodes.
      */
-    protected async onRequest(msg: any) {
+    protected onRequest(msg: any) {
         if (typeof msg === 'object') {
             msg = JSON.stringify(msg);
         }
@@ -109,7 +118,7 @@ export class ClusterAdapter extends HorizontalAdapter {
     /**
      * Handle a response from another node.
      */
-    protected async onResponse(msg: any) {
+    protected onResponse(msg: any) {
         if (typeof msg === 'object') {
             msg = JSON.stringify(msg);
         }
@@ -121,7 +130,13 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Listen for message coming from other nodes to broadcast
      * a specific message to the local sockets.
      */
-    protected onMessage(message: PubsubBroadcastedMessage) {
+    protected onMessage(msg: any) {
+        if (typeof msg === 'string') {
+            msg = JSON.parse(msg);
+        }
+
+        let message: PubsubBroadcastedMessage = msg;
+
         const { uuid, appId, channel, data, exceptingId } = message;
 
         if (uuid === this.uuid || !appId || !channel || !data) {
@@ -142,6 +157,6 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Get the number of Discover nodes.
      */
     protected getNumSub(): Promise<number> {
-        return Promise.resolve(Object.keys(this.discover.nodes).length);
+        return Promise.resolve(this.nodes.size);
     }
 }

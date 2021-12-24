@@ -1,4 +1,5 @@
 import { LocalAdapter } from './local-adapter';
+import { Log } from '../log';
 import { PresenceMember } from '../presence-member';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'uWebSockets.js';
@@ -88,6 +89,11 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * Broadcast data to a given channel.
      */
     protected abstract broadcastToChannel(channel: string, data: any): void;
+
+    /**
+     * Get the number of total subscribers subscribers.
+     */
+    protected abstract getNumSub(): Promise<number>;
 
     /**
      * Send a response through the response channel.
@@ -349,7 +355,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Listen for requests coming from other nodes.
      */
-    protected async onRequest(channel: string, msg: string) {
+    protected onRequest(channel: string, msg: string) {
         let request: Request;
 
         try {
@@ -359,6 +365,11 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         }
 
         let { appId } = request;
+
+        if (this.server.options.debug) {
+            Log.infoTitle('🧠 Received request from another node');
+            Log.info({ request, channel });
+        }
 
         switch (request.type) {
             case RequestType.SOCKETS:
@@ -462,6 +473,11 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         }
 
         const request = this.requests.get(requestId);
+
+        if (this.server.options.debug) {
+            Log.infoTitle('🧠 Received response from another node to our request');
+            Log.info(msg);
+        }
 
         switch (request.type) {
             case RequestType.SOCKETS:
@@ -575,12 +591,17 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         });
 
         this.sendToRequestChannel(request);
+
+        if (this.server.options.debug) {
+            Log.successTitle('✈ Sent message to other instances');
+            Log.success({ request: this.requests.get(requestId) });
+        }
     }
 
     /**
      * Process the incoming request from other subscriber.
      */
-    protected async processRequestFromAnotherInstance(request: Request, callbackResolver: Function) {
+    protected processRequestFromAnotherInstance(request: Request, callbackResolver: Function) {
         let { requestId } = request;
 
         // Do not process requests for the same node that created the request.
@@ -596,7 +617,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Process the incoming response to a request we made.
      */
-    protected async processReceivedResponse(
+    protected processReceivedResponse(
         response: Response,
         callbackResolver: CallableFunction,
         promiseResolver: CallableFunction,
@@ -616,9 +637,4 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             }
         }
     }
-
-    /**
-     * Get the number of total subscribers subscribers.
-     */
-    protected abstract getNumSub(): Promise<number>;
 }
