@@ -14,6 +14,7 @@ export class Cli {
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
         ADAPTER_CLUSTER_CHECK_INTERVAL: 'adapter.cluster.checkInterval',
+        ADAPTER_CLUSTER_HOST: 'adapter.cluster.host',
         ADAPTER_CLUSTER_IGNORE_PROCESS: 'adapter.cluster.ignoreProcess',
         ADAPTER_CLUSTER_KEEPALIVE_INTERVAL: 'adapter.cluster.keepaliveInterval',
         ADAPTER_CLUSTER_MASTER_TIMEOUT: 'adapter.cluster.masterTimeout',

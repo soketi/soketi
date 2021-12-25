@@ -42,6 +42,7 @@ export class ClusterAdapter extends HorizontalAdapter {
         this.responseChannel = `${this.channel}#comms#res`;
 
         this.discover = Discover({
+            host: server.options.adapter.cluster.host,
             helloInterval: server.options.adapter.cluster.keepaliveInterval,
             checkInterval: server.options.adapter.cluster.checkInterval,
             nodeTimeout: server.options.adapter.cluster.nodeTimeout,

@@ -32,6 +32,7 @@ export interface Options {
             prefix: string;
         };
         cluster: {
+            host: string;
             keepaliveInterval: number;
             checkInterval: number;
             nodeTimeout: number,

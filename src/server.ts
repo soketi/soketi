@@ -29,6 +29,7 @@ export class Server {
                 prefix: '',
             },
             cluster: {
+                host: '0.0.0.0',
                 keepaliveInterval: 500,
                 checkInterval: 500,
                 nodeTimeout: 2000,
