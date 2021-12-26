@@ -447,8 +447,8 @@ export class Server {
                     this.nodes.set('self', this.discover.me);
 
                     if (this.options.debug) {
-                        Log.infoTitle('Promoted from node to master.');
-                        Log.info(this.discover.me);
+                        Log.discoverTitle('Promoted from node to master.');
+                        Log.discover(this.discover.me);
                     }
                 });
 
@@ -456,8 +456,8 @@ export class Server {
                     this.nodes.set('self', this.discover.me);
 
                     if (this.options.debug) {
-                        Log.infoTitle('Demoted from master to node.');
-                        Log.info(this.discover.me);
+                        Log.discoverTitle('Demoted from master to node.');
+                        Log.discover(this.discover.me);
                     }
                 });
 
@@ -466,8 +466,8 @@ export class Server {
                     this.nodes.set(node.id, node);
 
                     if (this.options.debug) {
-                        Log.infoTitle('New node added.');
-                        Log.info(node);
+                        Log.discoverTitle('New node added.');
+                        Log.discover(node);
                     }
                 });
 
@@ -476,8 +476,8 @@ export class Server {
                     this.nodes.delete(node.id);
 
                     if (this.options.debug) {
-                        Log.infoTitle('Node removed.');
-                        Log.info(node);
+                        Log.discoverTitle('Node removed.');
+                        Log.discover(node);
                     }
                 });
 
@@ -486,8 +486,8 @@ export class Server {
                     this.nodes.set(node.id, node);
 
                     if (this.options.debug) {
-                        Log.infoTitle('New master.');
-                        Log.info(node);
+                        Log.discoverTitle('New master.');
+                        Log.discover(node);
                     }
                 });
 

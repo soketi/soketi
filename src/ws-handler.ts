@@ -50,8 +50,8 @@ export class WsHandler {
      */
     onOpen(ws: WebSocket): any {
         if (this.server.options.debug) {
-            Log.successTitle('👨‍🔬 New connection:');
-            Log.success({ ws });
+            Log.websocketTitle('👨‍🔬 New connection:');
+            Log.websocket({ ws });
         }
 
         ws.sendJson = (data) => {
@@ -63,8 +63,8 @@ export class WsHandler {
                 }
 
                 if (this.server.options.debug) {
-                    Log.successTitle('✈ Sent message to client:');
-                    Log.success({ ws, data });
+                    Log.websocketTitle('✈ Sent message to client:');
+                    Log.websocket({ ws, data });
                 }
             }
         }
@@ -162,11 +162,8 @@ export class WsHandler {
         }
 
         if (this.server.options.debug) {
-            Log.infoTitle('⚡ New message received:');
-            Log.info({
-                message,
-                isBinary,
-            });
+            Log.websocketTitle('⚡ New message received:');
+            Log.websocket({ message, isBinary });
         }
 
         if (message) {
@@ -179,7 +176,7 @@ export class WsHandler {
             } else if (Utils.isClientEvent(message.event)) {
                 this.handleClientEvent(ws, message);
             } else {
-                Log.info({
+                Log.warning({
                     info: 'Message event handler not implemented.',
                     message,
                 });
@@ -196,8 +193,8 @@ export class WsHandler {
      */
     onClose(ws: WebSocket, code: number, message: any): any {
         if (this.server.options.debug) {
-            Log.warningTitle('❌ Connection closed:');
-            Log.warning({ ws, code, message });
+            Log.websocketTitle('❌ Connection closed:');
+            Log.websocket({ ws, code, message });
         }
 
         this.unsubscribeFromAllChannels(ws).then(() => {

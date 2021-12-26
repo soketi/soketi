@@ -380,8 +380,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         let { appId } = request;
 
         if (this.server.options.debug) {
-            Log.infoTitle('🧠 Received request from another node');
-            Log.info({ request, channel });
+            Log.clusterTitle('🧠 Received request from another node');
+            Log.cluster({ request, channel });
         }
 
         switch (request.type) {
@@ -488,8 +488,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         const request = this.requests.get(requestId);
 
         if (this.server.options.debug) {
-            Log.infoTitle('🧠 Received response from another node to our request');
-            Log.info(msg);
+            Log.clusterTitle('🧠 Received response from another node to our request');
+            Log.cluster(msg);
         }
 
         switch (request.type) {
@@ -606,8 +606,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         this.sendToRequestChannel(request);
 
         if (this.server.options.debug) {
-            Log.successTitle('✈ Sent message to other instances');
-            Log.success({ request: this.requests.get(requestId) });
+            Log.clusterTitle('✈ Sent message to other instances');
+            Log.cluster({ request: this.requests.get(requestId) });
         }
     }
 
@@ -623,7 +623,14 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         }
 
         callbackResolver().then(extra => {
-            this.sendToResponseChannel(JSON.stringify({ requestId, ...extra }));
+            let response = JSON.stringify({ requestId, ...extra });
+
+            this.sendToResponseChannel(response);
+
+            if (this.server.options.debug) {
+                Log.clusterTitle('✈ Sent response to the instance');
+                Log.cluster({ response });
+            }
         });
     }
 
