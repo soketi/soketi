@@ -1,9 +1,18 @@
+import { App } from './../app';
+import { ConsumptionResponse } from './rate-limiter-interface';
 import { LocalRateLimiter } from './local-rate-limiter';
-import { RateLimiterAbstract, RateLimiterCluster, RateLimiterClusterMaster, RateLimiterClusterMasterPM2 } from 'rate-limiter-flexible';
+import { RateLimiterAbstract, RateLimiterClusterMasterPM2 } from 'rate-limiter-flexible';
 import { Server } from '../server';
 
 const cluster = require('cluster');
 const pm2 = require('pm2');
+
+export interface ConsumptionMessage {
+    app: App;
+    eventKey: string;
+    points: number;
+    maxPoints: number;
+}
 
 export class ClusterRateLimiter extends LocalRateLimiter {
     /**
@@ -12,23 +21,75 @@ export class ClusterRateLimiter extends LocalRateLimiter {
     constructor(protected server: Server) {
         super(server);
 
-        if (cluster.isPrimary) {
+        if (cluster.isPrimary || typeof cluster.isPrimary === 'undefined') {
             if (server.pm2) {
+                // With PM2, discovery is not needed.
                 new RateLimiterClusterMasterPM2(pm2);
             } else {
-                new RateLimiterClusterMaster();
+                // When a new master is demoted, the rate limiters it has become the pivot points of the real, synced
+                // rate limiter instances. Just trust this value.
+                server.discover.join('rate_limiter:limiters', (rateLimiters: { [key: string]: RateLimiterAbstract }) => {
+                    console.log('received forced rateLimiters', rateLimiters);
+                    this.rateLimiters = Object.fromEntries(
+                        Object.entries(rateLimiters).map(([key, rateLimiterObject]: [string, any]) => {
+                            return [
+                                key,
+                                this.createNewRateLimiter(key.split(':')[0], rateLimiterObject._points),
+                            ];
+                        })
+                    );
+                });
+
+                // All nodes need to know when other nodes consumed from the rate limiter.
+                server.discover.join('rate_limiter:consume', ({ app, eventKey, points, maxPoints }: ConsumptionMessage) => {
+                    super.consume(app, eventKey, points, maxPoints);
+                });
+
+                server.discover.on('added', () => {
+                    if (server.nodes.get('self').isMaster) {
+                        // When a new node is added, just send the rate limiters this master instance has.
+                        // This value is the true value of the rate limiters.
+                        this.sendRateLimiters();
+                    }
+                });
             }
         }
     }
 
     /**
-     * Create a new rate limiter instance.
+     * Consume points for a given key, then
+     * return a response object with headers and the success indicator.
      */
-    createNewRateLimiter(appId: string, maxPoints: number): RateLimiterAbstract {
-        return new RateLimiterCluster({
-            points: maxPoints,
-            duration: 1,
-            keyPrefix: `app:${appId}`,
+    protected consume(app: App, eventKey: string, points: number, maxPoints: number): Promise<ConsumptionResponse> {
+        return super.consume(app, eventKey, points, maxPoints).then((response) => {
+            if (response.canContinue) {
+                this.server.discover.send('rate_limiter:consume', {
+                    app, eventKey, points, maxPoints,
+                });
+            }
+
+            return response;
         });
+    }
+
+    /**
+     * Clear the rate limiter or active connections.
+     */
+    clear(closeConnections = false): Promise<void> {
+        return super.clear(closeConnections).then(() => {
+            // If the current instance is the master and the server is closing,
+            // demote and send the rate limiter of the current instance to the new master.
+            if (closeConnections && this.server.nodes.get('self').isMaster) {
+                this.server.discover.demote();
+                this.server.discover.send('rate_limiter:limiters', this.rateLimiters);
+            }
+        });
+    }
+
+    /**
+     * Send the stored rate limiters this instance currently have.
+     */
+    protected sendRateLimiters(): void {
+        this.server.discover.send('rate_limiter:limiters', this.rateLimiters);
     }
 }
