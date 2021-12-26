@@ -90,7 +90,7 @@ export class Cli {
      */
     constructor(protected pm2 = false) {
         this.server = new Server;
-        this.server.pm2 = true;
+        this.server.pm2 = pm2;
     }
 
     /**
