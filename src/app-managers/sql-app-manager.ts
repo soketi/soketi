@@ -83,25 +83,25 @@ export abstract class SqlAppManager extends BaseAppManager {
      */
     protected abstract knexClientName(): string;
 
-     /**
-      * Get the object connection details for Knex.
-      */
+    /**
+     * Get the object connection details for Knex.
+     */
     protected abstract knexConnectionDetails(): { [key: string]: any; };
 
-     /**
-      * Get the connection version for Knex.
-      * For MySQL can be 5.7 or 8.0, etc.
-      */
+    /**
+     * Get the connection version for Knex.
+     * For MySQL can be 5.7 or 8.0, etc.
+     */
     protected abstract knexVersion(): string;
 
-     /**
-      * Wether the manager supports pooling. This introduces
-      * additional settings for connection pooling.
-      */
+    /**
+     * Wether the manager supports pooling. This introduces
+     * additional settings for connection pooling.
+     */
     protected abstract supportsPooling(): boolean;
 
-     /**
-      * Get the table name where the apps are stored.
-      */
+    /**
+     * Get the table name where the apps are stored.
+     */
     protected abstract appsTableName(): string;
 }

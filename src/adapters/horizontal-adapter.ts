@@ -65,9 +65,9 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      */
     protected requestChannel;
 
-     /**
-      * The channel to emit back based on the requests.
-      */
+    /**
+     * The channel to emit back based on the requests.
+     */
     protected responseChannel;
 
     /**

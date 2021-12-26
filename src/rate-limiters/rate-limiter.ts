@@ -43,9 +43,9 @@ export class RateLimiter implements RateLimiterInterface {
         return this.driver.consumeFrontendEventPoints(points, app, ws);
     }
 
-     /**
-      * Consume the points for HTTP read requests.
-      */
+    /**
+     * Consume the points for HTTP read requests.
+     */
     consumeReadRequestsPoints(points: number, app?: App, ws?: WebSocket): Promise<ConsumptionResponse> {
         return this.driver.consumeReadRequestsPoints(points, app, ws);
     }

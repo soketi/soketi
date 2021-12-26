@@ -233,9 +233,9 @@ export class Server {
      */
     public nodes: Map<string, Node> = new Map<string, Node>();
 
-     /**
-      * The Discover instance.
-      */
+    /**
+     * The Discover instance.
+     */
     public discover: typeof Discover;
 
     /**
