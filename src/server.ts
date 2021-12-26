@@ -345,6 +345,8 @@ export class Server {
                     uWS.us_listen_socket_close(this.metricsServerProcess);
                 }
 
+                this.discover.stop();
+
                 return new Promise(resolve => setTimeout(resolve, this.options.shutdownGracePeriod));
             });
         });
