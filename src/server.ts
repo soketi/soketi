@@ -5,6 +5,7 @@ import { HttpHandler } from './http-handler';
 import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js';
 import { Log } from './log';
 import { Metrics, MetricsInterface } from './metrics';
+import { Node } from './node';
 import { Options } from './options';
 import { Queue } from './queues/queue';
 import { QueueInterface } from './queues/queue-interface';
@@ -15,6 +16,7 @@ import { WebhookSender } from './webhook-sender';
 import { WebSocket } from 'uWebSockets.js';
 import { WsHandler } from './ws-handler';
 
+const Discover = require('node-discover');
 const queryString = require('query-string');
 const uWS = require('uWebSockets.js');
 
@@ -27,16 +29,6 @@ export class Server {
             driver: 'local',
             redis: {
                 prefix: '',
-            },
-            cluster: {
-                host: '0.0.0.0',
-                keepaliveInterval: 500,
-                checkInterval: 500,
-                nodeTimeout: 2000,
-                masterTimeout: 2000,
-                port: 11002,
-                prefix: '',
-                ignoreProcess: true,
             },
         },
         appManager: {
@@ -74,6 +66,16 @@ export class Server {
         },
         channelLimits: {
             maxNameLength: 200,
+        },
+        cluster: {
+            host: '0.0.0.0',
+            keepaliveInterval: 500,
+            checkInterval: 500,
+            nodeTimeout: 2000,
+            masterTimeout: 2000,
+            port: 11002,
+            prefix: '',
+            ignoreProcess: true,
         },
         cors: {
             credentials: true,
@@ -227,6 +229,16 @@ export class Server {
     public pm2 = false;
 
     /**
+     * The list of nodes in the current private network.
+     */
+    public nodes: Map<string, Node> = new Map<string, Node>();
+
+     /**
+      * The Discover instance.
+      */
+    public discover: typeof Discover;
+
+    /**
      * Initialize the server.
      */
     constructor(options = {}) {
@@ -244,59 +256,61 @@ export class Server {
      * Start the server.
      */
     async start(callback?: CallableFunction) {
-        this.initializeDrivers();
+        this.configureDiscovery().then(() => {
+            this.initializeDrivers();
 
-        if (this.options.debug) {
-            console.dir(this.options, { depth: 100 });
-        }
-
-        this.wsHandler = new WsHandler(this);
-        this.httpHandler = new HttpHandler(this);
-
-        if (this.options.debug) {
-            Log.info('\n📡 soketi initialization....\n');
-            Log.info('⚡ Initializing the HTTP API & Websockets Server...\n');
-        }
-
-        let server: TemplatedApp = this.shouldConfigureSsl()
-            ? uWS.SSLApp({
-                key_file_name: this.options.ssl.keyPath,
-                cert_file_name: this.options.ssl.certPath,
-                passphrase: this.options.ssl.passphrase,
-            })
-            : uWS.App();
-
-        let metricsServer: TemplatedApp = uWS.App();
-
-        if (this.options.debug) {
-            Log.info('⚡ Initializing the Websocket listeners and channels...\n');
-        }
-
-        this.configureWebsockets(server).then(server => {
             if (this.options.debug) {
-                Log.info('⚡ Initializing the HTTP webserver...\n');
+                console.dir(this.options, { depth: 100 });
             }
 
-            this.configureHttp(server).then(server => {
-                this.configureMetricsServer(metricsServer).then(metricsServer => {
-                    metricsServer.listen('0.0.0.0', this.options.metrics.port, metricsServerProcess => {
-                        this.metricsServerProcess = metricsServerProcess;
+            this.wsHandler = new WsHandler(this);
+            this.httpHandler = new HttpHandler(this);
 
-                        server.listen('0.0.0.0', this.options.port, serverProcess => {
-                            this.serverProcess = serverProcess;
+            if (this.options.debug) {
+                Log.info('\n📡 soketi initialization....\n');
+                Log.info('⚡ Initializing the HTTP API & Websockets Server...\n');
+            }
 
-                            Log.successTitle('🎉 Server is up and running!\n');
-                            Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
-                            Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
-                            Log.successTitle(`🎊 The /usage endpoint is available on port ${this.options.metrics.port}.\n`);
+            let server: TemplatedApp = this.shouldConfigureSsl()
+                ? uWS.SSLApp({
+                    key_file_name: this.options.ssl.keyPath,
+                    cert_file_name: this.options.ssl.certPath,
+                    passphrase: this.options.ssl.passphrase,
+                })
+                : uWS.App();
 
-                            if (this.options.metrics.enabled) {
-                                Log.successTitle(`🌠 Prometheus /metrics endpoint is available on port ${this.options.metrics.port}.\n`);
-                            }
+            let metricsServer: TemplatedApp = uWS.App();
 
-                            if (callback) {
-                                callback(this);
-                            }
+            if (this.options.debug) {
+                Log.info('⚡ Initializing the Websocket listeners and channels...\n');
+            }
+
+            this.configureWebsockets(server).then(server => {
+                if (this.options.debug) {
+                    Log.info('⚡ Initializing the HTTP webserver...\n');
+                }
+
+                this.configureHttp(server).then(server => {
+                    this.configureMetricsServer(metricsServer).then(metricsServer => {
+                        metricsServer.listen('0.0.0.0', this.options.metrics.port, metricsServerProcess => {
+                            this.metricsServerProcess = metricsServerProcess;
+
+                            server.listen('0.0.0.0', this.options.port, serverProcess => {
+                                this.serverProcess = serverProcess;
+
+                                Log.successTitle('🎉 Server is up and running!\n');
+                                Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
+                                Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
+                                Log.successTitle(`🎊 The /usage endpoint is available on port ${this.options.metrics.port}.\n`);
+
+                                if (this.options.metrics.enabled) {
+                                    Log.successTitle(`🌠 Prometheus /metrics endpoint is available on port ${this.options.metrics.port}.\n`);
+                                }
+
+                                if (callback) {
+                                    callback(this);
+                                }
+                            });
                         });
                     });
                 });
@@ -406,6 +420,86 @@ export class Server {
      */
     protected url(path: string): string {
         return this.options.pathPrefix + path;
+    }
+
+    /**
+     * Get the cluster prefix name for discover.
+     */
+    clusterPrefix(channel: string): string {
+        if (this.options.cluster.prefix) {
+            channel = this.options.cluster.prefix + '#' + channel;
+        }
+
+        return channel;
+    }
+
+    /**
+     * Configure the private network discovery for this node.
+     */
+    protected configureDiscovery(): Promise<void> {
+        return new Promise(resolve => {
+            this.discover = Discover({
+                host: this.options.cluster.host,
+                helloInterval: this.options.cluster.keepaliveInterval,
+                checkInterval: this.options.cluster.checkInterval,
+                nodeTimeout: this.options.cluster.nodeTimeout,
+                masterTimeout: this.options.cluster.masterTimeout,
+                port: this.options.cluster.port,
+                ignoreProcess: this.options.cluster.ignoreProcess,
+            }, () => {
+                this.nodes.set('self', this.discover.me);
+
+                this.discover.on('promotion', () => {
+                    this.nodes.set('self', this.discover.me);
+
+                    if (this.options.debug) {
+                        Log.infoTitle('Promoted from node to master.');
+                        Log.info(this.discover.me);
+                    }
+                });
+
+                this.discover.on('demotion', () => {
+                    this.nodes.set('self', this.discover.me);
+
+                    if (this.options.debug) {
+                        Log.infoTitle('Demoted from master to node.');
+                        Log.info(this.discover.me);
+                    }
+                });
+
+                this.discover.on('added', (node: Node) => {
+                    this.nodes.set('self', this.discover.me);
+                    this.nodes.set(node.id, node);
+
+                    if (this.options.debug) {
+                        Log.infoTitle('New node added.');
+                        Log.info(node);
+                    }
+                });
+
+                this.discover.on('removed', (node: Node) => {
+                    this.nodes.set('self', this.discover.me);
+                    this.nodes.delete(node.id);
+
+                    if (this.options.debug) {
+                        Log.infoTitle('Node removed.');
+                        Log.info(node);
+                    }
+                });
+
+                this.discover.on('master', (node: Node) => {
+                    this.nodes.set('self', this.discover.me);
+                    this.nodes.set(node.id, node);
+
+                    if (this.options.debug) {
+                        Log.infoTitle('New master.');
+                        Log.info(node);
+                    }
+                });
+
+                resolve();
+            });
+        });
     }
 
     /**

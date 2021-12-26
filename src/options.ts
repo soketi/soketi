@@ -31,16 +31,6 @@ export interface Options {
         redis: {
             prefix: string;
         };
-        cluster: {
-            host: string;
-            keepaliveInterval: number;
-            checkInterval: number;
-            nodeTimeout: number,
-            masterTimeout: number;
-            port: number;
-            prefix: string;
-            ignoreProcess: boolean;
-        };
     };
     appManager: {
         driver: string;
@@ -64,6 +54,16 @@ export interface Options {
     };
     channelLimits: {
         maxNameLength: number;
+    };
+    cluster: {
+        host: string;
+        keepaliveInterval: number;
+        checkInterval: number;
+        nodeTimeout: number,
+        masterTimeout: number;
+        port: number;
+        prefix: string;
+        ignoreProcess: boolean;
     };
     cors: {
         credentials: boolean;

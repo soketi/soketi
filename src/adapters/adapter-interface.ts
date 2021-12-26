@@ -1,5 +1,4 @@
 import { Namespace } from '../namespace';
-import { Node } from './cluster-adapter';
 import { PresenceMember } from '../presence-member';
 import { WebSocket } from 'uWebSockets.js';
 
@@ -10,16 +9,6 @@ export interface AdapterInterface {
      * The app connections storage class to manage connections.
      */
     namespaces?: Map<string, Namespace>;
-
-    /**
-     * The Discover instance.
-     */
-    discover?: typeof Discover;
-
-    /**
-     * The list of nodes in the current private network.
-     */
-    nodes?: Map<string, Node>;
 
     /**
      * The list of nodes in the current private network.

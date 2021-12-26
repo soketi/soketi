@@ -5,6 +5,9 @@ import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
 
 export class LocalRateLimiter implements RateLimiterInterface {
+    /**
+     * The list of rate limiters bound to each apps that interacts.
+     */
     protected rateLimiters: { [appId: string]: RateLimiterAbstract } = {
         //
     };
