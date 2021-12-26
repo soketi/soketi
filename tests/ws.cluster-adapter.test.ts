@@ -31,14 +31,16 @@ describe('ws test for cluster adapter', () => {
                     let channel = client1.subscribe(channelName);
 
                     channel.bind('pusher:subscription_succeeded', () => {
-                        let client2 = Utils.newClientForPrivateChannel({}, 6002);
+                        Utils.wait(3000).then(() => {
+                            let client2 = Utils.newClientForPrivateChannel({}, 6002);
 
-                        client2.connection.bind('connected', () => {
-                            let channel = client2.subscribe(channelName);
+                            client2.connection.bind('connected', () => {
+                                let channel = client2.subscribe(channelName);
 
-                            channel.bind('pusher:subscription_succeeded', () => {
-                                channel.trigger('client-greeting', {
-                                    message: 'hello',
+                                channel.bind('pusher:subscription_succeeded', () => {
+                                    channel.trigger('client-greeting', {
+                                        message: 'hello',
+                                    });
                                 });
                             });
                         });
@@ -64,19 +66,21 @@ describe('ws test for cluster adapter', () => {
                     let channel = client1.subscribe(channelName);
 
                     channel.bind('pusher:subscription_succeeded', () => {
-                        let client2 = Utils.newClientForPrivateChannel({}, 6002);
+                        Utils.wait(3000).then(() => {
+                            let client2 = Utils.newClientForPrivateChannel({}, 6002);
 
-                        client2.connection.bind('connected', () => {
-                            let channel = client2.subscribe(channelName);
+                            client2.connection.bind('connected', () => {
+                                let channel = client2.subscribe(channelName);
 
-                            channel.bind('pusher:subscription_succeeded', () => {
-                                channel.bind('pusher:error', (error) => {
-                                    expect(error.code).toBe(4301);
-                                    done();
-                                });
+                                channel.bind('pusher:subscription_succeeded', () => {
+                                    channel.bind('pusher:error', (error) => {
+                                        expect(error.code).toBe(4301);
+                                        done();
+                                    });
 
-                                channel.trigger('client-greeting', {
-                                    message: 'hello',
+                                    channel.trigger('client-greeting', {
+                                        message: 'hello',
+                                    });
                                 });
                             });
                         });
@@ -103,19 +107,21 @@ describe('ws test for cluster adapter', () => {
                     let channel = client1.subscribe(channelName);
 
                     channel.bind('pusher:subscription_succeeded', () => {
-                        let client2 = Utils.newClientForPrivateChannel({}, 6002);
+                        Utils.wait(3000).then(() => {
+                            let client2 = Utils.newClientForPrivateChannel({}, 6002);
 
-                        client2.connection.bind('connected', () => {
-                            let channel = client2.subscribe(channelName);
+                            client2.connection.bind('connected', () => {
+                                let channel = client2.subscribe(channelName);
 
-                            channel.bind('pusher:subscription_succeeded', () => {
-                                channel.bind('pusher:error', (error) => {
-                                    expect(error.code).toBe(4301);
-                                    done();
-                                });
+                                channel.bind('pusher:subscription_succeeded', () => {
+                                    channel.bind('pusher:error', (error) => {
+                                        expect(error.code).toBe(4301);
+                                        done();
+                                    });
 
-                                channel.trigger(eventName, {
-                                    message: 'hello',
+                                    channel.trigger(eventName, {
+                                        message: 'hello',
+                                    });
                                 });
                             });
                         });
@@ -141,19 +147,21 @@ describe('ws test for cluster adapter', () => {
                     let channel = client1.subscribe(channelName);
 
                     channel.bind('pusher:subscription_succeeded', () => {
-                        let client2 = Utils.newClientForPrivateChannel({}, 6002);
+                        Utils.wait(3000).then(() => {
+                            let client2 = Utils.newClientForPrivateChannel({}, 6002);
 
-                        client2.connection.bind('connected', () => {
-                            let channel = client2.subscribe(channelName);
+                            client2.connection.bind('connected', () => {
+                                let channel = client2.subscribe(channelName);
 
-                            channel.bind('pusher:subscription_succeeded', () => {
-                                channel.bind('pusher:error', (error) => {
-                                    expect(error.code).toBe(4301);
-                                    done();
-                                });
+                                channel.bind('pusher:subscription_succeeded', () => {
+                                    channel.bind('pusher:error', (error) => {
+                                        expect(error.code).toBe(4301);
+                                        done();
+                                    });
 
-                                channel.trigger('client-greeting', {
-                                    message: 'hello',
+                                    channel.trigger('client-greeting', {
+                                        message: 'hello',
+                                    });
                                 });
                             });
                         });
@@ -169,14 +177,16 @@ describe('ws test for cluster adapter', () => {
                 let client1 = Utils.newClient({}, 6001, 'app-key', false);
 
                 client1.connection.bind('connected', () => {
-                    let client2 = Utils.newClient({}, 6002, 'app-key', false);
+                    Utils.wait(3000).then(() => {
+                        let client2 = Utils.newClient({}, 6002, 'app-key', false);
 
-                    client2.connection.bind('state_change', ({ current }) => {
-                        if (current === 'failed') {
-                            done();
-                        } else {
-                            throw new Error(`${current} is not an expected state.`);
-                        }
+                        client2.connection.bind('state_change', ({ current }) => {
+                            if (current === 'failed') {
+                                done();
+                            } else {
+                                throw new Error(`${current} is not an expected state.`);
+                            }
+                        });
                     });
                 });
             });
@@ -238,15 +248,17 @@ describe('ws test for cluster adapter', () => {
                     server1.adapter.getSockets('app-id').then(sockets => {
                         expect(sockets.size).toBe(1);
 
-                        let client2 = Utils.newClient({}, 6002);
+                        Utils.wait(3000).then(() => {
+                            let client2 = Utils.newClient({}, 6002);
 
-                        client2.connection.bind('connected', () => {
-                            server1.adapter.getSockets('app-id').then(sockets => {
-                                expect(sockets.size).toBe(2);
-                                done();
+                            client2.connection.bind('connected', () => {
+                                server1.adapter.getSockets('app-id').then(sockets => {
+                                    expect(sockets.size).toBe(2);
+                                    done();
+                                });
                             });
                         });
-                    })
+                    });
                 });
             });
         });
@@ -268,21 +280,23 @@ describe('ws test for cluster adapter', () => {
                             server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
                                 expect(sockets.size).toBe(1);
 
-                                let client2 = Utils.newClient({}, 6002);
+                                Utils.wait(3000).then(() => {
+                                    let client2 = Utils.newClient({}, 6002);
 
-                                client2.connection.bind('connected', () => {
-                                    let channel2 = client2.subscribe(channelName);
+                                    client2.connection.bind('connected', () => {
+                                        let channel2 = client2.subscribe(channelName);
 
-                                    channel2.bind('pusher:subscription_succeeded', () => {
-                                        server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
-                                            expect(sockets.size).toBe(2);
+                                        channel2.bind('pusher:subscription_succeeded', () => {
+                                            server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                                expect(sockets.size).toBe(2);
 
-                                            client2.unsubscribe(channelName);
+                                                client2.unsubscribe(channelName);
 
-                                            Utils.wait(3000).then(() => {
-                                                server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
-                                                    expect(sockets.size).toBe(1);
-                                                    done();
+                                                Utils.wait(3000).then(() => {
+                                                    server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                                        expect(sockets.size).toBe(1);
+                                                        done();
+                                                    });
                                                 });
                                             });
                                         });
