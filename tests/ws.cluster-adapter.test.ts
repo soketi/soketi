@@ -209,18 +209,20 @@ describe('ws test for cluster adapter', () => {
                     let channel1 = client1.subscribe(channelName);
 
                     channel1.bind('pusher:subscription_succeeded', () => {
-                        let client2 = Utils.newClientForPresenceUser(user2, {}, 6002);
+                        Utils.wait(3000).then(() => {
+                            let client2 = Utils.newClientForPresenceUser(user2, {}, 6002);
 
-                        client2.connection.bind('message', ({ event, channel, data }) => {
-                            if (event === 'pusher:subscription_error' && channel === channelName) {
-                                expect(data.type).toBe('LimitReached');
-                                expect(data.status).toBe(4100);
-                                expect(data.error).toBeDefined();
-                                done();
-                            }
+                            client2.connection.bind('message', ({ event, channel, data }) => {
+                                if (event === 'pusher:subscription_error' && channel === channelName) {
+                                    expect(data.type).toBe('LimitReached');
+                                    expect(data.status).toBe(4100);
+                                    expect(data.error).toBeDefined();
+                                    done();
+                                }
+                            });
+
+                            client2.subscribe(channelName);
                         });
-
-                        client2.subscribe(channelName);
                     });
                 });
             });

@@ -48,15 +48,17 @@ describe('presence channel test for cluster adapter', () => {
                         let aliceClient = Utils.newClientForPresenceUser(alice, {}, 6002);
 
                         aliceClient.connection.bind('connected', () => {
-                            let aliceChannel = aliceClient.subscribe(channelName);
+                            Utils.wait(3000).then(() => {
+                                let aliceChannel = aliceClient.subscribe(channelName);
 
-                            aliceChannel.bind('pusher:subscription_succeeded', (data) => {
-                                expect(data.count).toBe(2);
-                                expect(data.me.id).toBe(2);
-                                expect(data.members['1'].id).toBe(1);
-                                expect(data.members['2'].id).toBe(2);
-                                expect(data.me.info.name).toBe('Alice');
-                                aliceClient.disconnect();
+                                aliceChannel.bind('pusher:subscription_succeeded', (data) => {
+                                    expect(data.count).toBe(2);
+                                    expect(data.me.id).toBe(2);
+                                    expect(data.members['1'].id).toBe(1);
+                                    expect(data.members['2'].id).toBe(2);
+                                    expect(data.me.info.name).toBe('Alice');
+                                    aliceClient.disconnect();
+                                });
                             });
                         });
                     });
