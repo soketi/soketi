@@ -27,7 +27,7 @@ export class Cli {
         CLUSTER_CHECK_INTERVAL: 'cluster.checkInterval',
         CLUSTER_HOST: 'cluster.host',
         CLUSTER_IGNORE_PROCESS: 'cluster.ignoreProcess',
-        CLUSTER_KEEPALIVE_INTERVAL: 'cluster.keepaliveInterval',
+        CLUSTER_KEEPALIVE_INTERVAL: 'cluster.helloInterval',
         CLUSTER_MASTER_TIMEOUT: 'cluster.masterTimeout',
         CLUSTER_NODE_TIMEOUT: 'cluster.nodeTimeout',
         CLUSTER_PORT: 'cluster.port',

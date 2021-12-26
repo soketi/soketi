@@ -57,7 +57,7 @@ export interface Options {
     };
     cluster: {
         host: string;
-        keepaliveInterval: number;
+        helloInterval: number;
         checkInterval: number;
         nodeTimeout: number,
         masterTimeout: number;

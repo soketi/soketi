@@ -69,7 +69,7 @@ export class Server {
         },
         cluster: {
             host: '0.0.0.0',
-            keepaliveInterval: 500,
+            helloInterval: 500,
             checkInterval: 500,
             nodeTimeout: 2000,
             masterTimeout: 2000,
@@ -438,15 +438,7 @@ export class Server {
      */
     protected configureDiscovery(): Promise<void> {
         return new Promise(resolve => {
-            this.discover = Discover({
-                host: this.options.cluster.host,
-                helloInterval: this.options.cluster.keepaliveInterval,
-                checkInterval: this.options.cluster.checkInterval,
-                nodeTimeout: this.options.cluster.nodeTimeout,
-                masterTimeout: this.options.cluster.masterTimeout,
-                port: this.options.cluster.port,
-                ignoreProcess: this.options.cluster.ignoreProcess,
-            }, () => {
+            this.discover = Discover(this.options.cluster, () => {
                 this.nodes.set('self', this.discover.me);
 
                 this.discover.on('promotion', () => {
