@@ -54,7 +54,7 @@ export class Log {
     }
 
     static cluster(message: any): void {
-        console.log(colors.bold.yellow(message));
+        console.log(colors.bold.magenta(message));
     }
 
     static http(message: any): void {
