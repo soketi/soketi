@@ -23,18 +23,31 @@ export enum RequestType {
     SOCKET_EXISTS_IN_CHANNEL = 7,
 }
 
-export interface Request {
-    type: RequestType;
-    resolve: Function;
-    reject: Function;
-    timeout: any;
+export interface RequestExtra {
     numSub?: number;
     msgCount?: number;
     sockets?: Map<string, any>;
     members?: Map<string, PresenceMember>;
     channels?: Map<string, Set<string>>;
     totalCount?: number;
+}
+
+export interface Request extends RequestExtra {
+    type: RequestType;
+    resolve: Function;
+    reject: Function;
+    timeout: any;
     [other: string]: any;
+}
+
+export interface RequestOptions {
+    opts?: { [key: string]: any };
+}
+
+export interface RequestBody extends RequestOptions {
+    type: RequestType;
+    requestId: string;
+    appId: string;
 }
 
 export interface Response {
@@ -562,8 +575,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         type: number,
         resolve: CallableFunction,
         reject: CallableFunction,
-        extra: { [key: string]: any },
-        requestExtra: { [key: string]: any } = {},
+        requestExtra: RequestExtra = {},
+        requestOptions: RequestOptions = {},
     ) {
         const requestId = uuidv4();
 
@@ -571,7 +584,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             requestId,
             appId,
             type,
-            ...requestExtra,
+            ...requestOptions,
         });
 
         const timeout = setTimeout(() => {
@@ -587,7 +600,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             msgCount: 1,
             resolve,
             reject,
-            ...extra,
+            ...requestExtra,
         });
 
         this.sendToRequestChannel(request);
