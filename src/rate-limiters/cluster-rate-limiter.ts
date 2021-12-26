@@ -29,7 +29,6 @@ export class ClusterRateLimiter extends LocalRateLimiter {
                 // When a new master is demoted, the rate limiters it has become the pivot points of the real, synced
                 // rate limiter instances. Just trust this value.
                 server.discover.join('rate_limiter:limiters', (rateLimiters: { [key: string]: RateLimiterAbstract }) => {
-                    console.log('received forced rateLimiters', rateLimiters);
                     this.rateLimiters = Object.fromEntries(
                         Object.entries(rateLimiters).map(([key, rateLimiterObject]: [string, any]) => {
                             return [
