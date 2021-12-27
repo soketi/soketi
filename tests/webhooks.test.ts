@@ -276,16 +276,22 @@ describe('webhooks test', () => {
         const webhooks = [
             {
                 ...sharedWebhookConfig,
-                channel_starts_with: 'private-',
+                filter: {
+                    channel_starts_with: 'private-',
+                },
             },
             {
                 ...sharedWebhookConfig,
-                channel_starts_with: 'private-',
-                channel_ends_with: '-foo',
+                filter: {
+                    channel_starts_with: 'private-',
+                    channel_ends_with: '-foo',
+                },
             },
             {
                 ...sharedWebhookConfig,
-                channel_ends_with: '-bar',
+                filter: {
+                    channel_ends_with: '-bar',
+                },
             },
         ];
 
