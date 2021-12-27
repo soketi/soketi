@@ -25,6 +25,7 @@ jobs:
         adapter:
           - local
           - redis
+          - cluster
         app_manager:
           - array
           - dynamodb
@@ -34,6 +35,9 @@ jobs:
         include:
           - adapter: local
             rate_limiter: local
+            queue_driver: sync
+          - adapter: cluster
+            rate_limiter: cluster
             queue_driver: sync
           - adapter: redis
             rate_limiter: redis

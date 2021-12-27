@@ -1,4 +1,3 @@
-import * as dot from 'dot-wild';
 import { Server } from './../server';
 
 export class Cli {
@@ -25,6 +24,14 @@ export class Cli {
         APP_MANAGER_POSTGRES_VERSION: 'appManager.postgres.version',
         APP_MANAGER_MYSQL_USE_V2: 'appManager.mysql.useMysql2',
         CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength',
+        CLUSTER_CHECK_INTERVAL: 'cluster.checkInterval',
+        CLUSTER_HOST: 'cluster.host',
+        CLUSTER_IGNORE_PROCESS: 'cluster.ignoreProcess',
+        CLUSTER_KEEPALIVE_INTERVAL: 'cluster.helloInterval',
+        CLUSTER_MASTER_TIMEOUT: 'cluster.masterTimeout',
+        CLUSTER_NODE_TIMEOUT: 'cluster.nodeTimeout',
+        CLUSTER_PORT: 'cluster.port',
+        CLUSTER_PREFIX: 'cluster.prefix',
         DEBUG: 'debug',
         DEFAULT_APP_ID: 'appManager.array.apps.0.id',
         DEFAULT_APP_KEY: 'appManager.array.apps.0.key',
@@ -72,6 +79,7 @@ export class Cli {
         QUEUE_DRIVER: 'queue.driver',
         QUEUE_REDIS_CONCURRENCY: 'queue.redis.concurrency',
         RATE_LIMITER_DRIVER: 'rateLimiter.driver',
+        SHUTDOWN_GRACE_PERIOD: 'shutdownGracePeriod',
         SSL_CERT: 'ssl.certPath',
         SSL_KEY: 'ssl.keyPath',
         SSL_PASS: 'ssl.passphrase',
@@ -80,8 +88,9 @@ export class Cli {
     /**
      * Create new CLI instance.
      */
-    constructor() {
+    constructor(protected pm2 = false) {
         this.server = new Server;
+        this.server.pm2 = pm2;
     }
 
     /**
@@ -109,7 +118,10 @@ export class Cli {
                     }
                 }
 
-                this.server.options = dot.set(this.server.options, optionKey, value);
+                let settingObject = {};
+                settingObject[optionKey] = value;
+
+                this.server.setOptions(settingObject);
             }
         }
     }
@@ -119,6 +131,13 @@ export class Cli {
      */
     static async start(yargs: any): Promise<any> {
         return (new Cli).start(yargs);
+    }
+
+    /**
+     * Start the server with PM2 support.
+     */
+     static async startWithPm2(yargs: any): Promise<any> {
+        return (new Cli(true)).start(yargs);
     }
 
     /**

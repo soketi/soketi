@@ -8,7 +8,7 @@ export class Queue implements QueueInterface {
     /**
      * The Queue driver.
      */
-    protected driver: QueueInterface;
+    public driver: QueueInterface;
 
     /**
      * Initialize the queue exporter.
@@ -30,9 +30,9 @@ export class Queue implements QueueInterface {
         return this.driver.addToQueue(queueName, data);
     }
 
-     /**
-      * Register the code to run when handing the queue.
-      */
+    /**
+     * Register the code to run when handing the queue.
+     */
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
         return this.driver.processQueue(queueName, callback);
     }

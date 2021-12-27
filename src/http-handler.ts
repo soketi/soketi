@@ -408,8 +408,8 @@ export class HttpHandler {
 
         let loggingAction = (payload) => {
             if (this.server.options.debug) {
-                Log.infoTitle('⚡ HTTP Payload received:');
-                Log.info(payload);
+                Log.httpTitle('⚡ HTTP Payload received');
+                Log.http(payload);
             }
         };
 

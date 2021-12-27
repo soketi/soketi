@@ -2,11 +2,18 @@ import { Namespace } from '../namespace';
 import { PresenceMember } from '../presence-member';
 import { WebSocket } from 'uWebSockets.js';
 
+const Discover = require('node-discover');
+
 export interface AdapterInterface {
     /**
      * The app connections storage class to manage connections.
      */
     namespaces?: Map<string, Namespace>;
+
+    /**
+     * The list of nodes in the current private network.
+     */
+    driver?: AdapterInterface;
 
     /**
      * Get the app namespace.
@@ -26,7 +33,7 @@ export interface AdapterInterface {
     /**
      * Clear the local namespaces.
      */
-    clear(namespaceId?: string): void;
+    clear(namespaceId?: string, closeConnections?: boolean): Promise<void>;
 
     /**
      * Get all sockets from the namespace.

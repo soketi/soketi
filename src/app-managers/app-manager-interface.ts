@@ -2,6 +2,11 @@ import { App } from '../app';
 
 export interface AppManagerInterface {
     /**
+     * The application manager driver.
+     */
+    driver?: AppManagerInterface;
+
+    /**
      * Find an app by given ID.
      */
     findById(id: string): Promise<App|null>;

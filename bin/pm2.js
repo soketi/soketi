@@ -4,4 +4,4 @@ const { Cli } = require('./../dist/cli/cli');
 
 process.title = 'soketi-server';
 
-Cli.start();
+Cli.startWithPm2();

@@ -55,6 +55,16 @@ export interface Options {
     channelLimits: {
         maxNameLength: number;
     };
+    cluster: {
+        host: string;
+        helloInterval: number;
+        checkInterval: number;
+        nodeTimeout: number,
+        masterTimeout: number;
+        port: number;
+        prefix: string;
+        ignoreProcess: boolean;
+    };
     cors: {
         credentials: boolean;
         origin: string[];
@@ -106,6 +116,7 @@ export interface Options {
     rateLimiter: {
         driver: string;
     };
+    shutdownGracePeriod: number;
     ssl: {
         certPath: string;
         keyPath: string;

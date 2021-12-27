@@ -50,8 +50,8 @@ export class WsHandler {
      */
     onOpen(ws: WebSocket): any {
         if (this.server.options.debug) {
-            Log.successTitle('👨‍🔬 New connection:');
-            Log.success({ ws });
+            Log.websocketTitle('👨‍🔬 New connection:');
+            Log.websocket({ ws });
         }
 
         ws.sendJson = (data) => {
@@ -63,8 +63,8 @@ export class WsHandler {
                 }
 
                 if (this.server.options.debug) {
-                    Log.successTitle('✈ Sent message to client:');
-                    Log.success({ ws, data });
+                    Log.websocketTitle('✈ Sent message to client:');
+                    Log.websocket({ ws, data });
                 }
             }
         }
@@ -129,6 +129,7 @@ export class WsHandler {
                         // See: https://www.iana.org/assignments/websocket/websocket.xhtml
                         ws.end(1013);
                     } else {
+                        // Make sure to update the socket after new data was pushed in.
                         this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
                         let broadcastMessage = {
@@ -161,11 +162,8 @@ export class WsHandler {
         }
 
         if (this.server.options.debug) {
-            Log.infoTitle('⚡ New message received:');
-            Log.info({
-                message,
-                isBinary,
-            });
+            Log.websocketTitle('⚡ New message received:');
+            Log.websocket({ message, isBinary });
         }
 
         if (message) {
@@ -178,7 +176,7 @@ export class WsHandler {
             } else if (Utils.isClientEvent(message.event)) {
                 this.handleClientEvent(ws, message);
             } else {
-                Log.info({
+                Log.warning({
                     info: 'Message event handler not implemented.',
                     message,
                 });
@@ -195,8 +193,8 @@ export class WsHandler {
      */
     onClose(ws: WebSocket, code: number, message: any): any {
         if (this.server.options.debug) {
-            Log.warningTitle('❌ Connection closed:');
-            Log.warning({ ws, code, message });
+            Log.websocketTitle('❌ Connection closed:');
+            Log.websocket({ ws, code, message });
         }
 
         this.unsubscribeFromAllChannels(ws).then(() => {
@@ -239,13 +237,14 @@ export class WsHandler {
 
                     wsCallback();
                 }).then(() => {
-                    this.server.adapter.clear(namespaceId);
-                    nsCallback();
+                    this.server.adapter.clear(namespaceId).then(() => {
+                        nsCallback();
+                    });
                 });
             });
         }).then(() => {
             // One last clear to make sure everything went away.
-            return this.server.adapter.clear();
+            return this.server.adapter.clear(null, this.server.closing);
         });
     }
 
@@ -358,6 +357,7 @@ export class WsHandler {
                 ws.subscribedChannels.add(channel);
             }
 
+            // Make sure to update the socket after new data was pushed in.
             this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
             // If the connection freshly joined, send the webhook:
@@ -448,6 +448,9 @@ export class WsHandler {
                 if (channelManager instanceof PresenceChannelManager && ws.presence.has(channel)) {
                     ws.presence.delete(channel);
 
+                    // Make sure to update the socket after new data was pushed in.
+                    this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+
                     this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
                         if (!members.has(member.user_id as string)) {
                             this.server.webhookSender.sendMemberRemoved(ws.app, channel, member.user_id);
@@ -465,11 +468,12 @@ export class WsHandler {
 
                 ws.subscribedChannels.delete(channel);
 
+                // Make sure to update the socket after new data was pushed in.
+                this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+
                 if (response.remainingConnections === 0) {
                     this.server.webhookSender.sendChannelVacated(ws.app, channel);
                 }
-
-
             }
 
             // ws.send(JSON.stringify({
@@ -642,7 +646,7 @@ export class WsHandler {
     /**
      * Clear WebSocket timeout.
      */
-    protected clearTimeout(ws: WebSocket) {
+    protected clearTimeout(ws: WebSocket): void {
         if(ws.timeout) {
             clearTimeout(ws.timeout);
         }
@@ -651,7 +655,7 @@ export class WsHandler {
     /**
      * Update WebSocket timeout.
      */
-    protected updateTimeout(ws: WebSocket) {
+    protected updateTimeout(ws: WebSocket): void {
         this.clearTimeout(ws);
 
         ws.timeout = setTimeout(() => {

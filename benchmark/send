@@ -18,6 +18,7 @@ $fs->setScriptFile($flags);
 $fs->addOpt('interval', 'i', 'Specify at which interval to send each message.', FlagType::FLOAT, false, 0.1);
 $fs->addOpt('messages', 'm', 'Specify the number of messages to send.', FlagType::INT, false);
 $fs->addOpt('host', 'h', 'Specify the host to connect to.', FlagType::STRING, false, '127.0.0.1');
+$fs->addOpt('port', 'p', 'Specify the port to connect to.', FlagType::INT, false, 6001);
 $fs->addOpt('ssl', 's', 'Securely connect to the server.', FlagType::BOOL, false, false);
 
 if (! $fs->parse($argv)) {
@@ -29,7 +30,7 @@ $args = $fs->getArgs();
 
 $pusher = new Pusher('app-key', 'app-secret', 'app-id', [
     'host' => $options['host'],
-    'port' => 6001,
+    'port' => $options['port'],
     'scheme' => $options['ssl'] ? 'https' : 'http',
     'encrypted' => true,
     'useTLS' => $options['ssl'],
