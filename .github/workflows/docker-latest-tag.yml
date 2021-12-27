@@ -1,4 +1,4 @@
-name: Docker Latest
+name: Docker Latest - Standard
 
 on:
   push:
