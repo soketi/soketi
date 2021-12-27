@@ -46,17 +46,21 @@ export class WebhookSender {
 
             server.appManager.findByKey(appKey).then(app => {
                 app.webhooks.forEach((webhook: WebhookInterface) => {
-                    if (! webhook.event_types.includes(payload.events[0].name)) {
+                    if (!webhook.event_types.includes(payload.events[0].name)) {
+                        return;
+                    }
+
+                    if (webhook.filter?.channel_name_starts_with && !payload.events[0].channel.startsWith(webhook.filter.channel_name_starts_with)) {
+                        return;
+                    }
+
+                    if (webhook.filter?.channel_name_ends_with && !payload.events[0].channel.endsWith(webhook.filter.channel_name_ends_with)) {
                         return;
                     }
 
                     if (this.server.options.debug) {
-                        Log.successTitle('🚀 Processing webhook from queue.');
-                        Log.success({
-                            appKey,
-                            payload,
-                            pusherSignature,
-                        });
+                        Log.webhookSenderTitle('🚀 Processing webhook from queue.');
+                        Log.webhookSender({ appKey, payload, pusherSignature });
                     }
 
                     const headers = {
@@ -71,15 +75,15 @@ export class WebhookSender {
                     if (webhook.url) {
                         axios.post(webhook.url, payload, { headers }).then((res) => {
                             if (this.server.options.debug) {
-                                Log.successTitle('✅ Webhook sent.');
-                                Log.success({ webhook, payload });
+                                Log.webhookSenderTitle('✅ Webhook sent.');
+                                Log.webhookSender({ webhook, payload });
                             }
                         }).catch(err => {
                             // TODO: Maybe retry exponentially?
 
                             if (this.server.options.debug) {
-                                Log.errorTitle('❎ Webhook could not be sent.');
-                                Log.error({ err, webhook, payload });
+                                Log.webhookSenderTitle('❎ Webhook could not be sent.');
+                                Log.webhookSender({ err, webhook, payload });
                             }
                         }).then(() => {
                             if (typeof done === 'function') {
@@ -103,13 +107,13 @@ export class WebhookSender {
                         lambda.invoke(params, (err, data) => {
                             if (err) {
                                 if (this.server.options.debug) {
-                                    Log.errorTitle('❎ Lambda trigger failed.');
-                                    Log.error({ webhook, err, data });
+                                    Log.webhookSenderTitle('❎ Lambda trigger failed.');
+                                    Log.webhookSender({ webhook, err, data });
                                 }
                             } else {
                                 if (this.server.options.debug) {
-                                    Log.successTitle('✅ Lambda triggered.');
-                                    Log.success({ webhook, payload });
+                                    Log.webhookSenderTitle('✅ Lambda triggered.');
+                                    Log.webhookSender({ webhook, payload });
                                 }
                             }
 

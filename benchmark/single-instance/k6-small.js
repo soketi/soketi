@@ -20,6 +20,7 @@ export const options = {
             iterations: 6,
             env: {
                 sleep: '10',
+                host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
             },
         },
 
@@ -40,13 +41,14 @@ export const options = {
             gracefulRampDown: '5s',
             env: {
                 sleep: '5',
+                host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
             },
         },
     },
 };
 
 export default () => {
-    ws.connect(options.host, null, (socket) => {
+    ws.connect(__ENV.host, null, (socket) => {
         socket.setTimeout(() => {
             socket.close();
         }, __ENV.sleep * 1000);

@@ -8,39 +8,39 @@ https://github.com/JetBrains/java-annotations#readme
 https://hc.apache.org/httpcomponents-client-ga/
 ** Apache-HttpComponents-HttpCore; version 4.4.x --
 https://hc.apache.org/httpcomponents-core-4.4.x/index.html
-** closure-compiler; version 20140110 --
-https://github.com/google/closure-compiler
 ** commons-cli; version 1.2 -- http://commons.apache.org/proper/commons-cli/
 ** commons-lang; version 3.3.x --
 http://commons.apache.org/proper/commons-lang/
 ** Findbugs Jsr305; version 3.0.x -- http://findbugs.sourceforge.net/
-** google-guava; version 18.0 -- https://github.com/google/guava
+** google-guava; version 20.x -- https://github.com/google/guava
 ** hopscotch; version 0.2.0 -- https://github.com/LinkedInAttic/hopscotch
-** ion-element; version 0.1.0 -- https://github.com/amzn/ion-element-kotlin
+** ion-element; version 0.2.0 -- https://github.com/amzn/ion-element-kotlin
 ** Jackson; version 2.10 -- http://github.com/FasterXML/jackson
 ** jackson-annotations; version 2.10.x --
 https://github.com/FasterXML/jackson-annotations
 ** jackson-core; version 2.10.x -- https://github.com/FasterXML/jackson-core
 ** jackson-databind; version 2.10.x --
 https://github.com/FasterXML/jackson-databind
-** jackson-dataformat-cbor; version 2.6.x --
+** jackson-dataformat-cbor; version 2.12.3 --
 https://github.com/FasterXML/jackson-dataformat-cbor
-** jackson-datatype-jsr310; version 2.10.x --
-https://github.com/FasterXML/jackson-modules-java8
 ** JakartaCommons-codec; version 1.9 --
 http://commons.apache.org/proper/commons-codec/
+** JakartaCommons-logging; version 1.2 --
+https://github.com/apache/commons-logging
 ** jetty; version 9.4.18 -- https://github.com/eclipse/jetty.project
-** joda-time; version 2.8.2 -- https://github.com/JodaOrg/joda-time
-** KotlinReflect; version 1.3.21 --
+** jetty-servlet; version 9.4.18 -- https://github.com/eclipse/jetty.project
+** joda-time; version 2.10.10 -- https://github.com/JodaOrg/joda-time
+** KotlinReflect; version 1.3.72 --
 https://kotlinlang.org/docs/reference/reflection.html
-** KotlinStdlib; version 1.3.31 --
+** KotlinStdlib; version 1.3.72 --
 https://github.com/JetBrains/kotlin/tree/master/libraries/stdlib
-** KotlinStdlibCommon; version 1.3.21 --
+** KotlinStdlibCommon; version 1.3.72 --
 https://github.com/JetBrains/kotlin/tree/master/libraries/stdlib/common
 ** log4j; version 2.x -- http://logging.apache.org/log4j/2.x/
 ** log4j-1.2-api; version 2.x -- https://logging.apache.org/log4j/2.x/
 ** log4j-core; version 2.13.3 --
 https://logging.apache.org/log4j/2.x/log4j-core/
+** Log4j-slf4j; version 2.x -- https://logging.apache.org/log4j/2.x/
 ** netty-all; version 4.1 -- https://netty.io/index.html
 ** netty-reactive-streams; version 2.0.0 --
 https://github.com/playframework/netty-reactive-streams
@@ -280,8 +280,6 @@ limitations under the License.
 
     This product includes software developed at
     The Apache Software Foundation (http://www.apache.org/).
-* For closure-compiler see also this required NOTICE:
-    No copyright statement was found for this project.
 * For commons-cli see also this required NOTICE:
     Apache Commons CLI
     Copyright 2001-2009 The Apache Software Foundation
@@ -300,7 +298,7 @@ limitations under the License.
 * For Findbugs Jsr305 see also this required NOTICE:
     Copyright (C) 2006, University of Maryland
 * For google-guava see also this required NOTICE:
-    Copyright (C) 2010 The Guava Authors
+    Copyright (C) 2017 The Guava Authors
 * For hopscotch see also this required NOTICE:
     No copyright statement was found for this project.
 * For ion-element see also this required NOTICE:
@@ -315,9 +313,9 @@ limitations under the License.
     No copyright statement was found for this project.
 * For jackson-dataformat-cbor see also this required NOTICE:
     No copyright statement was found for this project.
-* For jackson-datatype-jsr310 see also this required NOTICE:
-    No copyright statement was found for this project.
 * For JakartaCommons-codec see also this required NOTICE:
+    Copyright © 2002-2020 The Apache Software Foundation. All Rights Reserved.
+* For JakartaCommons-logging see also this required NOTICE:
     Copyright © 2002-2020 The Apache Software Foundation. All Rights Reserved.
 * For jetty see also this required NOTICE:
     ==============================================================
@@ -343,6 +341,107 @@ limitations under the License.
     The javax.servlet package used was sourced from the Apache
     Software Foundation and is distributed under the apache 2.0
     license.
+
+    The UnixCrypt.java code implements the one way cryptography used by
+    Unix systems for simple password protection.  Copyright 1996 Aki Yoshida,
+    modified April 2001  by Iris Van den Broeke, Daniel Deville.
+    Permission to use, copy, modify and distribute UnixCrypt
+    for non-commercial or commercial purposes and without fee is
+    granted provided that the copyright notice appears in all copies.
+* For jetty-servlet see also this required NOTICE:
+    Notices for Eclipse Jetty
+    =========================
+    This content is produced and maintained by the Eclipse Jetty project.
+
+    Project home: https://www.eclipse.org/jetty/
+
+    Trademarks
+    ----------
+    Eclipse Jetty, and Jetty are trademarks of the Eclipse Foundation.
+
+    Copyright
+    ---------
+    All contributions are the property of the respective authors or of
+    entities to which copyright has been assigned by the authors (eg.
+    employer).
+
+    Declared Project Licenses
+    -------------------------
+    This artifacts of this project are made available under the terms of:
+
+      * the Eclipse Public License v2.0
+        https://www.eclipse.org/legal/epl-2.0
+        SPDX-License-Identifier: EPL-2.0
+
+      or
+
+      * the Apache License, Version 2.0
+        https://www.apache.org/licenses/LICENSE-2.0
+        SPDX-License-Identifier: Apache-2.0
+
+    The following dependencies are EPL.
+     * org.eclipse.jetty.orbit:org.eclipse.jdt.core
+
+    The following dependencies are EPL and ASL2.
+     * org.eclipse.jetty.orbit:javax.security.auth.message
+
+    The following dependencies are EPL and CDDL 1.0.
+     * org.eclipse.jetty.orbit:javax.mail.glassfish
+
+    The following dependencies are CDDL + GPLv2 with classpath exception.
+    https://glassfish.dev.java.net/nonav/public/CDDL+GPL.html
+
+     * javax.servlet:javax.servlet-api
+     * javax.annotation:javax.annotation-api
+     * javax.transaction:javax.transaction-api
+     * javax.websocket:javax.websocket-api
+
+    The following dependencies are licensed by the OW2 Foundation according to
+    the
+    terms of http://asm.ow2.org/license.html
+
+     * org.ow2.asm:asm-commons
+     * org.ow2.asm:asm
+
+    The following dependencies are ASL2 licensed.
+
+     * org.apache.taglibs:taglibs-standard-spec
+     * org.apache.taglibs:taglibs-standard-impl
+
+    The following dependencies are ASL2 licensed. Based on selected classes
+    from
+    following Apache Tomcat jars, all ASL2 licensed.
+
+     * org.mortbay.jasper:apache-jsp
+     * org.apache.tomcat:tomcat-jasper
+     * org.apache.tomcat:tomcat-juli
+     * org.apache.tomcat:tomcat-jsp-api
+     * org.apache.tomcat:tomcat-el-api
+     * org.apache.tomcat:tomcat-jasper-el
+     * org.apache.tomcat:tomcat-api
+     * org.apache.tomcat:tomcat-util-scan
+     * org.apache.tomcat:tomcat-util
+     * org.mortbay.jasper:apache-el
+     * org.apache.tomcat:tomcat-jasper-el
+     * org.apache.tomcat:tomcat-el-api
+
+    The following artifacts are CDDL + GPLv2 with classpath exception.
+    https://glassfish.dev.java.net/nonav/public/CDDL+GPL.html
+
+     * org.eclipse.jetty.toolchain:jetty-schemas
+
+    Cryptography
+    ------------
+    Content may contain encryption software. The country in which you are
+    currently
+    may have restrictions on the import, possession, and use, and/or re-export
+    to
+    another country, of encryption software. BEFORE using any encryption
+    software,
+    please check the country's laws, regulations and policies concerning the
+    import,
+    possession, or use, and re-export of encryption software, to see if this is
+    permitted.
 
     The UnixCrypt.java code implements the one way cryptography used by
     Unix systems for simple password protection.  Copyright 1996 Aki Yoshida,
@@ -406,6 +505,9 @@ limitations under the License.
 * For log4j-1.2-api see also this required NOTICE:
     Copyright © 1999-2020 The Apache Software Foundation. All Rights Reserved.
 * For log4j-core see also this required NOTICE:
+    Copyright © 1999-2020 The Apache Software Foundation. All Rights Reserved.
+* For Log4j-slf4j see also this required NOTICE:
+    Apache Log4j
     Copyright © 1999-2020 The Apache Software Foundation. All Rights Reserved.
 * For netty-all see also this required NOTICE:
     Copyright 2011 The Netty Project
@@ -525,249 +627,3 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-------
-
-** ace; version unknown -- https://ace.c9.io/
-Copyright (c) 2010, Ajax.org B.V.
-All rights reserved.
-
-Copyright (c) 2010, Ajax.org B.V.
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of Ajax.org B.V. nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL AJAX.ORG B.V. BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-------
-
-** reactive-streams; version 1.0.3 -- https://www.reactive-streams.org/
-Copyright 2014 Reactive Streams
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-------
-
-** jsxss; version 1.0.8 -- https://github.com/leizongmin/js-xss
-Copyright (c) 2012-2018 Zongmin Lei(雷宗民) <leizongmin@gmail.com>
-http://ucdok.com
-
-Copyright (c) 2012-2018 Zongmin Lei(雷宗民) <leizongmin@gmail.com>
-http://ucdok.com
-
-The MIT License
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-------
-
-** node-mkdirp; version 0.5.0 -- https://github.com/substack/node-mkdirp
-Copyright 2010 James Halliday (mail@substack.net)
-
-Copyright 2010 James Halliday (mail@substack.net)
-
-This project is free software released under the MIT/X11 license:
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
-------
-
-** bootstrap; version 2.3.0 -- http://getbootstrap.com
-Copyright (c) 2011-2020 Twitter, Inc. Copyright (c) 2011-2020 The Bootstrap
-Authors
-
-The MIT License (MIT) Copyright (c) 2011-2020 Twitter, Inc. Copyright (c)
-2011-2020 The Bootstrap Authors Permission is hereby granted, free of charge,
-to any person obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish, distribute,
-sublicense, and/or sell copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the following conditions: The
-above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS
-IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
-AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-------
-
-** slf4j-api; version 1.7.10 -- http://www.slf4j.org/
-Copyright (c) 2004-2017 QOS.ch
- All rights reserved.
-
- Permission is hereby granted, free  of charge, to any person obtaining
- a  copy  of this  software  and  associated  documentation files  (the
- "Software"), to  deal in  the Software without  restriction, including
- without limitation  the rights to  use, copy, modify,  merge, publish,
- distribute,  sublicense, and/or sell  copies of  the Software,  and to
- permit persons to whom the Software  is furnished to do so, subject to
- the following conditions:
-
- The  above  copyright  notice  and  this permission  notice  shall  be
- included in all copies or substantial portions of the Software.
-
- THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
- EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
- MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
- WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-------
-
-** coffee-script; version 1.7.1 -- https://github.com/jashkenas/coffeescript
-Copyright (c) 2009-2018 Jeremy Ashkenas
-
-Copyright (c) 2009-2018 Jeremy Ashkenas
-
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following
-conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-------
-
-** jq-console; version 2.10.x -- https://github.com/replit-archive/jq-console
-No copyright statement was found for this project.
-** jsrepl; version unknown -- https://github.com/replit-archive/jsrepl
-jsREPL is available under the MIT license. Language interpreters and the
-modifications done to them by jsREPL developers have their own licenses, found
-in their extern/{language} folders or submodules.
-** repl.it; version unknown -- https://github.com/replit-archive/repl.it
-repl.it source code is available under the MIT license. However, the repl.it
-logos and assets represent only Repl.it and should not be used to represent
-your products. External libraries used in repl.it may use other licenses.
-Please check each library for its specific license.
-
-MIT License
-
-Copyright (c) <year> <copyright holders>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-------
-
-** FileSaver.js; version 1.x -- https://github.com/eligrey/FileSaver.js
-Copyright © 2016 Eli Grey.
-
-The MIT License
-
-Copyright © 2016 Eli Grey.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.

@@ -9,7 +9,7 @@ export class Metrics implements MetricsInterface {
     /**
      * The Metrics driver.
      */
-    protected driver: MetricsInterface;
+    public driver: MetricsInterface;
 
     /**
      * Initialize the Prometheus exporter.
@@ -78,9 +78,9 @@ export class Metrics implements MetricsInterface {
         return this.driver.getMetricsAsPlaintext();
     }
 
-     /**
-      * Get the stored metrics as JSON.
-      */
+    /**
+     * Get the stored metrics as JSON.
+     */
     getMetricsAsJson(): Promise<prom.metric[]|void> {
         if (!this.server.options.metrics.enabled) {
             return Promise.resolve();

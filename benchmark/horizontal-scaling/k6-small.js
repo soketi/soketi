@@ -1,52 +1,97 @@
 import { Trend } from 'k6/metrics';
 import ws from 'k6/ws';
 
-// Low: php send --interval 1
-// Mild: php send --interval 0.5
-// Overkill: php send --interval 0.1
+/**
+ * You need to run 4 terminals for this.
+ *
+ * 1. Run the servers:
+ *
+ * PORT=6001 ADAPTER_DRIVER=cluster RATE_LIMITER_DRIVER=cluster bin/server.js start
+ * PORT=6002 ADAPTER_DRIVER=cluster RATE_LIMITER_DRIVER=cluster bin/server.js start
+ *
+ * 2. Run the PHP senders based on the amount of messages per second you want to receive.
+ *    The sending rate influences the final benchmark.
+ *
+ * Low, 1 message per second:
+ * php send --interval 1 --port 6001
+ * php send --interval 1 --port 6002
+ *
+ * Mild, 2 messages per second:
+ * php send --interval 0.5 --port 6001
+ * php send --interval 0.5 --port 6002
+ *
+ * Overkill, 10 messages per second:
+ * php send --interval 0.1 --port 6001
+ * php send --interval 0.1 --port 6002
+ */
 
 const delayTrend = new Trend('message_delay_ms');
 
 export const options = {
-    // Custom options
-    host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
-
     // K6 options
     scenarios: {
         // Keep connected many users users at the same time.
-        soakTraffic: {
+        soakTraffic1: {
             executor: 'per-vu-iterations',
-            vus: 250,
+            vus: 100,
             iterations: 6,
             env: {
                 sleep: '10',
+                host: __ENV.WS_URL1 || 'ws://127.0.0.1:6001/app/app-key',
+            },
+        },
+        soakTraffic2: {
+            executor: 'per-vu-iterations',
+            vus: 100,
+            iterations: 6,
+            env: {
+                sleep: '10',
+                host: __ENV.WS_URL2 || 'ws://127.0.0.1:6002/app/app-key',
             },
         },
 
         // Having high amount of connections and disconnections
         // representing active traffic that starts after 5 seconds
         // from the soakTraffic scenario.
-        highTraffic: {
+        highTraffic1: {
             executor: 'ramping-vus',
             startVUs: 0,
             startTime: '5s',
             stages: [
-                { duration: '30s', target: 250 },
-                { duration: '10s', target: 250 },
+                { duration: '30s', target: 100 },
                 { duration: '10s', target: 100 },
                 { duration: '10s', target: 50 },
-                { duration: '10s', target: 100 },
+                { duration: '10s', target: 20 },
+                { duration: '10s', target: 50 },
             ],
             gracefulRampDown: '5s',
             env: {
                 sleep: '5',
+                host: __ENV.WS_URL1 || 'ws://127.0.0.1:6001/app/app-key',
+            },
+        },
+        highTraffic2: {
+            executor: 'ramping-vus',
+            startVUs: 0,
+            startTime: '5s',
+            stages: [
+                { duration: '30s', target: 100 },
+                { duration: '10s', target: 100 },
+                { duration: '10s', target: 50 },
+                { duration: '10s', target: 20 },
+                { duration: '10s', target: 50 },
+            ],
+            gracefulRampDown: '5s',
+            env: {
+                sleep: '5',
+                host: __ENV.WS_URL2 || 'ws://127.0.0.1:6002/app/app-key',
             },
         },
     },
 };
 
 export default () => {
-    ws.connect(options.host, null, (socket) => {
+    ws.connect(__ENV.host, null, (socket) => {
         socket.setTimeout(() => {
             socket.close();
         }, __ENV.sleep * 1000);
