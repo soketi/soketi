@@ -36,7 +36,7 @@ jobs:
             queue_driver: sync
           - adapter: cluster
             rate_limiter: cluster
-            queue_driver: local
+            queue_driver: sync
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis
@@ -120,8 +120,9 @@ jobs:
 
       - name: Run the port 6001 server
         run: |
-          PORT=6001 node bin/server.js start &
+          node bin/server.js start &
         env:
+          PORT: 6001
           ADAPTER_DRIVER: ${{ matrix.adapter }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
           APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
@@ -135,8 +136,9 @@ jobs:
       - name: Run the port 6002 server
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
         run: |
-          PORT=6002 node bin/server.js start &
+          node bin/server.js start &
         env:
+          PORT: 6002
           ADAPTER_DRIVER: ${{ matrix.adapter }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
           APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
@@ -173,14 +175,16 @@ jobs:
         run: |
           curl --silent -XGET --fail http://127.0.0.1:6002
 
+      - name: Install k6
+        run: |
+          curl https://github.com/loadimpact/k6/releases/download/v0.26.2/k6-v0.26.2-linux64.tar.gz -L | tar xvz --strip-components 1
+
       - name: Run benchmarks
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
-        uses: k6io/action@v0.1
-        with:
-          filename: benchmark/horizontal-scaling/k6-medium.js
+        run: |
+          ./k6 run benchmark/horizontal-scaling/k6-medium.js
 
       - name: Run benchmarks
         if: "matrix.adapter == 'local'"
-        uses: k6io/action@v0.1
-        with:
-          filename: benchmark/single-instance/k6-medium.js
+        run: |
+          ./k6 run benchmark/single-instance/k6-medium.js
