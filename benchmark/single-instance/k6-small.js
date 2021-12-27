@@ -8,9 +8,6 @@ import ws from 'k6/ws';
 const delayTrend = new Trend('message_delay_ms');
 
 export const options = {
-    // Custom options
-    host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
-
     // K6 options
     scenarios: {
         // Keep connected many users users at the same time.
@@ -20,7 +17,7 @@ export const options = {
             iterations: 6,
             env: {
                 sleep: '10',
-                host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
+                host: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
 
@@ -41,7 +38,7 @@ export const options = {
             gracefulRampDown: '5s',
             env: {
                 sleep: '5',
-                host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
+                host: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
     },

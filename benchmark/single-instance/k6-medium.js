@@ -17,7 +17,7 @@ export const options = {
             iterations: 6,
             env: {
                 sleep: '10',
-                host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
+                host: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
 
@@ -38,7 +38,7 @@ export const options = {
             gracefulRampDown: '5s',
             env: {
                 sleep: '5',
-                host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
+                host: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
     },
