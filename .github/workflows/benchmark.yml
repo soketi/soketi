@@ -133,7 +133,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: fake-secret
 
       - name: Run the port 6002 server
-        if: "matrix.adapter == 'redis' or matrix.adapter == 'cluster'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
         run: |
           PORT=6002 node bin/server.js start &
         env:
@@ -158,13 +158,13 @@ jobs:
           php send --interval 1 --port 6001 &
 
       - name: Run the message sender for second server
-        if: "matrix.adapter == 'redis' or matrix.adapter == 'cluster'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
         run: |
           cd benchmark/
           php send --interval 1 --port 6002 &
 
       - name: Run benchmarks
-        if: "matrix.adapter == 'redis' or matrix.adapter == 'cluster'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
         uses: k6io/action@v0.1
         with:
           filename: benchmark/horizontal-scaling/k6-medium.js
