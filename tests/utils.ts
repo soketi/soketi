@@ -26,26 +26,31 @@ export class Utils {
             tcpPortUsed.waitUntilFree(6001, 500, 5 * 1000),
             tcpPortUsed.waitUntilFree(6002, 500, 5 * 1000),
             tcpPortUsed.waitUntilFree(3001, 500, 5 * 1000),
+            tcpPortUsed.waitUntilFree(9601, 500, 5 * 1000),
+            tcpPortUsed.waitUntilFree(11002, 500, 5 * 1000),
         ]);
     }
 
     static newServer(options = {}, callback): any {
         options = {
+            'cluster.prefix': uuidv4(),
             'adapter.redis.prefix': uuidv4(),
             'appManager.array.apps.0.maxBackendEventsPerSecond': 200,
             'appManager.array.apps.0.maxClientEventsPerSecond': 200,
             'appManager.array.apps.0.maxReadRequestsPerSecond': 200,
+            'metrics.enabled': true,
+            'appManager.mysql.useMysql2': true,
+            'cluster.port': parseInt((Math.random() * (20000 - 10000) + 10000).toString()), // random: 10000-20000
+            'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
+            'cluster.ignoreProcess': false,
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
             'queue.driver': process.env.TEST_QUEUE_DRIVER || 'sync',
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
-            'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
-            'metrics.enabled': true,
-            'appManager.mysql.useMysql2': true,
         };
 
-        return Server.start(options, (server: Server) => {
+        return (new Server(options)).start((server: Server) => {
             this.wsServers.push(server);
 
             callback(server);
@@ -56,6 +61,8 @@ export class Utils {
         return this.newServer({
             // Make sure the same prefixes exists so that they can communicate
             'adapter.redis.prefix': server.options.adapter.redis.prefix,
+            'cluster.prefix': server.options.cluster.prefix,
+            'cluster.port': server.options.cluster.port,
             ...options,
         }, callback);
     }

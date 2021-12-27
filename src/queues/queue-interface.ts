@@ -1,5 +1,10 @@
 export interface QueueInterface {
     /**
+     * The Queue driver.
+     */
+    driver?: QueueInterface;
+
+    /**
      * Add a new event with data to queue.
      */
     addToQueue(queueName: string, data?: any): Promise<void>;

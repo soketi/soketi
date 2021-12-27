@@ -25,6 +25,7 @@ jobs:
         adapter:
           - local
           - redis
+          - cluster
         app_manager:
           - array
           - dynamodb
@@ -35,6 +36,9 @@ jobs:
           - adapter: local
             rate_limiter: local
             queue_driver: sync
+          - adapter: cluster
+            rate_limiter: cluster
+            queue_driver: sync
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis
@@ -44,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         name: Installing Node.js v${{ matrix.node }}
         with:
           node-version: ${{ matrix.node }}

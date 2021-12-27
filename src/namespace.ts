@@ -41,7 +41,7 @@ export class Namespace {
      */
     async removeSocket(wsId: string): Promise<boolean> {
         for (let channel of this.channels.keys()){
-            await this.removeFromChannel(wsId, channel);
+            this.removeFromChannel(wsId, channel);
         }
 
         return this.sockets.delete(wsId);
