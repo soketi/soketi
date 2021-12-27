@@ -3,9 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - '*'
-    tags:
-      - '*'
+      - master
   pull_request:
     branches:
       - '*'
@@ -25,7 +23,7 @@ jobs:
         adapter:
           - local
           - redis
-          - private-network
+          - cluster
         app_manager:
           - array
           - dynamodb
@@ -36,9 +34,9 @@ jobs:
           - adapter: local
             rate_limiter: local
             queue_driver: sync
-          - adapter: private-network
-            rate_limiter: redis
-            queue_driver: redis
+          - adapter: cluster
+            rate_limiter: cluster
+            queue_driver: local
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis
@@ -120,9 +118,9 @@ jobs:
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
 
-      - name: Run the server
+      - name: Run the port 6001 server
         run: |
-          node bin/server.js start &
+          PORT=6001 node bin/server.js start &
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
@@ -134,18 +132,45 @@ jobs:
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
 
-      - name: Install and run the message sender
+      - name: Run the port 6002 server
+        if: "adapter == 'redis' or adapter == 'cluster'"
+        run: |
+          PORT=6002 node bin/server.js start &
+        env:
+          ADAPTER_DRIVER: ${{ matrix.adapter }}
+          APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
+          APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
+          APP_MANAGER_MYSQL_USE_V2: true
+          METRICS_ENABLED: true
+          QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
+
+      - name: Install the message sender
         run: |
           cd benchmark/
           composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
-          php send --interval 0.5 &
+
+      - name: Run the message sender
+        run: |
+          cd benchmark/
+          php send --interval 1 --port 6001 &
+
+      - name: Run the message sender for second server
+        if: "adapter == 'redis' or adapter == 'cluster'"
+        run: |
+          cd benchmark/
+          php send --interval 1 --port 6002 &
 
       - name: Run benchmarks
+        if: "adapter == 'redis' or adapter == 'cluster'"
         uses: k6io/action@v0.1
         with:
-          filename: benchmark/k6-big.js
+          filename: benchmark/horizontal-scaling/k6-medium.js
 
-      - uses: codecov/codecov-action@v2.1.0
+      - name: Run benchmarks
+        if: "adapter == 'local'"
+        uses: k6io/action@v0.1
         with:
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+          filename: benchmark/single-instance/k6-medium.js
