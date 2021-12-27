@@ -163,6 +163,16 @@ jobs:
           cd benchmark/
           php send --interval 1 --port 6002 &
 
+      - name: Test connection
+        run: |
+          sleep 5
+          curl --silent -XGET --fail http://127.0.0.1:6001
+
+      - name: Test connection for the other server
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        run: |
+          curl --silent -XGET --fail http://127.0.0.1:6002
+
       - name: Run benchmarks
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
         uses: k6io/action@v0.1
