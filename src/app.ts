@@ -21,6 +21,10 @@ export interface WebhookInterface {
     url?: string;
     lambda_function?: string;
     event_types: string[];
+    filter?: {
+        channel_name_starts_with?: string;
+        channel_name_ends_with?: string;
+    };
     lambda: {
         async?: boolean;
         region?: string;

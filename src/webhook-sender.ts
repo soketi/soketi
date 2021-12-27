@@ -50,6 +50,14 @@ export class WebhookSender {
                         return;
                     }
 
+                    if (webhook.filter?.channel_name_starts_with && !payload.events[0].channel.startsWith(webhook.filter.channel_name_starts_with)) {
+                        return;
+                    }
+
+                    if (webhook.filter?.channel_name_ends_with && !payload.events[0].channel.endsWith(webhook.filter.channel_name_ends_with)) {
+                        return;
+                    }
+
                     if (this.server.options.debug) {
                         Log.webhookSenderTitle('🚀 Processing webhook from queue.');
                         Log.webhookSender({ appKey, payload, pusherSignature });
