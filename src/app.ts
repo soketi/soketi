@@ -22,8 +22,8 @@ export interface WebhookInterface {
     lambda_function?: string;
     event_types: string[];
     filter?: {
-        channel_starts_with?: string;
-        channel_ends_with?: string;
+        channel_name_starts_with?: string;
+        channel_name_ends_with?: string;
     };
     lambda: {
         async?: boolean;

@@ -50,11 +50,11 @@ export class WebhookSender {
                         return;
                     }
 
-                    if (webhook.filter?.channel_starts_with && !payload.events[0].channel.startsWith(webhook.filter.channel_starts_with)) {
+                    if (webhook.filter?.channel_name_starts_with && !payload.events[0].channel.startsWith(webhook.filter.channel_name_starts_with)) {
                         return;
                     }
 
-                    if (webhook.filter?.channel_ends_with && !payload.events[0].channel.endsWith(webhook.filter.channel_ends_with)) {
+                    if (webhook.filter?.channel_name_ends_with && !payload.events[0].channel.endsWith(webhook.filter.channel_name_ends_with)) {
                         return;
                     }
 
