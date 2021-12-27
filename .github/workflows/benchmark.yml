@@ -177,14 +177,18 @@ jobs:
 
       - name: Install k6
         run: |
-          curl https://github.com/loadimpact/k6/releases/download/v0.26.2/k6-v0.26.2-linux64.tar.gz -L | tar xvz --strip-components 1
+          apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb https://dl.k6.io/deb stable main" | tee /etc/apt/sources.list.d/k6.list
+          apt-get update
+          apt-get install k6
+
 
       - name: Run benchmarks
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
         run: |
-          ./k6 run benchmark/horizontal-scaling/k6-medium.js
+          k6 run benchmark/horizontal-scaling/k6-medium.js
 
       - name: Run benchmarks
         if: "matrix.adapter == 'local'"
         run: |
-          ./k6 run benchmark/single-instance/k6-medium.js
+          k6 run benchmark/single-instance/k6-medium.js
