@@ -16,8 +16,8 @@ export const options = {
             vus: 250,
             iterations: 6,
             env: {
-                sleep: '10',
-                host: 'ws://127.0.0.1:6001/app/app-key',
+                SLEEP_FOR: '10',
+                WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
 
@@ -37,18 +37,18 @@ export const options = {
             ],
             gracefulRampDown: '5s',
             env: {
-                sleep: '5',
-                host: 'ws://127.0.0.1:6001/app/app-key',
+                SLEEP_FOR: '5',
+                WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
     },
 };
 
 export default () => {
-    ws.connect(__ENV.host, null, (socket) => {
+    ws.connect(__ENV.WS_HOST, null, (socket) => {
         socket.setTimeout(() => {
             socket.close();
-        }, __ENV.sleep * 1000);
+        }, __ENV.SLEEP_FOR * 1000);
 
         socket.on('open', () => {
             // Keep connection alive with pusher:ping
