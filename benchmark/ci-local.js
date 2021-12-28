@@ -26,8 +26,8 @@ const delayTrend = new Trend('message_delay_ms');
 export const options = {
     thresholds: {
         message_delay_ms: [
-            { threshold: 'p(95)<50', abortOnFail: false },
-            { threshold: 'avg<200', abortOnFail: false },
+            { threshold: 'p(95)<100', abortOnFail: false },
+            { threshold: 'avg<100', abortOnFail: false },
         ],
         ws_connecting: [
             { threshold: 'p(95)<50', abortOnFail: false },
