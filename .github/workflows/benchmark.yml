@@ -186,9 +186,9 @@ jobs:
       - name: Run benchmarks
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
         run: |
-          k6 run benchmark/horizontal-scaling/k6-medium.js
+          k6 run benchmark/ci-horizontal.js
 
       - name: Run benchmarks
         if: "matrix.adapter == 'local'"
         run: |
-          k6 run benchmark/single-instance/k6-medium.js
+          k6 run benchmark/ci-local.js

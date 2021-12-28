@@ -28,12 +28,22 @@ import ws from 'k6/ws';
 const delayTrend = new Trend('message_delay_ms');
 
 export const options = {
-    // K6 options
+    thresholds: {
+        message_delay_ms: [
+            { threshold: 'p(95)<50', abortOnFail: false },
+            { threshold: 'avg<200', abortOnFail: false },
+        ],
+        ws_connecting: [
+            { threshold: 'p(95)<50', abortOnFail: false },
+            { threshold: 'avg<50', abortOnFail: false },
+        ],
+    },
+
     scenarios: {
         // Keep connected many users users at the same time.
         soakTraffic1: {
             executor: 'per-vu-iterations',
-            vus: 500,
+            vus: 250,
             iterations: 6,
             env: {
                 SLEEP_FOR: '10',
@@ -42,7 +52,7 @@ export const options = {
         },
         soakTraffic2: {
             executor: 'per-vu-iterations',
-            vus: 500,
+            vus: 250,
             iterations: 6,
             env: {
                 SLEEP_FOR: '10',
@@ -58,11 +68,11 @@ export const options = {
             startVUs: 0,
             startTime: '5s',
             stages: [
-                { duration: '30s', target: 500 },
-                { duration: '10s', target: 500 },
+                { duration: '30s', target: 250 },
                 { duration: '10s', target: 250 },
                 { duration: '10s', target: 100 },
-                { duration: '10s', target: 250 },
+                { duration: '10s', target: 50 },
+                { duration: '10s', target: 100 },
             ],
             gracefulRampDown: '5s',
             env: {
@@ -75,11 +85,11 @@ export const options = {
             startVUs: 0,
             startTime: '5s',
             stages: [
-                { duration: '30s', target: 500 },
-                { duration: '10s', target: 500 },
+                { duration: '30s', target: 250 },
                 { duration: '10s', target: 250 },
                 { duration: '10s', target: 100 },
-                { duration: '10s', target: 250 },
+                { duration: '10s', target: 50 },
+                { duration: '10s', target: 100 },
             ],
             gracefulRampDown: '5s',
             env: {
