@@ -1,26 +1,60 @@
 import { Trend } from 'k6/metrics';
 import ws from 'k6/ws';
 
-// Low: php send --interval 1
-// Mild: php send --interval 0.5
-// Overkill: php send --interval 0.1
+/**
+ * You need to run 4 terminals for this.
+ *
+ * 1. Run the servers:
+ *
+ * PORT=6001 ADAPTER_DRIVER=local RATE_LIMITER_DRIVER=local bin/server.js start
+ *
+ * 2. Run the PHP senders based on the amount of messages per second you want to receive.
+ *    The sending rate influences the final benchmark.
+ *
+ * Low, 1 message per second:
+ * php send --interval 1 --port 6001
+ *
+ * Mild, 2 messages per second:
+ * php send --interval 0.5 --port 6001
+ *
+ * Overkill, 10 messages per second:
+ * php send --interval 0.1 --port 6001
+ */
 
 const delayTrend = new Trend('message_delay_ms');
 
-export const options = {
-    // Custom options
-    host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
+let maxP95 = 100;
+let maxAvg = 100;
 
-    // K6 options
+// External DBs are really slow for benchmarks.
+if (['mysql', 'postgres', 'dynamodb'].includes(__ENV.APP_MANAGER_DRIVER)) {
+    maxP95 += 500;
+    maxAvg += 100;
+}
+
+// Horizontal drivers take additional time to communicate with other nodes.
+if (['redis', 'cluster'].includes(__ENV.ADAPTER_DRIVER)) {
+    maxP95 += 100;
+    maxAvg += 100;
+}
+
+export const options = {
+    thresholds: {
+        message_delay_ms: [
+            { threshold: `p(95)<${maxP95}`, abortOnFail: false },
+            { threshold: `avg<${maxAvg}`, abortOnFail: false },
+        ],
+    },
+
     scenarios: {
         // Keep connected many users users at the same time.
         soakTraffic: {
             executor: 'per-vu-iterations',
-            vus: 100,
+            vus: 250,
             iterations: 6,
             env: {
-                sleep: '10',
-                host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
+                SLEEP_FOR: '10',
+                WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
 
@@ -32,26 +66,26 @@ export const options = {
             startVUs: 0,
             startTime: '5s',
             stages: [
-                { duration: '30s', target: 100 },
+                { duration: '30s', target: 250 },
+                { duration: '10s', target: 250 },
                 { duration: '10s', target: 100 },
                 { duration: '10s', target: 50 },
-                { duration: '10s', target: 20 },
-                { duration: '10s', target: 50 },
+                { duration: '10s', target: 100 },
             ],
             gracefulRampDown: '5s',
             env: {
-                sleep: '5',
-                host: __ENV.WS_URL || 'ws://127.0.0.1:6001/app/app-key',
+                SLEEP_FOR: '5',
+                WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
     },
 };
 
 export default () => {
-    ws.connect(__ENV.host, null, (socket) => {
+    ws.connect(__ENV.WS_HOST, null, (socket) => {
         socket.setTimeout(() => {
             socket.close();
-        }, __ENV.sleep * 1000);
+        }, __ENV.SLEEP_FOR * 1000);
 
         socket.on('open', () => {
             // Keep connection alive with pusher:ping

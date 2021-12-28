@@ -27,26 +27,47 @@ import ws from 'k6/ws';
 
 const delayTrend = new Trend('message_delay_ms');
 
+let maxP95 = 100;
+let maxAvg = 100;
+
+// External DBs are really slow for benchmarks.
+if (['mysql', 'postgres', 'dynamodb'].includes(__ENV.APP_MANAGER_DRIVER)) {
+    maxP95 += 500;
+    maxAvg += 100;
+}
+
+// Horizontal drivers take additional time to communicate with other nodes.
+if (['redis', 'cluster'].includes(__ENV.ADAPTER_DRIVER)) {
+    maxP95 += 100;
+    maxAvg += 100;
+}
+
 export const options = {
-    // K6 options
+    thresholds: {
+        message_delay_ms: [
+            { threshold: `p(95)<${maxP95}`, abortOnFail: false },
+            { threshold: `avg<${maxAvg}`, abortOnFail: false },
+        ],
+    },
+
     scenarios: {
         // Keep connected many users users at the same time.
         soakTraffic1: {
             executor: 'per-vu-iterations',
-            vus: 100,
+            vus: 250,
             iterations: 6,
             env: {
-                sleep: '10',
-                host: __ENV.WS_URL1 || 'ws://127.0.0.1:6001/app/app-key',
+                SLEEP_FOR: '10',
+                WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
         soakTraffic2: {
             executor: 'per-vu-iterations',
-            vus: 100,
+            vus: 250,
             iterations: 6,
             env: {
-                sleep: '10',
-                host: __ENV.WS_URL2 || 'ws://127.0.0.1:6002/app/app-key',
+                SLEEP_FOR: '10',
+                WS_HOST: 'ws://127.0.0.1:6002/app/app-key',
             },
         },
 
@@ -58,16 +79,16 @@ export const options = {
             startVUs: 0,
             startTime: '5s',
             stages: [
-                { duration: '30s', target: 100 },
+                { duration: '30s', target: 250 },
+                { duration: '10s', target: 250 },
                 { duration: '10s', target: 100 },
                 { duration: '10s', target: 50 },
-                { duration: '10s', target: 20 },
-                { duration: '10s', target: 50 },
+                { duration: '10s', target: 100 },
             ],
             gracefulRampDown: '5s',
             env: {
-                sleep: '5',
-                host: __ENV.WS_URL1 || 'ws://127.0.0.1:6001/app/app-key',
+                SLEEP_FOR: '5',
+                WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
         highTraffic2: {
@@ -75,26 +96,26 @@ export const options = {
             startVUs: 0,
             startTime: '5s',
             stages: [
-                { duration: '30s', target: 100 },
+                { duration: '30s', target: 250 },
+                { duration: '10s', target: 250 },
                 { duration: '10s', target: 100 },
                 { duration: '10s', target: 50 },
-                { duration: '10s', target: 20 },
-                { duration: '10s', target: 50 },
+                { duration: '10s', target: 100 },
             ],
             gracefulRampDown: '5s',
             env: {
-                sleep: '5',
-                host: __ENV.WS_URL2 || 'ws://127.0.0.1:6002/app/app-key',
+                SLEEP_FOR: '5',
+                WS_HOST: 'ws://127.0.0.1:6002/app/app-key',
             },
         },
     },
 };
 
 export default () => {
-    ws.connect(__ENV.host, null, (socket) => {
+    ws.connect(__ENV.WS_HOST, null, (socket) => {
         socket.setTimeout(() => {
             socket.close();
-        }, __ENV.sleep * 1000);
+        }, __ENV.SLEEP_FOR * 1000);
 
         socket.on('open', () => {
             // Keep connection alive with pusher:ping
