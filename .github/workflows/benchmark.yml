@@ -182,13 +182,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install k6
 
-
       - name: Run benchmarks
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
         run: |
           k6 run benchmark/ci-horizontal.js
+        env:
+          ADAPTER_DRIVER: ${{ matrix.adapter }}
+          APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
+          QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
 
       - name: Run benchmarks
         if: "matrix.adapter == 'local'"
         run: |
           k6 run benchmark/ci-local.js
+        env:
+          ADAPTER_DRIVER: ${{ matrix.adapter }}
+          APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
+          QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}

@@ -27,11 +27,26 @@ import ws from 'k6/ws';
 
 const delayTrend = new Trend('message_delay_ms');
 
+let maxP95 = 100;
+let maxAvg = 100;
+
+// External DBs are really slow for benchmarks.
+if (['mysql', 'postgres', 'dynamodb'].includes(__ENV.APP_MANAGER_DRIVER)) {
+    maxP95 += 500;
+    maxAvg += 100;
+}
+
+// Horizontal drivers take additional time to communicate with other nodes.
+if (['redis', 'cluster'].includes(__ENV.ADAPTER_DRIVER)) {
+    maxP95 += 100;
+    maxAvg += 100;
+}
+
 export const options = {
     thresholds: {
         message_delay_ms: [
-            { threshold: 'p(95)<100', abortOnFail: false },
-            { threshold: 'avg<100', abortOnFail: false },
+            { threshold: `p(95)<${maxP95}`, abortOnFail: false },
+            { threshold: `avg<${maxAvg}`, abortOnFail: false },
         ],
     },
 
