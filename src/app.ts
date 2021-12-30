@@ -19,6 +19,9 @@ export interface AppInterface {
 
 export interface WebhookInterface {
     url?: string;
+    headers?: {
+        [key: string]: string;
+    };
     lambda_function?: string;
     event_types: string[];
     filter?: {
