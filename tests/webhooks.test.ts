@@ -82,7 +82,6 @@ describe('webhooks test', () => {
         let channelName = `private-${Utils.randomChannelName()}`;
 
         Utils.newServer({
-            'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
             'database.redis.keyPrefix': 'channel-webhooks',
         }, (server: Server) => {
@@ -131,7 +130,6 @@ describe('webhooks test', () => {
         let channelName = `presence-${Utils.randomChannelName()}`;
 
         Utils.newServer({
-            'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
             'database.redis.keyPrefix': 'presence-webhooks',
         }, (server: Server) => {
@@ -312,7 +310,6 @@ describe('webhooks test', () => {
         const expectedWebhookRequests = matchedChannels.length;
 
         Utils.newServer({
-            'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
             'database.redis.keyPrefix': 'channel-webhooks',
         }, (server: Server) => {
@@ -364,7 +361,6 @@ describe('webhooks test', () => {
         const channelName = `private-${Utils.randomChannelName()}`;
 
         Utils.newServer({
-            'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
             'database.redis.keyPrefix': 'channel-webhooks',
         }, (server: Server) => {
