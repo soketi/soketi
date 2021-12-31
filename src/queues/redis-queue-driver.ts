@@ -45,8 +45,7 @@ export class RedisQueueDriver implements QueueInterface {
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
         return new Promise(resolve => {
             if (!this.queueWithWorker.has(queueName)) {
-
-                let connection = new Redis({
+                const connection = new Redis({
                     maxRetriesPerRequest: null,
                     enableReadyCheck: false,
                     ...this.server.options.database.redis,
@@ -74,7 +73,7 @@ export class RedisQueueDriver implements QueueInterface {
                     //       A single scheduler per queue is needed: https://docs.bullmq.io/guide/queuescheduler
                     scheduler: new QueueScheduler(queueName, {
                         connection,
-                    })
+                    }),
                 });
             }
 
