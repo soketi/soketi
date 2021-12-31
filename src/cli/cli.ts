@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { Server } from './../server';
 
 export class Cli {
@@ -127,23 +128,44 @@ export class Cli {
     }
 
     /**
+     * Inject the variables from a config file.
+     */
+    protected overwriteOptionsFromConfig(path?: string): void {
+        try {
+            let config = JSON.parse(readFileSync(path, { encoding: 'utf-8' }));
+
+            for (let optionKey in config) {
+                let value = config[optionKey];
+                let settingObject = {};
+
+                settingObject[optionKey] = value;
+
+                this.server.setOptions(settingObject);
+            }
+        } catch (e) {
+            //
+        }
+    }
+
+    /**
      * Start the server.
      */
-    static async start(yargs: any): Promise<any> {
-        return (new Cli).start(yargs);
+    static async start(cliArgs: any): Promise<any> {
+        return (new Cli).start(cliArgs);
     }
 
     /**
      * Start the server with PM2 support.
      */
-     static async startWithPm2(yargs: any): Promise<any> {
-        return (new Cli(true)).start(yargs);
+     static async startWithPm2(cliArgs: any): Promise<any> {
+        return (new Cli(true)).start(cliArgs);
     }
 
     /**
      * Start the server.
      */
-    async start(yargs: any): Promise<any> {
+    async start(cliArgs: any): Promise<any> {
+        this.overwriteOptionsFromConfig(cliArgs.config);
         this.overwriteOptionsFromEnv();
 
         const handleFailure = () => {
