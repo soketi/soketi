@@ -35,7 +35,6 @@ export class RedisQueueDriver implements QueueInterface {
                 return resolve();
             }
 
-            // TODO: Retry policy? https://docs.bullmq.io/guide/retrying-failing-jobs
             queueWithWorker.queue.add('webhook', data).then(() => resolve());
         });
     }
