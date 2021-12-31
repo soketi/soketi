@@ -1,7 +1,7 @@
 import async from 'async';
-import {Queue, Worker, QueueScheduler} from 'bullmq'
-import {QueueInterface} from './queue-interface';
-import {Server} from '../server';
+import { Queue, Worker, QueueScheduler } from 'bullmq'
+import { QueueInterface } from './queue-interface';
+import { Server } from '../server';
 
 const Redis = require('ioredis');
 
@@ -56,7 +56,7 @@ export class RedisQueueDriver implements QueueInterface {
                 // We remove a trailing `:` from the prefix because BullMQ adds that already
                 const prefix = this.server.options.database.redis.keyPrefix.replace(/:$/, '');
 
-                const sharedOptions = {prefix, connection};
+                const sharedOptions = { prefix, connection };
 
                 this.queueWithWorker.set(queueName, {
                     queue: new Queue(queueName, {
@@ -90,7 +90,7 @@ export class RedisQueueDriver implements QueueInterface {
      * Clear the queues for a graceful shutdown.
      */
     clear(): Promise<void> {
-        return async.each([...this.queueWithWorker], ([queueName, {queue, worker, scheduler}]: [string, QueueWithWorker], callback) => {
+        return async.each([...this.queueWithWorker], ([queueName, { queue, worker, scheduler }]: [string, QueueWithWorker], callback) => {
             scheduler.close().then(() => {
                 worker.close().then(() => callback());
             });
