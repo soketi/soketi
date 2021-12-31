@@ -1,4 +1,4 @@
-import { Log } from './../log';
+import { Log } from '../log';
 import { QueueInterface } from './queue-interface';
 import { RedisQueueDriver } from './redis-queue-driver';
 import { SyncQueueDriver } from './sync-queue-driver';
@@ -11,7 +11,7 @@ export class Queue implements QueueInterface {
     public driver: QueueInterface;
 
     /**
-     * Initialize the queue exporter.
+     * Initialize the queue.
      */
     constructor(protected server: Server) {
         if (server.options.queue.driver === 'sync') {
@@ -19,7 +19,7 @@ export class Queue implements QueueInterface {
         } else if (server.options.queue.driver === 'redis') {
             this.driver = new RedisQueueDriver(server);
         } else {
-            Log.error('No queue driver specified.');
+            Log.error('No valid queue driver specified.');
         }
     }
 
