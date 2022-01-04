@@ -647,7 +647,7 @@ export class WsHandler {
      * Clear WebSocket timeout.
      */
     protected clearTimeout(ws: WebSocket): void {
-        if(ws.timeout) {
+        if (ws.timeout) {
             clearTimeout(ws.timeout);
         }
     }

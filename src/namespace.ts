@@ -40,7 +40,7 @@ export class Namespace {
      * Remove a socket from the namespace.
      */
     async removeSocket(wsId: string): Promise<boolean> {
-        for (let channel of this.channels.keys()){
+        for (let channel of this.channels.keys()) {
             this.removeFromChannel(wsId, channel);
         }
 
