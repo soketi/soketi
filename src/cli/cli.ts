@@ -157,7 +157,7 @@ export class Cli {
     /**
      * Start the server with PM2 support.
      */
-     static async startWithPm2(cliArgs: any): Promise<any> {
+    static async startWithPm2(cliArgs: any): Promise<any> {
         return (new Cli(true)).start(cliArgs);
     }
 

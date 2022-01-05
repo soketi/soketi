@@ -112,7 +112,7 @@ export class App implements AppInterface {
      * Stripe data off the app, usually the one that's not needed from the WS's perspective.
      * Usually used when attached to WS connections, as they don't need these details.
      */
-     forWebSocket(): App {
+    forWebSocket(): App {
         // delete this.secret;
         delete this.maxBackendEventsPerSecond;
         delete this.maxReadRequestsPerSecond;
