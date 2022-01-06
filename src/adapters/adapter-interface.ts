@@ -1,5 +1,5 @@
 import { Namespace } from '../namespace';
-import { PresenceMember } from '../presence-member';
+import { PresenceMember } from '../channels/presence-channel-manager';
 import { WebSocket } from 'uWebSockets.js';
 
 const Discover = require('node-discover');

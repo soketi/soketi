@@ -1,6 +1,6 @@
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
-import { PresenceMember } from '../presence-member';
+import { PresenceMember } from '../channels/presence-channel-manager';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'uWebSockets.js';
 

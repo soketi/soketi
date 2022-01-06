@@ -1,6 +1,6 @@
 import { AdapterInterface } from './adapter-interface';
 import { Namespace } from '../namespace';
-import { PresenceMember } from '../presence-member';
+import { PresenceMember } from '../channels/presence-channel-manager';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
 

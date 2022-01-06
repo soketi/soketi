@@ -11,6 +11,7 @@ import { Queue } from './queues/queue';
 import { QueueInterface } from './queues/queue-interface';
 import { RateLimiter } from './rate-limiters/rate-limiter';
 import { RateLimiterInterface } from './rate-limiters/rate-limiter-interface';
+import { uWebSocketMessage } from './message';
 import { v4 as uuidv4 } from 'uuid';
 import { WebhookSender } from './webhook-sender';
 import { WebSocket } from 'uWebSockets.js';
@@ -503,9 +504,9 @@ export class Server {
                 idleTimeout: 120, // According to protocol
                 maxBackpressure: 1024 * 1024,
                 maxPayloadLength: 100 * 1024 * 1024, // 100 MB
-                message: (ws: WebSocket, message: any, isBinary: boolean) => this.wsHandler.onMessage(ws, message, isBinary),
+                message: (ws: WebSocket, message: uWebSocketMessage, isBinary: boolean) => this.wsHandler.onMessage(ws, message, isBinary),
                 open: (ws: WebSocket) => this.wsHandler.onOpen(ws),
-                close: (ws: WebSocket, code: number, message: any) => this.wsHandler.onClose(ws, code, message),
+                close: (ws: WebSocket, code: number, message: uWebSocketMessage) => this.wsHandler.onClose(ws, code, message),
                 upgrade: (res: HttpResponse, req: HttpRequest, context) => this.wsHandler.handleUpgrade(res, req, context),
             });
 
