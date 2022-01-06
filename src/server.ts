@@ -558,6 +558,15 @@ export class Server {
                 return this.httpHandler.events(res);
             });
 
+            server.post(this.url('/apps/:appId/batch_events'), (res, req) => {
+                res.params = { appId: req.getParameter(0) };
+                res.query = queryString.parse(req.getQuery());
+                res.method = req.getMethod().toUpperCase();
+                res.url = req.getUrl();
+
+                return this.httpHandler.batchEvents(res);
+            });
+
             server.any(this.url('/*'), (res, req) => {
                 return this.httpHandler.notFound(res);
             });

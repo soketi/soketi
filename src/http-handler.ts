@@ -1,5 +1,6 @@
 import async from 'async';
 import { HttpResponse, RecognizedString } from 'uWebSockets.js';
+import { PusherApiMessage } from './message';
 import { Server } from './server';
 import { Utils } from './utils';
 import { Log } from './log';
@@ -213,49 +214,82 @@ export class HttpHandler {
             this.authMiddleware,
             this.broadcastEventRateLimitingMiddleware,
         ]).then(res => {
-            let message = res.body;
+            let message = res.body as PusherApiMessage;
 
+            this.checkMessageToBroadcast(message).then(message => {
+                this.broadcastMessage(message, res.app.id);
+                this.sendJson(res, { ok: true });
+            }).catch(error => {
+                this.badResponse(res, error);
+            });
+        });
+    }
+
+    batchEvents(res: HttpResponse) {
+        this.attachMiddleware(res, [
+            this.jsonBodyMiddleware,
+            this.corsMiddleware,
+            this.appMiddleware,
+            this.authMiddleware,
+            this.broadcastBatchEventsRateLimitingMiddleware,
+        ]).then(res => {
+            let batch = res.body.batch as PusherApiMessage[];
+
+            Promise.all(batch.map(message => this.checkMessageToBroadcast(message))).then(messages => {
+                messages.forEach(message => this.broadcastMessage(message, res.app.id));
+
+                this.sendJson(res, { ok: true });
+            }).catch(error => {
+                this.badResponse(res, error);
+            });
+        });
+    }
+
+    protected checkMessageToBroadcast(message: PusherApiMessage): Promise<PusherApiMessage> {
+        return new Promise((resolve, reject) => {
             if (
                 (!message.channels && !message.channel) ||
                 !message.name ||
                 !message.data
             ) {
-                return this.badResponse(res, 'The received data is incorrect');
+                return reject('The received data is incorrect');
             }
 
             let channels: string[] = message.channels || [message.channel];
 
+            message.channels = channels;
+
             // Make sure the channels length is not too big.
             if (channels.length > this.server.options.eventLimits.maxChannelsAtOnce) {
-                return this.badResponse(res, `Cannot broadcast to more than ${this.server.options.eventLimits.maxChannelsAtOnce} channels at once`);
+                return reject(`Cannot broadcast to more than ${this.server.options.eventLimits.maxChannelsAtOnce} channels at once`);
             }
 
             // Make sure the event name length is not too big.
             if (message.name.length > this.server.options.eventLimits.maxNameLength) {
-                return this.badResponse(res, `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`);
+                return reject(`Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`);
             }
 
             let payloadSizeInKb = Utils.dataToKilobytes(message.data);
 
             // Make sure the total payload of the message body is not too big.
             if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
-                return this.badResponse(res, `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`);
+                return reject(`The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`);
             }
 
-            channels.forEach(channel => {
-                this.server.adapter.send(res.params.appId, channel, JSON.stringify({
-                    event: message.name,
-                    channel,
-                    data: message.data,
-                }), message.socket_id);
-            });
-
-            this.server.metricsManager.markApiMessage(res.params.appId, message, { ok: true });
-
-            this.sendJson(res, {
-                ok: true,
-            });
+            resolve(message);
         });
+    }
+
+    protected broadcastMessage(message: PusherApiMessage, appId: string): void {
+        message.channels.forEach(channel => {
+            this.server.adapter.send(appId, channel, JSON.stringify({
+                event: message.name,
+                channel,
+                data: message.data,
+            }), message.socket_id);
+        });
+
+        this.server.metricsManager.markApiMessage(appId, message, { ok: true });
     }
 
     notFound(res: HttpResponse) {
@@ -358,6 +392,26 @@ export class HttpHandler {
         let channels = res.body.channels || [res.body.channel];
 
         this.server.rateLimiter.consumeBackendEventPoints(Math.max(channels.length, 1), res.app).then(response => {
+            if (response.canContinue) {
+                for (let header in response.headers) {
+                    res.writeHeader(header, '' + response.headers[header]);
+                }
+
+                return next(null, res);
+            }
+
+            this.tooManyRequestsResponse(res);
+        });
+    }
+
+    protected broadcastBatchEventsRateLimitingMiddleware(res: HttpResponse, next: CallableFunction): any {
+        let rateLimiterPoints = res.body.batch.reduce((rateLimiterPoints, event) => {
+            let channels: string[] = event.channels || [event.channel];
+
+            return rateLimiterPoints += channels.length;
+        }, 0);
+
+        this.server.rateLimiter.consumeBackendEventPoints(rateLimiterPoints, res.app).then(response => {
             if (response.canContinue) {
                 for (let header in response.headers) {
                     res.writeHeader(header, '' + response.headers[header]);

@@ -11,6 +11,14 @@ export interface PusherMessage {
     data?: MessageData;
 }
 
+export interface PusherApiMessage {
+    name?: string;
+    data?: string|{ [key: string]: any };
+    channel?: string;
+    channels?: string[];
+    socket_id?: string;
+}
+
 export interface SentPusherMessage {
     channel?: string;
     event?: string;
