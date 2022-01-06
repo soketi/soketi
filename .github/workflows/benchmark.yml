@@ -41,7 +41,7 @@ jobs:
             rate_limiter: redis
             queue_driver: redis
 
-    name: Benchmark Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
+    name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
     steps:
       - uses: actions/checkout@v2.4.0
