@@ -44,15 +44,15 @@ jobs:
     name: Benchmark Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.4.0
 
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.1
         name: Installing Node.js v${{ matrix.node }}
         with:
           node-version: ${{ matrix.node }}
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@2.16.0
         with:
           php-version: "8.0"
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, yaml
@@ -81,7 +81,7 @@ jobs:
           mysql root password: password
 
       - name: Setup PostgreSQL
-        uses: harmon758/postgresql-action@v1
+        uses: harmon758/postgresql-action@v1.0.0
         with:
           postgresql version: 13.3
           postgresql db: main
