@@ -205,6 +205,17 @@ export class WebhookSender {
      * Send a webhook for the app with the given data.
      */
     protected send(app: App, data: ClientEventData, queueName: string): void {
+        if (this.server.options.webhooks.batch) {
+            this.sendBatch(app, data, queueName);
+        } else {
+            this.sendSingle(app, data, queueName)
+        }
+    }
+
+    /**
+     * Send a webhook for the app with the given data, without batching.
+     */
+    protected sendSingle(app: App, data: ClientEventData, queueName: string): void {
         // According to the Pusher docs: The time_ms key provides the unix timestamp in milliseconds when the webhook was created.
         // So we set the time here instead of creating a new one in the queue handler so you can detect delayed webhooks when the queue is busy.
         let time = (new Date).getTime();
@@ -221,5 +232,38 @@ export class WebhookSender {
             payload,
             pusherSignature,
         });
+    }
+
+    /**
+     * Send a webhook for the app with the given data, with batching.
+     */
+    protected sendBatch(app: App, data: ClientEventData, queueName: string): void {
+        this.server.webhookBatch.push(data);
+
+        // If there's no batch leader, elect itself as the batch leader, then wait 50ms using
+        // setTimeout to build up a batch, before firing off the full batch of events in one webhook.
+        if (!this.server.webhookBatchHasLeader) {
+            this.server.webhookBatchHasLeader = true;
+            setTimeout(() => {
+                // According to the Pusher docs: The time_ms key provides the unix timestamp in milliseconds when the webhook was created.
+                // So we set the time here instead of creating a new one in the queue handler so you can detect delayed webhooks when the queue is busy.
+                let time = (new Date).getTime();
+
+                let payload = {
+                    time_ms: time,
+                    events: this.server.webhookBatch.splice(0, this.server.webhookBatch.length),
+                };
+
+                let pusherSignature = createWebhookHmac(JSON.stringify(payload), app.secret);
+
+                this.server.queueManager.addToQueue(queueName, {
+                    appKey: app.key,
+                    payload,
+                    pusherSignature,
+                });
+
+                this.server.webhookBatchHasLeader = false;
+            }, 50);
+        }
     }
 }

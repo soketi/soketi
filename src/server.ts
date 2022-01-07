@@ -13,7 +13,7 @@ import { RateLimiter } from './rate-limiters/rate-limiter';
 import { RateLimiterInterface } from './rate-limiters/rate-limiter-interface';
 import { uWebSocketMessage } from './message';
 import { v4 as uuidv4 } from 'uuid';
-import { WebhookSender } from './webhook-sender';
+import { ClientEventData, WebhookSender } from './webhook-sender';
 import { WebSocket } from 'uWebSockets.js';
 import { WsHandler } from './ws-handler';
 
@@ -167,6 +167,9 @@ export class Server {
             keyPath: '',
             passphrase: '',
         },
+        webhooks: {
+            batch: false,
+        }
     };
 
     /**
@@ -238,6 +241,16 @@ export class Server {
      * The Discover instance.
      */
     public discover: typeof Discover;
+
+    /**
+     * Batch of ClientEventData, to be sent as one webhook.
+     */
+    public webhookBatch: Array<ClientEventData>  = [];
+
+    /**
+     * Whether current process has nominated batch handler.
+     */
+    public webhookBatchHasLeader: boolean = false;
 
     /**
      * Initialize the server.

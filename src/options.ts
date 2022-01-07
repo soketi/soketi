@@ -122,4 +122,7 @@ export interface Options {
         keyPath: string;
         passphrase: string;
     };
+    webhooks: {
+        batch: boolean;
+    };
 }
