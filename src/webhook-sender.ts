@@ -36,7 +36,7 @@ export class WebhookSender {
     /**
      * Whether current process has nominated batch handler.
      */
-    public batchHasLeader: boolean = false;
+    public batchHasLeader = false;
 
     /**
      * Initialize the Webhook sender.
