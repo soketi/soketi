@@ -3,7 +3,7 @@ import { ClusterAdapter } from './cluster-adapter';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { Namespace } from '../namespace';
-import { PresenceMember } from '../channels/presence-channel-manager';
+import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { RedisAdapter } from './redis-adapter';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
@@ -81,7 +81,7 @@ export class Adapter implements AdapterInterface {
     /**
      * Get a given presence channel's members.
      */
-    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
+    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMemberInfo>> {
         return this.driver.getChannelMembers(appId, channel, onlyLocal);
     }
 
