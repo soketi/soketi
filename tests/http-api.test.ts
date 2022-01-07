@@ -454,7 +454,7 @@ describe('http api test', () => {
                 .then(res => res.json())
                 .then(res => {
                     expect(res.error).toBeDefined();
-                    expect(res.code).toBe(400);
+                    expect(res.code).toBe(413);
                     done();
                 })
                 .catch(error => {
