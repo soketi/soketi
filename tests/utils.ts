@@ -45,6 +45,7 @@ export class Utils {
             'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
             'cluster.ignoreProcess': false,
             'webhooks.batching.enabled': true,
+            'webhooks.batching.duration': 1,
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
