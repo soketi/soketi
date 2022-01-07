@@ -43,7 +43,7 @@
     "prom-client": "^14.0.1",
     "prometheus-query": "^3.0.3",
     "pusher": "^5.0.0",
-    "query-string": "^7.0.0",
+    "query-string": "^7.1.0",
     "rate-limiter-flexible": "^2.3.6",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.6.0",
     "uuid": "^8.3.2",
