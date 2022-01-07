@@ -49,6 +49,12 @@ export class Utils {
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
             'queue.driver': process.env.TEST_QUEUE_DRIVER || 'sync',
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
+            'database.mysql.user': process.env.TEST_MYSQL_USER || 'testing',
+            'database.mysql.password': process.env.TEST_MYSQL_PASSWORD || 'testing',
+            'database.mysql.database': process.env.TEST_MYSQL_DATABASE || 'testing',
+            'database.postgres.user': process.env.TEST_POSTGRES_USER || 'testing',
+            'database.postgres.password': process.env.TEST_POSTGRES_PASSWORD || 'testing',
+            'database.postgres.database': process.env.TEST_POSTGRES_DATABASE || 'testing',
         };
 
         return (new Server(options)).start((server: Server) => {
