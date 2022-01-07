@@ -62,7 +62,7 @@
     "@types/jest": "^26.0.24",
     "@types/node": "^16.11.12",
     "@types/pusher-js": "^5.1.0",
-    "@typescript-eslint/eslint-plugin": "^5.8.1",
+    "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.8.1",
     "eslint": "^8.6.0",
     "jest": "^26.6.3",
