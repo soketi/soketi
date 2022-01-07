@@ -54,7 +54,7 @@
     "@babel/plugin-proposal-export-namespace-from": "^7.16.0",
     "@babel/plugin-proposal-function-sent": "^7.16.0",
     "@babel/plugin-proposal-numeric-separator": "^7.16.7",
-    "@babel/plugin-proposal-throw-expressions": "^7.16.0",
+    "@babel/plugin-proposal-throw-expressions": "^7.16.7",
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-env": "^7.16.4",
     "@types/bull": "^3.15.7",
