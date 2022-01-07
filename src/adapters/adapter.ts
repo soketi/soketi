@@ -3,7 +3,7 @@ import { ClusterAdapter } from './cluster-adapter';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { Namespace } from '../namespace';
-import { PresenceMember } from '../presence-member';
+import { PresenceMember } from '../channels/presence-channel-manager';
 import { RedisAdapter } from './redis-adapter';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';

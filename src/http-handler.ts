@@ -1,5 +1,6 @@
 import async from 'async';
 import { HttpResponse, RecognizedString } from 'uWebSockets.js';
+import { PusherApiMessage } from './message';
 import { Server } from './server';
 import { Utils } from './utils';
 import { Log } from './log';
@@ -10,6 +11,11 @@ export interface ChannelResponse {
     subscription_count: number;
     user_count?: number;
     occupied: boolean;
+}
+
+export interface MessageCheckError {
+    message: string;
+    code: number;
 }
 
 export class HttpHandler {
@@ -213,49 +219,104 @@ export class HttpHandler {
             this.authMiddleware,
             this.broadcastEventRateLimitingMiddleware,
         ]).then(res => {
-            let message = res.body;
+            this.checkMessageToBroadcast(res.body as PusherApiMessage).then(message => {
+                this.broadcastMessage(message, res.app.id);
+                this.sendJson(res, { ok: true });
+            }).catch(error => {
+                if (error.code === 400) {
+                    this.badResponse(res, error.message);
+                } else if (error.code === 413) {
+                    this.entityTooLargeResponse(res, error.message);
+                }
+            });
+        });
+    }
 
+    batchEvents(res: HttpResponse) {
+        this.attachMiddleware(res, [
+            this.jsonBodyMiddleware,
+            this.corsMiddleware,
+            this.appMiddleware,
+            this.authMiddleware,
+            this.broadcastBatchEventsRateLimitingMiddleware,
+        ]).then(res => {
+            let batch = res.body.batch as PusherApiMessage[];
+
+            // Make sure the batch size is not too big.
+            if (batch.length > this.server.options.eventLimits.maxBatchSize) {
+                return this.badResponse(res, `Cannot batch-send more than ${this.server.options.eventLimits.maxBatchSize} messages at once`);
+            }
+
+            Promise.all(batch.map(message => this.checkMessageToBroadcast(message))).then(messages => {
+                messages.forEach(message => this.broadcastMessage(message, res.app.id));
+                this.sendJson(res, { ok: true });
+            }).catch((error: MessageCheckError) => {
+                if (error.code === 400) {
+                    this.badResponse(res, error.message);
+                } else if (error.code === 413) {
+                    this.entityTooLargeResponse(res, error.message);
+                }
+            });
+        });
+    }
+
+    protected checkMessageToBroadcast(message: PusherApiMessage): Promise<PusherApiMessage> {
+        return new Promise((resolve, reject) => {
             if (
                 (!message.channels && !message.channel) ||
                 !message.name ||
                 !message.data
             ) {
-                return this.badResponse(res, 'The received data is incorrect');
+                return reject({
+                    message: 'The received data is incorrect',
+                    code: 400,
+                });
             }
 
             let channels: string[] = message.channels || [message.channel];
 
+            message.channels = channels;
+
             // Make sure the channels length is not too big.
             if (channels.length > this.server.options.eventLimits.maxChannelsAtOnce) {
-                return this.badResponse(res, `Cannot broadcast to more than ${this.server.options.eventLimits.maxChannelsAtOnce} channels at once`);
+                return reject({
+                    message: `Cannot broadcast to more than ${this.server.options.eventLimits.maxChannelsAtOnce} channels at once`,
+                    code: 400,
+                });
             }
 
             // Make sure the event name length is not too big.
             if (message.name.length > this.server.options.eventLimits.maxNameLength) {
-                return this.badResponse(res, `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`);
+                return reject({
+                    message: `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`,
+                    code: 400,
+                });
             }
 
             let payloadSizeInKb = Utils.dataToKilobytes(message.data);
 
             // Make sure the total payload of the message body is not too big.
             if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
-                return this.badResponse(res, `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`);
+                return reject({
+                    message: `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`,
+                    code: 413,
+                });
             }
 
-            channels.forEach(channel => {
-                this.server.adapter.send(res.params.appId, channel, JSON.stringify({
-                    event: message.name,
-                    channel,
-                    data: message.data,
-                }), message.socket_id);
-            });
-
-            this.server.metricsManager.markApiMessage(res.params.appId, message, { ok: true });
-
-            this.sendJson(res, {
-                ok: true,
-            });
+            resolve(message);
         });
+    }
+
+    protected broadcastMessage(message: PusherApiMessage, appId: string): void {
+        message.channels.forEach(channel => {
+            this.server.adapter.send(appId, channel, JSON.stringify({
+                event: message.name,
+                channel,
+                data: message.data,
+            }), message.socket_id);
+        });
+
+        this.server.metricsManager.markApiMessage(appId, message, { ok: true });
     }
 
     notFound(res: HttpResponse) {
@@ -358,6 +419,26 @@ export class HttpHandler {
         let channels = res.body.channels || [res.body.channel];
 
         this.server.rateLimiter.consumeBackendEventPoints(Math.max(channels.length, 1), res.app).then(response => {
+            if (response.canContinue) {
+                for (let header in response.headers) {
+                    res.writeHeader(header, '' + response.headers[header]);
+                }
+
+                return next(null, res);
+            }
+
+            this.tooManyRequestsResponse(res);
+        });
+    }
+
+    protected broadcastBatchEventsRateLimitingMiddleware(res: HttpResponse, next: CallableFunction): any {
+        let rateLimiterPoints = res.body.batch.reduce((rateLimiterPoints, event) => {
+            let channels: string[] = event.channels || [event.channel];
+
+            return rateLimiterPoints += channels.length;
+        }, 0);
+
+        this.server.rateLimiter.consumeBackendEventPoints(rateLimiterPoints, res.app).then(response => {
             if (response.canContinue) {
                 for (let header in response.headers) {
                     res.writeHeader(header, '' + response.headers[header]);

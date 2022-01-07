@@ -74,8 +74,8 @@
     "typescript": "^4.5.3"
   },
   "scripts": {
-    "build": "./node_modules/.bin/tsc",
-    "build:watch": "./node_modules/.bin/tsc -W",
+    "build": "node node_modules/typescript/bin/tsc",
+    "build:watch": "npm run build -- -W",
     "lint": "eslint --ext .js,.ts ./src",
     "prepublish": "npm run build",
     "test": "jest --detectOpenHandles --forceExit --silent",

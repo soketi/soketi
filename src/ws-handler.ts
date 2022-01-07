@@ -5,9 +5,10 @@ import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { Log } from './log';
 import { Namespace } from './namespace';
 import { PresenceChannelManager } from './channels';
-import { PresenceMember } from './presence-member';
+import { PresenceMember } from './channels/presence-channel-manager';
 import { PrivateChannelManager } from './channels';
 import { PublicChannelManager } from './channels';
+import { PusherMessage, uWebSocketMessage } from './message';
 import { Server } from './server';
 import { Utils } from './utils';
 import { WebSocket } from 'uWebSockets.js';
@@ -152,10 +153,10 @@ export class WsHandler {
     /**
      * Handle a received message from the client.
      */
-    onMessage(ws: WebSocket, message: any, isBinary: boolean): any {
+    onMessage(ws: WebSocket, message: uWebSocketMessage, isBinary: boolean): any {
         if (message instanceof ArrayBuffer) {
             try {
-                message = JSON.parse(ab2str(message));
+                message = JSON.parse(ab2str(message)) as PusherMessage;
             } catch (err) {
                 return;
             }
@@ -191,7 +192,7 @@ export class WsHandler {
     /**
      * Handle the event of the client closing the connection.
      */
-    onClose(ws: WebSocket, code: number, message: any): any {
+    onClose(ws: WebSocket, code: number, message: uWebSocketMessage): any {
         if (this.server.options.debug) {
             Log.websocketTitle('❌ Connection closed:');
             Log.websocket({ ws, code, message });
@@ -291,7 +292,7 @@ export class WsHandler {
     /**
      * Instruct the server to subscribe the connection to the channel.
      */
-    subscribeToChannel(ws: WebSocket, message: any): any {
+    subscribeToChannel(ws: WebSocket, message: PusherMessage): any {
         if (this.server.closing) {
             ws.sendJson({
                 event: 'pusher:error',
@@ -501,7 +502,7 @@ export class WsHandler {
     /**
      * Handle the events coming from the client.
      */
-    handleClientEvent(ws: WebSocket, message: any): any {
+    handleClientEvent(ws: WebSocket, message: PusherMessage): any {
         let { event, data, channel } = message;
 
         if (!ws.app.enableClientMessages) {

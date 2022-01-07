@@ -66,6 +66,7 @@ export class Cli {
         DB_REDIS_SENTINELS: 'database.redis.sentinels',
         DB_REDIS_SENTINEL_PASSWORD: 'database.redis.sentinelPassword',
         DB_REDIS_INSTANCE_NAME: 'database.redis.name',
+        EVENT_MAX_BATCH_SIZE: 'eventLimits.maxBatchSize',
         EVENT_MAX_CHANNELS_AT_ONCE: 'eventLimits.maxChannelsAtOnce',
         EVENT_MAX_NAME_LENGTH: 'eventLimits.maxNameLength',
         EVENT_MAX_SIZE_IN_KB: 'eventLimits.maxPayloadInKb',
