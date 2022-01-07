@@ -28,9 +28,9 @@ jobs:
           - cluster
         app_manager:
           - array
-          - dynamodb
           - mysql
           - postgres
+          - dynamodb
 
         include:
           - adapter: local
@@ -49,21 +49,24 @@ jobs:
       - uses: actions/checkout@v2.4.0
 
       - uses: actions/setup-node@v2.5.1
-        name: Installing Node.js v${{ matrix.node }}
+        name: Setup Node.js v${{ matrix.node }}
         with:
           node-version: ${{ matrix.node }}
 
+      - name: Install dependencies
+        run: npm install
+
+      - name: Execute lint & build
+        run: |
+          npm run lint
+          npm run build
+
       - uses: zhulik/redis-action@1.1.0
-        name: Installing Redis 6.x
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        name: Setup Redis
         with:
           redis version: 6
           number of databases: 100
-
-      - name: Setup DynamoDB
-        if: "matrix.app_manager == 'dynamodb'"
-        run: |
-          java -Djava.library.path=./DynamoDBLocal_lib -jar tests/fixtures/dynamodb/DynamoDBLocal.jar --port 8000 &
-          sleep 5
 
       - name: Setup MySQL
         if: "matrix.app_manager == 'mysql'"
@@ -77,14 +80,14 @@ jobs:
           mysql database: main
           mysql root password: password
 
-      - name: Load SQL into MySQL
+      - name: Setup MySQL database
         if: "matrix.app_manager == 'mysql'"
         run: |
           sleep 15
           mysql --host=127.0.0.1 --user=root --password=password --database=main < tests/fixtures/app_mysql.sql
 
       - name: Setup PostgreSQL
-        if: "matrix.app_manager == 'postgresql'"
+        if: "matrix.app_manager == 'postgres'"
         uses: harmon758/postgresql-action@v1.0.0
         with:
           postgresql version: 13.3
@@ -92,23 +95,21 @@ jobs:
           postgresql user: postgres
           postgresql password: password
 
-      - name: Load SQL into PostgreSQL
-        if: "matrix.app_manager == 'postgresql'"
+      - name: Setup PostgreSQL database
+        if: "matrix.app_manager == 'postgres'"
         run: |
           sleep 15
           psql --host=127.0.0.1 --username=postgres main < tests/fixtures/app_postgres.sql
         env:
           PGPASSWORD: password
 
-      - name: Installing dependencies
-        run: npm install
-
-      - name: Lint & Compile
+      - name: Setup DynamoDB
+        if: "matrix.app_manager == 'dynamodb'"
         run: |
-          npm run lint
-          npm run build
+          java -Djava.library.path=./DynamoDBLocal_lib -jar tests/fixtures/dynamodb/DynamoDBLocal.jar --port 8000 &
+          sleep 5
 
-      - name: Running DynamoDB schema
+      - name: Setup DynamoDB database
         if: "matrix.app_manager == 'dynamodb'"
         run: node .dynamodb-schema.js
         env:
