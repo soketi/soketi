@@ -1,5 +1,5 @@
 import { Namespace } from '../namespace';
-import { PresenceMember } from '../presence-member';
+import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { WebSocket } from 'uWebSockets.js';
 
 const Discover = require('node-discover');
@@ -63,7 +63,7 @@ export interface AdapterInterface {
     /**
      * Get a given presence channel's members.
      */
-    getChannelMembers(appId: string, channel: string, onlyLocal?: boolean): Promise<Map<string, PresenceMember>>;
+    getChannelMembers(appId: string, channel: string, onlyLocal?: boolean): Promise<Map<string, PresenceMemberInfo>>;
 
     /**
      * Get a given presence channel's members count

@@ -44,7 +44,7 @@ export class Utils {
     /**
      * Get the amount of megabytes from given parameters.
      */
-     static dataToMegabytes(...data: any): number {
+    static dataToMegabytes(...data: any): number {
         return this.dataToKilobytes(...data) / 1024;
     }
 

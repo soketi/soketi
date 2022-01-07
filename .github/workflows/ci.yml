@@ -28,9 +28,9 @@ jobs:
           - cluster
         app_manager:
           - array
-          - dynamodb
           - mysql
           - postgres
+          - dynamodb
 
         include:
           - adapter: local
@@ -46,25 +46,30 @@ jobs:
     name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.4.0
 
-      - uses: actions/setup-node@v2.5.0
-        name: Installing Node.js v${{ matrix.node }}
+      - uses: actions/setup-node@v2.5.1
+        name: Setup Node.js v${{ matrix.node }}
         with:
           node-version: ${{ matrix.node }}
 
+      - name: Install dependencies
+        run: npm install
+
+      - name: Execute lint & build
+        run: |
+          npm run lint
+          npm run build
+
       - uses: zhulik/redis-action@1.1.0
-        name: Installing Redis 6.x
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        name: Setup Redis
         with:
           redis version: 6
           number of databases: 100
 
-      - name: Setup DynamoDB
-        run: |
-          java -Djava.library.path=./DynamoDBLocal_lib -jar tests/fixtures/dynamodb/DynamoDBLocal.jar --port 8000 &
-          sleep 5
-
       - name: Setup MySQL
+        if: "matrix.app_manager == 'mysql'"
         uses: haltuf/mysql-action@master
         with:
           host port: 3306
@@ -75,41 +80,44 @@ jobs:
           mysql database: main
           mysql root password: password
 
+      - name: Setup MySQL database
+        if: "matrix.app_manager == 'mysql'"
+        run: |
+          sleep 15
+          mysql --host=127.0.0.1 --user=root --password=password --database=main < tests/fixtures/app_mysql.sql
+
       - name: Setup PostgreSQL
-        uses: harmon758/postgresql-action@v1
+        if: "matrix.app_manager == 'postgres'"
+        uses: harmon758/postgresql-action@v1.0.0
         with:
           postgresql version: 13.3
           postgresql db: main
           postgresql user: postgres
           postgresql password: password
 
-      - name: Load SQL into databases
+      - name: Setup PostgreSQL database
+        if: "matrix.app_manager == 'postgres'"
         run: |
           sleep 15
-          mysql --host=127.0.0.1 --user=root --password=password --database=main < tests/fixtures/app_mysql.sql
           psql --host=127.0.0.1 --username=postgres main < tests/fixtures/app_postgres.sql
         env:
           PGPASSWORD: password
 
-      - name: Installing dependencies
+      - name: Setup DynamoDB
+        if: "matrix.app_manager == 'dynamodb'"
         run: |
-          npm install
+          java -Djava.library.path=./DynamoDBLocal_lib -jar tests/fixtures/dynamodb/DynamoDBLocal.jar --port 8000 &
+          sleep 5
 
-      - name: Lint & Compile
-        run: |
-          npm run lint
-          npm run build
-
-      - name: Running DynamoDB schema
-        run: |
-          node .dynamodb-schema.js
+      - name: Setup DynamoDB database
+        if: "matrix.app_manager == 'dynamodb'"
+        run: node .dynamodb-schema.js
         env:
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
 
       - name: Execute tests
-        run: |
-          npm run test
+        run: npm run test
         env:
           TEST_ADAPTER: ${{ matrix.adapter }}
           TEST_APP_MANAGER: ${{ matrix.app_manager }}
@@ -120,5 +128,5 @@ jobs:
 
       - uses: codecov/codecov-action@v2.1.0
         with:
-          fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false

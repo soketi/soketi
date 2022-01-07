@@ -66,6 +66,7 @@ export class Cli {
         DB_REDIS_SENTINELS: 'database.redis.sentinels',
         DB_REDIS_SENTINEL_PASSWORD: 'database.redis.sentinelPassword',
         DB_REDIS_INSTANCE_NAME: 'database.redis.name',
+        EVENT_MAX_BATCH_SIZE: 'eventLimits.maxBatchSize',
         EVENT_MAX_CHANNELS_AT_ONCE: 'eventLimits.maxChannelsAtOnce',
         EVENT_MAX_NAME_LENGTH: 'eventLimits.maxNameLength',
         EVENT_MAX_SIZE_IN_KB: 'eventLimits.maxPayloadInKb',
@@ -157,7 +158,7 @@ export class Cli {
     /**
      * Start the server with PM2 support.
      */
-     static async startWithPm2(cliArgs: any): Promise<any> {
+    static async startWithPm2(cliArgs: any): Promise<any> {
         return (new Cli(true)).start(cliArgs);
     }
 

@@ -1,6 +1,6 @@
 import { AdapterInterface } from './adapter-interface';
 import { Namespace } from '../namespace';
-import { PresenceMember } from '../presence-member';
+import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
 
@@ -80,7 +80,7 @@ export class LocalAdapter implements AdapterInterface {
     /**
      * Get a given presence channel's members.
      */
-    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
+    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMemberInfo>> {
         return this.getNamespace(appId).getChannelMembers(channel);
     }
 

@@ -302,6 +302,41 @@ describe('http api test', () => {
         });
     });
 
+    test('sends batch events', done => {
+        Utils.newServer({}, (server: Server) => {
+            let client = Utils.newClient();
+            let backend = Utils.newBackend();
+            let channelName = Utils.randomChannelName();
+
+            client.connection.bind('connected', () => {
+                let channel = client.subscribe(channelName);
+                let receivedMessages = 0;
+
+                channel.bind('greeting', e => {
+                    expect(e.message).toBe('hello');
+                    expect(e.weirdVariable).toBe('abc/d');
+
+                    receivedMessages++;
+
+                    if (receivedMessages === 3) {
+                        client.disconnect();
+                        done();
+                    }
+                });
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    Utils.sendBatch(backend, [
+                        { name: 'greeting', channel: channelName, data: { message: 'hello', weirdVariable: 'abc/d' } },
+                        { name: 'greeting', channel: channelName, data: { message: 'hello', weirdVariable: 'abc/d' } },
+                        { name: 'greeting', channel: channelName, data: { message: 'hello', weirdVariable: 'abc/d' } },
+                    ]).catch(error => {
+                        throw new Error(error);
+                    });
+                });
+            });
+        });
+    });
+
     test('passing an inexistent app id will return 404', done => {
         Utils.newServer({}, (server: Server) => {
             let backend = Utils.newBackend('inexistent-app-id');
@@ -419,7 +454,7 @@ describe('http api test', () => {
                 .then(res => res.json())
                 .then(res => {
                     expect(res.error).toBeDefined();
-                    expect(res.code).toBe(400);
+                    expect(res.code).toBe(413);
                     done();
                 })
                 .catch(error => {

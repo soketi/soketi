@@ -1,6 +1,7 @@
-import { PresenceMember } from '../presence-member';
+import { PresenceMember } from '../channels/presence-channel-manager';
 import { WebSocket } from 'uWebSockets.js';
 import { Server } from '../server';
+import { PusherMessage } from '../message';
 
 export interface JoinResponse {
     ws: WebSocket;
@@ -27,7 +28,7 @@ export class PublicChannelManager {
     /**
      * Join the connection to the channel.
      */
-    join(ws: WebSocket, channel: string, message?: any): Promise<JoinResponse> {
+    join(ws: WebSocket, channel: string, message?: PusherMessage): Promise<JoinResponse> {
         return this.server.adapter.getNamespace(ws.app.id).addToChannel(ws, channel).then(connections => {
             return {
                 ws,
