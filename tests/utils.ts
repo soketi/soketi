@@ -1,5 +1,6 @@
 import async from 'async';
 import { Log } from '../src/log';
+import { PusherApiMessage } from '../src/message';
 import { Server } from './../src/server';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -213,6 +214,10 @@ export class Utils {
 
     static sendEventToChannel(pusher, channel: string|string[], event: string, body: any): any {
         return pusher.trigger(channel, event, body);
+    }
+
+    static sendBatches(pusher, events: PusherApiMessage[]): any {
+        return pusher.triggerBatch(events);
     }
 
     static signTokenForPrivateChannel(
