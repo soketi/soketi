@@ -13,6 +13,11 @@ export interface ChannelResponse {
     occupied: boolean;
 }
 
+export interface MessageCheckError {
+    message: string;
+    code: number;
+}
+
 export class HttpHandler {
     /**
      * Initialize the HTTP handler.
@@ -214,13 +219,15 @@ export class HttpHandler {
             this.authMiddleware,
             this.broadcastEventRateLimitingMiddleware,
         ]).then(res => {
-            let message = res.body as PusherApiMessage;
-
-            this.checkMessageToBroadcast(message).then(message => {
+            this.checkMessageToBroadcast(res.body as PusherApiMessage).then(message => {
                 this.broadcastMessage(message, res.app.id);
                 this.sendJson(res, { ok: true });
             }).catch(error => {
-                this.badResponse(res, error);
+                if (error.code === 400) {
+                    this.badResponse(res, error.message);
+                } else if (error.code === 413) {
+                    this.entityTooLargeResponse(res, error.message);
+                }
             });
         });
     }
@@ -237,10 +244,13 @@ export class HttpHandler {
 
             Promise.all(batch.map(message => this.checkMessageToBroadcast(message))).then(messages => {
                 messages.forEach(message => this.broadcastMessage(message, res.app.id));
-
                 this.sendJson(res, { ok: true });
-            }).catch(error => {
-                this.badResponse(res, error);
+            }).catch((error: MessageCheckError) => {
+                if (error.code === 400) {
+                    this.badResponse(res, error.message);
+                } else if (error.code === 413) {
+                    this.entityTooLargeResponse(res, error.message);
+                }
             });
         });
     }
@@ -252,7 +262,10 @@ export class HttpHandler {
                 !message.name ||
                 !message.data
             ) {
-                return reject('The received data is incorrect');
+                return reject({
+                    message: 'The received data is incorrect',
+                    code: 400,
+                });
             }
 
             let channels: string[] = message.channels || [message.channel];
@@ -261,19 +274,28 @@ export class HttpHandler {
 
             // Make sure the channels length is not too big.
             if (channels.length > this.server.options.eventLimits.maxChannelsAtOnce) {
-                return reject(`Cannot broadcast to more than ${this.server.options.eventLimits.maxChannelsAtOnce} channels at once`);
+                return reject({
+                    message: `Cannot broadcast to more than ${this.server.options.eventLimits.maxChannelsAtOnce} channels at once`,
+                    code: 400,
+                });
             }
 
             // Make sure the event name length is not too big.
             if (message.name.length > this.server.options.eventLimits.maxNameLength) {
-                return reject(`Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`);
+                return reject({
+                    message: `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`,
+                    code: 400,
+                });
             }
 
             let payloadSizeInKb = Utils.dataToKilobytes(message.data);
 
             // Make sure the total payload of the message body is not too big.
             if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
-                return reject(`The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`);
+                return reject({
+                    message: `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`,
+                    code: 413,
+                });
             }
 
             resolve(message);
