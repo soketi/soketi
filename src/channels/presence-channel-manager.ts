@@ -5,9 +5,13 @@ import { PusherMessage } from '../message';
 import { Utils } from '../utils';
 import { WebSocket } from 'uWebSockets.js';
 
+export interface PresenceMemberInfo {
+    [key: string]: any;
+}
+
 export interface PresenceMember {
     user_id: number|string;
-    user_info: any;
+    user_info: PresenceMemberInfo;
     socket_id?: string;
 }
 

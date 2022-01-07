@@ -5,7 +5,7 @@ import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { Log } from './log';
 import { Namespace } from './namespace';
 import { PresenceChannelManager } from './channels';
-import { PresenceMember } from './channels/presence-channel-manager';
+import { PresenceMember, PresenceMemberInfo } from './channels/presence-channel-manager';
 import { PrivateChannelManager } from './channels';
 import { PublicChannelManager } from './channels';
 import { PusherMessage, uWebSocketMessage } from './message';
@@ -85,7 +85,7 @@ export class WsHandler {
 
         ws.id = this.generateSocketId();
         ws.subscribedChannels = new Set();
-        ws.presence = new Map<string, PresenceMember>();
+        ws.presence = new Map<string, PresenceMemberInfo>();
 
         this.checkForValidApp(ws).then(validApp => {
             if (!validApp) {
@@ -379,26 +379,24 @@ export class WsHandler {
             }
 
             // Otherwise, prepare a response for the presence channel.
-            let { user_id, user_info } = response.member;
-
             this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
-                let member = { user_id, user_info };
+                let { user_id, user_info } = response.member;
 
-                ws.presence.set(channel, member);
+                ws.presence.set(channel, response.member);
 
                 // Make sure to update the socket after new data was pushed in.
                 this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
                 // If the member already exists in the channel, don't resend the member_added event.
                 if (!members.has(user_id as string)) {
-                    this.server.webhookSender.sendMemberAdded(ws.app, channel, member.user_id as string);
+                    this.server.webhookSender.sendMemberAdded(ws.app, channel, user_id as string);
 
                     this.server.adapter.send(ws.app.id, channel, JSON.stringify({
                         event: 'pusher_internal:member_added',
                         channel,
                         data: JSON.stringify({
-                            user_id: member.user_id,
-                            user_info: member.user_info,
+                            user_id: user_id,
+                            user_info: user_info,
                         }),
                     }), ws.id);
 
