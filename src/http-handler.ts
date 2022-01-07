@@ -417,19 +417,22 @@ export class HttpHandler {
             let chunk = Buffer.from(ab);
 
             if (isLast) {
-                let json;
-                let raw;
+                let json = {};
+                let raw = '{}';
 
                 if (buffer) {
                     try {
                         // @ts-ignore
                         json = JSON.parse(Buffer.concat([buffer, chunk]));
                     } catch (e) {
-                        res.close();
-                        return;
+                        //
                     }
 
-                    raw = Buffer.concat([buffer, chunk]).toString();
+                    try {
+                        raw = Buffer.concat([buffer, chunk]).toString();
+                    } catch (e) {
+                        //
+                    }
 
                     cb(json, raw);
                     loggingAction(json);
@@ -439,8 +442,7 @@ export class HttpHandler {
                         json = JSON.parse(chunk);
                         raw = chunk.toString();
                     } catch (e) {
-                        res.close();
-                        return;
+                        //
                     }
 
                     cb(json, raw);
