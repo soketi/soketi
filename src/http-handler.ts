@@ -242,6 +242,11 @@ export class HttpHandler {
         ]).then(res => {
             let batch = res.body.batch as PusherApiMessage[];
 
+            // Make sure the batch size is not too big.
+            if (batch.length > this.server.options.eventLimits.maxBatchSize) {
+                return this.badResponse(res, `Cannot batch-send more than ${this.server.options.eventLimits.maxBatchSize} messages at once`);
+            }
+
             Promise.all(batch.map(message => this.checkMessageToBroadcast(message))).then(messages => {
                 messages.forEach(message => this.broadcastMessage(message, res.app.id));
                 this.sendJson(res, { ok: true });
