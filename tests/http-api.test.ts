@@ -325,10 +325,10 @@ describe('http api test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendBatches(backend, [
-                        { name: 'greeting', channels: [channelName], data: { message: 'hello', weirdVariable: 'abc/d' } },
-                        { name: 'greeting', channels: [channelName], data: { message: 'hello', weirdVariable: 'abc/d' } },
-                        { name: 'greeting', channels: [channelName], data: { message: 'hello', weirdVariable: 'abc/d' } },
+                    Utils.sendBatch(backend, [
+                        { name: 'greeting', channel: channelName, data: { message: 'hello', weirdVariable: 'abc/d' } },
+                        { name: 'greeting', channel: channelName, data: { message: 'hello', weirdVariable: 'abc/d' } },
+                        { name: 'greeting', channel: channelName, data: { message: 'hello', weirdVariable: 'abc/d' } },
                     ]).catch(error => {
                         throw new Error(error);
                     });

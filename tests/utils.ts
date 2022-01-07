@@ -216,7 +216,7 @@ export class Utils {
         return pusher.trigger(channel, event, body);
     }
 
-    static sendBatches(pusher, events: PusherApiMessage[]): any {
+    static sendBatch(pusher, events: PusherApiMessage[]): any {
         return pusher.triggerBatch(events);
     }
 
