@@ -100,7 +100,7 @@ export interface Options {
             prefix: string;
         };
         port: number;
-    },
+    };
     port: number;
     pathPrefix: string;
     presence: {
@@ -123,6 +123,9 @@ export interface Options {
         passphrase: string;
     };
     webhooks: {
-        batch: boolean;
+        batching: {
+            enabled: boolean;
+            duration: number;
+        };
     };
 }
