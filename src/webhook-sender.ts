@@ -235,13 +235,19 @@ export class WebhookSender {
      * Send a webhook for the app with the given data, without batching.
      */
     protected sendWebhook(app: App, data: ClientEventData|ClientEventData[], queueName: string): void {
+        let events = data instanceof Array ? data : [data];
+
+        if (events.length === 0) {
+            return;
+        }
+
         // According to the Pusher docs: The time_ms key provides the unix timestamp in milliseconds when the webhook was created.
         // So we set the time here instead of creating a new one in the queue handler so you can detect delayed webhooks when the queue is busy.
         let time = (new Date).getTime();
 
         let payload = {
             time_ms: time,
-            events: data instanceof Array ? data : [data],
+            events,
         };
 
         let pusherSignature = createWebhookHmac(JSON.stringify(payload), app.secret);
