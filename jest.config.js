@@ -7,7 +7,6 @@ module.exports = {
     collectCoverage: true,
     maxWorkers: 1,
     testRunner: 'jest-circus/runner',
-    include: ['src/*'],
     globals: {
         'ts-jest': {
             isolatedModules: true,
