@@ -325,17 +325,17 @@ describe('webhooks test', () => {
                 expect(req.body.events).toBeDefined();
                 expect(req.body.events.length).toBe(1);
 
-                const webhookEvent = req.body.events[0];
+                req.body.events.forEach(webhookEvent => {
+                    if (matchedChannels.includes(webhookEvent.channel)) {
+                        receivedWebhookRequests += 1;
+                    }
 
-                if (matchedChannels.includes(webhookEvent.channel)) {
-                    receivedWebhookRequests += 1;
-                }
+                    if (receivedWebhookRequests >= expectedWebhookRequests) {
+                        done();
+                    }
+                });
 
                 res.json({ ok: true });
-
-                if (receivedWebhookRequests >= expectedWebhookRequests) {
-                    done();
-                }
             }, (activeHttpServer) => {
                 let client = Utils.newClientForPrivateChannel();
 
