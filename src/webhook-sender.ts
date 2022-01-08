@@ -18,6 +18,15 @@ export interface ClientEventData {
     time_ms?: number;
 }
 
+export interface JobData {
+    appKey: string;
+    payload: {
+        time_ms: number;
+        events: ClientEventData[];
+    },
+    pusherSignature: string;
+}
+
 /**
  * Create the HMAC for the given data.
  */
@@ -43,30 +52,30 @@ export class WebhookSender {
      */
     constructor(protected server: Server) {
         let queueProcessor = (job, done) => {
-            let rawData: {
-                appKey: string;
-                payload: {
-                    time_ms: number;
-                    events: ClientEventData[];
-                },
-                pusherSignature: string;
-            } = job.data;
+            let rawData: JobData = job.data;
 
             const { appKey, payload, pusherSignature } = rawData;
 
             server.appManager.findByKey(appKey).then(app => {
                 app.webhooks.forEach((webhook: WebhookInterface) => {
-                    if (!webhook.event_types.includes(payload.events[0].name)) {
-                        return;
-                    }
+                    payload.events = payload.events.filter(event => {
+                        if (!webhook.event_types.includes(event.name)) {
+                            return false;
+                        }
 
-                    if (webhook.filter?.channel_name_starts_with && !payload.events[0].channel.startsWith(webhook.filter.channel_name_starts_with)) {
-                        return;
-                    }
+                        if (webhook.filter) {
+                            if (webhook.filter.channel_name_starts_with && !event.channel.startsWith(webhook.filter.channel_name_starts_with)) {
+                                return false;
+                            }
 
-                    if (webhook.filter?.channel_name_ends_with && !payload.events[0].channel.endsWith(webhook.filter.channel_name_ends_with)) {
-                        return;
-                    }
+                            if (webhook.filter.channel_name_ends_with && !event.channel.endsWith(webhook.filter.channel_name_ends_with)) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    });
+
 
                     if (this.server.options.debug) {
                         Log.webhookSenderTitle('🚀 Processing webhook from queue.');
