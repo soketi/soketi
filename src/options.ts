@@ -86,6 +86,7 @@ export interface Options {
         maxChannelsAtOnce: string|number;
         maxNameLength: string|number;
         maxPayloadInKb: string|number;
+        maxBatchSize: string|number;
     };
     httpApi: {
         requestLimitInMb: string|number;

@@ -131,6 +131,7 @@ export class Server {
             maxChannelsAtOnce: 100,
             maxNameLength: 200,
             maxPayloadInKb: 100,
+            maxBatchSize: 10,
         },
         httpApi: {
             requestLimitInMb: 100,

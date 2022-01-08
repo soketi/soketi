@@ -26,9 +26,9 @@ jobs:
           - cluster
         app_manager:
           - array
-          - dynamodb
           - mysql
           - postgres
+          - dynamodb
 
         include:
           - adapter: local
@@ -41,86 +41,86 @@ jobs:
             rate_limiter: redis
             queue_driver: redis
 
-    name: Benchmark Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
+    name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.4.0
 
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.1
         name: Installing Node.js v${{ matrix.node }}
         with:
           node-version: ${{ matrix.node }}
 
+      - name: Install dependencies
+        run: npm install
+
+      - name: Execute lint & build
+        run: |
+          npm run lint
+          npm run build
+
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@2.16.0
         with:
           php-version: "8.0"
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, yaml
           coverage: pcov
 
-      - uses: zhulik/redis-action@1.1.0
-        name: Installing Redis 6.x
-        with:
-          redis version: 6
-          number of databases: 100
-
-      - name: Setup DynamoDB
-        run: |
-          java -Djava.library.path=./DynamoDBLocal_lib -jar tests/fixtures/dynamodb/DynamoDBLocal.jar --port 8000 &
-          sleep 5
-
-      - name: Setup MySQL
-        uses: haltuf/mysql-action@master
-        with:
-          host port: 3306
-          container port: 3306
-          character set server: utf8mb4
-          collation server: utf8mb4_unicode_ci
-          mysql version: 8.0
-          mysql database: main
-          mysql root password: password
-
-      - name: Setup PostgreSQL
-        uses: harmon758/postgresql-action@v1
-        with:
-          postgresql version: 13.3
-          postgresql db: main
-          postgresql user: postgres
-          postgresql password: password
-
-      - name: Load SQL into databases
-        run: |
-          sleep 15
-          mysql --host=127.0.0.1 --user=root --password=password --database=main < tests/fixtures/app_mysql.sql
-          psql --host=127.0.0.1 --username=postgres main < tests/fixtures/app_postgres.sql
-        env:
-          PGPASSWORD: password
-
       - uses: actions/cache@v2.1.7
-        name: Cache dependencies
+        name: Cache Composer dependencies
         with:
           path: ~/.composer/cache/files
           key: composer-php-${{ hashFiles('benchmark/composer.json') }}
 
-      - name: Installing dependencies
+      - name: Setup message sender
         run: |
-          npm install
+          cd benchmark/
+          composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
-      - name: Lint & Compile
+      - name: Setup k6
         run: |
-          npm run lint
-          npm run build
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
 
-      - name: Running DynamoDB schema
+      - name: Setup Redis
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        run: docker run -p 6379:6379 redis:6-alpine &
+
+      # Setup MySQL with user `root`, password `root` and database `testing`
+      - name: Setup MySQL
+        if: "matrix.app_manager == 'mysql'"
         run: |
-          node .dynamodb-schema.js
+          sudo systemctl start mysql.service
+          mysql -e 'CREATE DATABASE testing;' -u root -proot
+          mysql -u root -proot --database=testing < tests/fixtures/mysql_schema.sql
+
+      # Setup PostgreSQL with user `testing`, password `testing` and database `testing`
+      - name: Setup PostgreSQL
+        if: "matrix.app_manager == 'postgres'"
+        run: |
+          sudo systemctl start postgresql.service
+          pg_isready
+          sudo -u postgres psql --command="CREATE USER testing PASSWORD 'testing'"
+          sudo -u postgres createdb --owner=postgres testing
+          psql --host=127.0.0.1 --username=testing testing < tests/fixtures/postgres_schema.sql
+        env:
+          PGPASSWORD: testing
+
+      - name: Setup DynamoDB
+        if: "matrix.app_manager == 'dynamodb'"
+        run: |
+          docker run -p 8000:8000 amazon/dynamodb-local &
+          node tests/fixtures/dynamodb_schema.js
         env:
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
 
-      - name: Run the port 6001 server
+      - name: Run Soketi (port 6001)
         run: |
           node bin/server.js start &
+          timeout 30 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://127.0.0.1:6001/ready)" != "200" ]]; do echo "Waiting for server to be ready..."; sleep 5; done' || false
         env:
           PORT: 6001
           ADAPTER_DRIVER: ${{ matrix.adapter }}
@@ -132,11 +132,14 @@ jobs:
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
+          TEST_MYSQL_USER: root
+          TEST_MYSQL_PASSWORD: root
 
-      - name: Run the port 6002 server
+      - name: Run Soketi (port 6002)
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
         run: |
           node bin/server.js start &
+          timeout 30 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://127.0.0.1:6002/ready)" != "200" ]]; do echo "Waiting for server to be ready..."; sleep 5; done' || false
         env:
           PORT: 6002
           ADAPTER_DRIVER: ${{ matrix.adapter }}
@@ -148,54 +151,28 @@ jobs:
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
+          TEST_MYSQL_USER: root
+          TEST_MYSQL_PASSWORD: root
 
-      - name: Install the message sender
-        run: |
-          cd benchmark/
-          composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+      - name: Run message sender (port 6001)
+        run: ./benchmark/send --interval 1 --port 6001 &
 
-      - name: Run the message sender
-        run: |
-          cd benchmark/
-          php send --interval 1 --port 6001 &
-
-      - name: Run the message sender for second server
+      - name: Run message sender (port 6002)
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
-        run: |
-          cd benchmark/
-          php send --interval 1 --port 6002 &
+        run: ./benchmark/send --interval 1 --port 6002 &
 
-      - name: Test connection
-        run: |
-          sleep 5
-          curl --silent -XGET --fail http://127.0.0.1:6001
-
-      - name: Test connection for the other server
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
-        run: |
-          curl --silent -XGET --fail http://127.0.0.1:6002
-
-      - name: Install k6
-        run: |
-          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt-get update
-          sudo apt-get install k6
-
-      - name: Run benchmarks
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
-        run: |
-          k6 run benchmark/ci-horizontal.js
+      - name: Execute benchmarks (single nodes)
+        if: "matrix.adapter == 'local'"
+        run: k6 run benchmark/ci-local.js
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
           QUEUE_DRIVER: ${{ matrix.queue_driver }}
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
 
-      - name: Run benchmarks
-        if: "matrix.adapter == 'local'"
-        run: |
-          k6 run benchmark/ci-local.js
+      - name: Execute benchmarks (multiple nodes)
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        run: k6 run benchmark/ci-horizontal.js
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
