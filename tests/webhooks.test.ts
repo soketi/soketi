@@ -307,8 +307,6 @@ describe('webhooks test', () => {
             `${Utils.randomChannelName()}-foo`,
         ];
 
-        const expectedWebhookRequests = matchedChannels.length;
-
         Utils.newServer({
             'appManager.array.apps.0.webhooks': webhooks,
             'database.redis.keyPrefix': 'channel-webhooks',
@@ -325,17 +323,17 @@ describe('webhooks test', () => {
                 expect(req.body.events).toBeDefined();
                 expect(req.body.events.length).toBe(1);
 
-                const webhookEvent = req.body.events[0];
+                req.body.events.forEach(webhookEvent => {
+                    if (matchedChannels.includes(webhookEvent.channel)) {
+                        receivedWebhookRequests += 1;
+                    }
 
-                if (matchedChannels.includes(webhookEvent.channel)) {
-                    receivedWebhookRequests += 1;
-                }
+                    if (receivedWebhookRequests >= matchedChannels.length) {
+                        done();
+                    }
+                });
 
                 res.json({ ok: true });
-
-                if (receivedWebhookRequests >= expectedWebhookRequests) {
-                    done();
-                }
             }, (activeHttpServer) => {
                 let client = Utils.newClientForPrivateChannel();
 

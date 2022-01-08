@@ -101,7 +101,7 @@ export interface Options {
             prefix: string;
         };
         port: number;
-    },
+    };
     port: number;
     pathPrefix: string;
     presence: {
@@ -122,5 +122,11 @@ export interface Options {
         certPath: string;
         keyPath: string;
         passphrase: string;
+    };
+    webhooks: {
+        batching: {
+            enabled: boolean;
+            duration: number;
+        };
     };
 }

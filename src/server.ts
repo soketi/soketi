@@ -168,6 +168,12 @@ export class Server {
             keyPath: '',
             passphrase: '',
         },
+        webhooks: {
+            batching: {
+                enabled: false,
+                duration: 50,
+            },
+        },
     };
 
     /**
