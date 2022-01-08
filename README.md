@@ -29,6 +29,10 @@ In addition to being a good companion during local development, soketi comes wit
 
 Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
+## ⁉ Ideas or Discussions?
+
+Have any ideas that can make into the project? Perhaps you have questions? [Jump into the discussions board](https://github.com/soketi/soketi/discussions)
+
 ## 🔒  Security
 
 If you discover any security related issues, please email alex@renoki.org instead of using the issue tracker.
