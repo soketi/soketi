@@ -259,13 +259,16 @@ export class WebhookSender {
     protected sendWebhookByBatching(app: App, data: ClientEventData, queueName: string): void {
         this.batch.push(data);
 
-        // If there's no batch leader, elect itself as the batch leader, then wait 50ms using
+        // If there's no batch leader, elect itself as the batch leader, then wait an arbitrary time using
         // setTimeout to build up a batch, before firing off the full batch of events in one webhook.
         if (!this.batchHasLeader) {
             this.batchHasLeader = true;
 
             setTimeout(() => {
-                this.sendWebhook(app, this.batch.splice(0, this.batch.length), queueName);
+                if (this.batch.length > 0) {
+                    this.sendWebhook(app, this.batch.splice(0, this.batch.length), queueName);
+                }
+
                 this.batchHasLeader = false;
             }, this.server.options.webhooks.batching.duration);
         }

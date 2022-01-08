@@ -307,8 +307,6 @@ describe('webhooks test', () => {
             `${Utils.randomChannelName()}-foo`,
         ];
 
-        const expectedWebhookRequests = matchedChannels.length;
-
         Utils.newServer({
             'appManager.array.apps.0.webhooks': webhooks,
             'database.redis.keyPrefix': 'channel-webhooks',
@@ -330,7 +328,7 @@ describe('webhooks test', () => {
                         receivedWebhookRequests += 1;
                     }
 
-                    if (receivedWebhookRequests >= expectedWebhookRequests) {
+                    if (receivedWebhookRequests >= matchedChannels.length) {
                         done();
                     }
                 });

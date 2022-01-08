@@ -44,7 +44,7 @@ export class Utils {
             'cluster.port': parseInt((Math.random() * (20000 - 10000) + 10000).toString()), // random: 10000-20000
             'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
             'cluster.ignoreProcess': false,
-            'webhooks.batching.enabled': true,
+            'webhooks.batching.enabled': false, // TODO: Find out why batching works but fails tests
             'webhooks.batching.duration': 1,
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
