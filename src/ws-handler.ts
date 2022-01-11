@@ -70,7 +70,7 @@ export class WsHandler {
                     Log.websocket({ ws, data });
                 }
             } catch (e) {
-
+                //
             }
         }
 
