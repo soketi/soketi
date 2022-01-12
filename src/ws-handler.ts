@@ -56,7 +56,9 @@ export class WsHandler {
         }
 
         ws.sendJson = (data) => {
-            if (ws.send(JSON.stringify(data))) {
+            try {
+                ws.send(JSON.stringify(data));
+
                 this.updateTimeout(ws);
 
                 if (ws.app) {
@@ -67,6 +69,8 @@ export class WsHandler {
                     Log.websocketTitle('✈ Sent message to client:');
                     Log.websocket({ ws, data });
                 }
+            } catch (e) {
+                //
             }
         }
 
