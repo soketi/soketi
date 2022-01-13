@@ -58,7 +58,25 @@ export class WebhookSender {
 
             server.appManager.findByKey(appKey).then(app => {
                 app.webhooks.forEach((webhook: WebhookInterface) => {
-                    payload.events = payload.events.filter(event => {
+                    // Apply filters only if batching is disabled.
+                    if (!server.options.webhooks.batching.enabled) {
+                        if (!webhook.event_types.includes(payload.events[0].name)) {
+                            return;
+                        }
+
+                        if (webhook.filter) {
+                            if (webhook.filter.channel_name_starts_with && !payload.events[0].channel.startsWith(webhook.filter.channel_name_starts_with)) {
+                                return;
+                            }
+
+                            if (webhook.filter.channel_name_ends_with && !payload.events[0].channel.endsWith(webhook.filter.channel_name_ends_with)) {
+                                return;
+                            }
+                        }
+                    }
+
+                    // TODO: For batches, you can filter the messages, but recalculate the pusherSignature value.
+                    /* payload.events = payload.events.filter(event => {
                         if (!webhook.event_types.includes(event.name)) {
                             return false;
                         }
@@ -74,8 +92,7 @@ export class WebhookSender {
                         }
 
                         return true;
-                    });
-
+                    }); */
 
                     if (this.server.options.debug) {
                         Log.webhookSenderTitle('🚀 Processing webhook from queue.');
