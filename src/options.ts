@@ -40,7 +40,7 @@ export interface Options {
         dynamodb: {
             table: string;
             region: string;
-            endpoint: string;
+            endpoint?: string;
         };
         mysql: {
             table: string;

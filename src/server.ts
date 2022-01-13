@@ -53,7 +53,7 @@ export class Server {
             dynamodb: {
                 table: 'apps',
                 region: 'us-east-1',
-                endpoint: '',
+                endpoint: null,
             },
             mysql: {
                 table: 'apps',

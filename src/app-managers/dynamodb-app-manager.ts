@@ -4,6 +4,7 @@ import { BaseAppManager } from './base-app-manager';
 import { boolean } from 'boolean';
 import { DynamoDB } from 'aws-sdk';
 import { Server } from '../server';
+import { Log } from '../log';
 
 export class DynamoDbAppManager extends BaseAppManager {
     /**
@@ -42,6 +43,11 @@ export class DynamoDbAppManager extends BaseAppManager {
 
             return new App(this.unmarshallItem(item));
         }).catch(err => {
+            if (this.server.options.debug) {
+                Log.error('Error loading app config from dynamodb');
+                Log.error(err);
+            }
+
             return null;
         });
     }
@@ -68,6 +74,11 @@ export class DynamoDbAppManager extends BaseAppManager {
 
             return new App(this.unmarshallItem(item));
         }).catch(err => {
+            if (this.server.options.debug) {
+                Log.error('Error loading app config from dynamodb');
+                Log.error(err);
+            }
+            
             return null;
         });
     }
