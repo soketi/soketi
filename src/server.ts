@@ -167,6 +167,7 @@ export class Server {
             certPath: '',
             keyPath: '',
             passphrase: '',
+            caPath: '',
         },
         webhooks: {
             batching: {
@@ -284,6 +285,7 @@ export class Server {
                     key_file_name: this.options.ssl.keyPath,
                     cert_file_name: this.options.ssl.certPath,
                     passphrase: this.options.ssl.passphrase,
+                    ca_file_name: this.options.ssl.caPath,
                 })
                 : uWS.App();
 
@@ -610,7 +612,6 @@ export class Server {
      */
     protected shouldConfigureSsl(): boolean {
         return this.options.ssl.certPath !== '' ||
-            this.options.ssl.keyPath !== '' ||
-            this.options.ssl.passphrase !== '';
+            this.options.ssl.keyPath !== '';
     }
 }

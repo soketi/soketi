@@ -122,6 +122,7 @@ export interface Options {
         certPath: string;
         keyPath: string;
         passphrase: string;
+        caPath: string;
     };
     webhooks: {
         batching: {
