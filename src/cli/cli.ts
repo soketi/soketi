@@ -85,6 +85,7 @@ export class Cli {
         SSL_CERT: 'ssl.certPath',
         SSL_KEY: 'ssl.keyPath',
         SSL_PASS: 'ssl.passphrase',
+        SSL_CA: 'ssl.caPath',
         WEBHOOKS_BATCHING: 'webhooks.batching.enabled',
         WEBHOOKS_BATCHING_DURATION: 'webhooks.batching.duration',
     };
