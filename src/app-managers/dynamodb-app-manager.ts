@@ -3,8 +3,8 @@ import { AttributeMap } from 'aws-sdk/clients/dynamodb';
 import { BaseAppManager } from './base-app-manager';
 import { boolean } from 'boolean';
 import { DynamoDB } from 'aws-sdk';
-import { Server } from '../server';
 import { Log } from '../log';
+import { Server } from '../server';
 
 export class DynamoDbAppManager extends BaseAppManager {
     /**
@@ -78,7 +78,7 @@ export class DynamoDbAppManager extends BaseAppManager {
                 Log.error('Error loading app config from dynamodb');
                 Log.error(err);
             }
-            
+
             return null;
         });
     }
