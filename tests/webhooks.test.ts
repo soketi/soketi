@@ -3,7 +3,7 @@ import { Server } from '../src/server';
 import { Utils } from './utils';
 import { createWebhookHmac } from "../src/webhook-sender";
 
-jest.retryTimes(2);
+jest.retryTimes(parseInt(process.env.RETRY_TIMES || '1'));
 
 describe('webhooks test', () => {
     beforeEach(() => {
