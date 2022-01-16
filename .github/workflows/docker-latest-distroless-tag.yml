@@ -73,3 +73,7 @@ jobs:
           file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}
+          platforms: |
+            linux/amd64
+            linux/arm64
+            linux/arm/v7
