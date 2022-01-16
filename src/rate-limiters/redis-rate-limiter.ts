@@ -28,6 +28,8 @@ export class RedisRateLimiter extends LocalRateLimiter {
             duration: 1,
             storeClient: this.redisConnection,
             keyPrefix: `app:${appId}`,
+            // TODO: Insurance limiter?
+            // insuranceLimiter: super.createNewRateLimiter(appId, maxPoints),
         }));
     }
 }

@@ -18,6 +18,15 @@ export interface ClientEventData {
     time_ms?: number;
 }
 
+export interface JobData {
+    appKey: string;
+    payload: {
+        time_ms: number;
+        events: ClientEventData[];
+    },
+    pusherSignature: string;
+}
+
 /**
  * Create the HMAC for the given data.
  */
@@ -29,40 +38,73 @@ export function createWebhookHmac(data: string, secret: string): string {
 
 export class WebhookSender {
     /**
+     * Batch of ClientEventData, to be sent as one webhook.
+     */
+    public batch: ClientEventData[]  = [];
+
+    /**
+     * Whether current process has nominated batch handler.
+     */
+    public batchHasLeader = false;
+
+    /**
      * Initialize the Webhook sender.
      */
     constructor(protected server: Server) {
         let queueProcessor = (job, done) => {
-            let rawData: {
-                appKey: string;
-                payload: {
-                    time_ms: number;
-                    events: ClientEventData[];
-                },
-                pusherSignature: string;
-            } = job.data;
+            let rawData: JobData = job.data;
 
             const { appKey, payload, pusherSignature } = rawData;
 
             server.appManager.findByKey(appKey).then(app => {
                 app.webhooks.forEach((webhook: WebhookInterface) => {
-                    if (! webhook.event_types.includes(payload.events[0].name)) {
-                        return;
+                    // Apply filters only if batching is disabled.
+                    if (!server.options.webhooks.batching.enabled) {
+                        if (!webhook.event_types.includes(payload.events[0].name)) {
+                            return;
+                        }
+
+                        if (webhook.filter) {
+                            if (webhook.filter.channel_name_starts_with && !payload.events[0].channel.startsWith(webhook.filter.channel_name_starts_with)) {
+                                return;
+                            }
+
+                            if (webhook.filter.channel_name_ends_with && !payload.events[0].channel.endsWith(webhook.filter.channel_name_ends_with)) {
+                                return;
+                            }
+                        }
                     }
 
+                    // TODO: For batches, you can filter the messages, but recalculate the pusherSignature value.
+                    /* payload.events = payload.events.filter(event => {
+                        if (!webhook.event_types.includes(event.name)) {
+                            return false;
+                        }
+
+                        if (webhook.filter) {
+                            if (webhook.filter.channel_name_starts_with && !event.channel.startsWith(webhook.filter.channel_name_starts_with)) {
+                                return false;
+                            }
+
+                            if (webhook.filter.channel_name_ends_with && !event.channel.endsWith(webhook.filter.channel_name_ends_with)) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    }); */
+
                     if (this.server.options.debug) {
-                        Log.successTitle('🚀 Processing webhook from queue.');
-                        Log.success({
-                            appKey,
-                            payload,
-                            pusherSignature,
-                        });
+                        Log.webhookSenderTitle('🚀 Processing webhook from queue.');
+                        Log.webhookSender({ appKey, payload, pusherSignature });
                     }
 
                     const headers = {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
                         'User-Agent': `SoketiWebhooksAxiosClient/1.0 (Process: ${this.server.options.instance.process_id})`,
+                        // We specifically merge in the custom headers here so the headers below cannot be overwritten
+                        ...webhook.headers ?? {},
                         'X-Pusher-Key': appKey,
                         'X-Pusher-Signature': pusherSignature,
                     };
@@ -71,15 +113,15 @@ export class WebhookSender {
                     if (webhook.url) {
                         axios.post(webhook.url, payload, { headers }).then((res) => {
                             if (this.server.options.debug) {
-                                Log.successTitle('✅ Webhook sent.');
-                                Log.success({ webhook, payload });
+                                Log.webhookSenderTitle('✅ Webhook sent.');
+                                Log.webhookSender({ webhook, payload });
                             }
                         }).catch(err => {
                             // TODO: Maybe retry exponentially?
 
                             if (this.server.options.debug) {
-                                Log.errorTitle('❎ Webhook could not be sent.');
-                                Log.error({ err, webhook, payload });
+                                Log.webhookSenderTitle('❎ Webhook could not be sent.');
+                                Log.webhookSender({ err, webhook, payload });
                             }
                         }).then(() => {
                             if (typeof done === 'function') {
@@ -103,13 +145,13 @@ export class WebhookSender {
                         lambda.invoke(params, (err, data) => {
                             if (err) {
                                 if (this.server.options.debug) {
-                                    Log.errorTitle('❎ Lambda trigger failed.');
-                                    Log.error({ webhook, err, data });
+                                    Log.webhookSenderTitle('❎ Lambda trigger failed.');
+                                    Log.webhookSender({ webhook, err, data });
                                 }
                             } else {
                                 if (this.server.options.debug) {
-                                    Log.successTitle('✅ Lambda triggered.');
-                                    Log.success({ webhook, payload });
+                                    Log.webhookSenderTitle('✅ Lambda triggered.');
+                                    Log.webhookSender({ webhook, payload });
                                 }
                             }
 
@@ -199,13 +241,30 @@ export class WebhookSender {
      * Send a webhook for the app with the given data.
      */
     protected send(app: App, data: ClientEventData, queueName: string): void {
+        if (this.server.options.webhooks.batching.enabled) {
+            this.sendWebhookByBatching(app, data, queueName);
+        } else {
+            this.sendWebhook(app, data, queueName)
+        }
+    }
+
+    /**
+     * Send a webhook for the app with the given data, without batching.
+     */
+    protected sendWebhook(app: App, data: ClientEventData|ClientEventData[], queueName: string): void {
+        let events = data instanceof Array ? data : [data];
+
+        if (events.length === 0) {
+            return;
+        }
+
         // According to the Pusher docs: The time_ms key provides the unix timestamp in milliseconds when the webhook was created.
         // So we set the time here instead of creating a new one in the queue handler so you can detect delayed webhooks when the queue is busy.
         let time = (new Date).getTime();
 
         let payload = {
             time_ms: time,
-            events: [data],
+            events,
         };
 
         let pusherSignature = createWebhookHmac(JSON.stringify(payload), app.secret);
@@ -215,5 +274,26 @@ export class WebhookSender {
             payload,
             pusherSignature,
         });
+    }
+
+    /**
+     * Send a webhook for the app with the given data, with batching enabled.
+     */
+    protected sendWebhookByBatching(app: App, data: ClientEventData, queueName: string): void {
+        this.batch.push(data);
+
+        // If there's no batch leader, elect itself as the batch leader, then wait an arbitrary time using
+        // setTimeout to build up a batch, before firing off the full batch of events in one webhook.
+        if (!this.batchHasLeader) {
+            this.batchHasLeader = true;
+
+            setTimeout(() => {
+                if (this.batch.length > 0) {
+                    this.sendWebhook(app, this.batch.splice(0, this.batch.length), queueName);
+                }
+
+                this.batchHasLeader = false;
+            }, this.server.options.webhooks.batching.duration);
+        }
     }
 }

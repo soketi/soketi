@@ -1,0 +1,180 @@
+name: Benchmark
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        node:
+          - 16.x
+        adapter:
+          - local
+          - redis
+          - cluster
+        app_manager:
+          - array
+          - mysql
+          - postgres
+          - dynamodb
+
+        include:
+          - adapter: local
+            rate_limiter: local
+            queue_driver: sync
+          - adapter: cluster
+            rate_limiter: cluster
+            queue_driver: sync
+          - adapter: redis
+            rate_limiter: redis
+            queue_driver: redis
+
+    name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
+
+    steps:
+      - uses: actions/checkout@v2.4.0
+
+      - uses: actions/setup-node@v2.5.1
+        name: Installing Node.js v${{ matrix.node }}
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Execute lint & build
+        run: |
+          npm run lint
+          npm run build
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@2.16.0
+        with:
+          php-version: "8.0"
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, yaml
+          coverage: pcov
+
+      - uses: actions/cache@v2.1.7
+        name: Cache Composer dependencies
+        with:
+          path: ~/.composer/cache/files
+          key: composer-php-${{ hashFiles('benchmark/composer.json') }}
+
+      - name: Setup message sender
+        run: |
+          cd benchmark/
+          composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Setup k6
+        run: |
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Setup Redis
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        run: docker run -p 6379:6379 redis:6-alpine &
+
+      # Setup MySQL with user `root`, password `root` and database `testing`
+      - name: Setup MySQL
+        if: "matrix.app_manager == 'mysql'"
+        run: |
+          sudo systemctl start mysql.service
+          mysql -e 'CREATE DATABASE testing;' -u root -proot
+          mysql -u root -proot --database=testing < tests/fixtures/mysql_schema.sql
+
+      # Setup PostgreSQL with user `testing`, password `testing` and database `testing`
+      - name: Setup PostgreSQL
+        if: "matrix.app_manager == 'postgres'"
+        run: |
+          sudo systemctl start postgresql.service
+          pg_isready
+          sudo -u postgres psql --command="CREATE USER testing PASSWORD 'testing'"
+          sudo -u postgres createdb --owner=postgres testing
+          psql --host=127.0.0.1 --username=testing testing < tests/fixtures/postgres_schema.sql
+        env:
+          PGPASSWORD: testing
+
+      - name: Setup DynamoDB
+        if: "matrix.app_manager == 'dynamodb'"
+        run: |
+          docker run -p 8000:8000 amazon/dynamodb-local &
+          node tests/fixtures/dynamodb_schema.js
+        env:
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
+
+      - name: Run Soketi (port 6001)
+        run: |
+          node bin/server.js start &
+          timeout 30 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://127.0.0.1:6001/ready)" != "200" ]]; do echo "Waiting for server to be ready..."; sleep 5; done' || false
+        env:
+          PORT: 6001
+          ADAPTER_DRIVER: ${{ matrix.adapter }}
+          APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
+          APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
+          APP_MANAGER_MYSQL_USE_V2: true
+          METRICS_ENABLED: true
+          QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
+          TEST_MYSQL_USER: root
+          TEST_MYSQL_PASSWORD: root
+
+      - name: Run Soketi (port 6002)
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        run: |
+          node bin/server.js start &
+          timeout 30 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://127.0.0.1:6002/ready)" != "200" ]]; do echo "Waiting for server to be ready..."; sleep 5; done' || false
+        env:
+          PORT: 6002
+          ADAPTER_DRIVER: ${{ matrix.adapter }}
+          APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
+          APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
+          APP_MANAGER_MYSQL_USE_V2: true
+          METRICS_ENABLED: true
+          QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
+          TEST_MYSQL_USER: root
+          TEST_MYSQL_PASSWORD: root
+
+      - name: Run message sender (port 6001)
+        run: ./benchmark/send --interval 1 --port 6001 &
+
+      - name: Run message sender (port 6002)
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        run: ./benchmark/send --interval 1 --port 6002 &
+
+      - name: Execute benchmarks (single nodes)
+        if: "matrix.adapter == 'local'"
+        run: k6 run benchmark/ci-local.js
+        env:
+          ADAPTER_DRIVER: ${{ matrix.adapter }}
+          APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
+          QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
+
+      - name: Execute benchmarks (multiple nodes)
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        run: k6 run benchmark/ci-horizontal.js
+        env:
+          ADAPTER_DRIVER: ${{ matrix.adapter }}
+          APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
+          QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}

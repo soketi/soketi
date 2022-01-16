@@ -5,6 +5,9 @@ import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
 
 export class LocalRateLimiter implements RateLimiterInterface {
+    /**
+     * The list of rate limiters bound to each apps that interacts.
+     */
     protected rateLimiters: { [appId: string]: RateLimiterAbstract } = {
         //
     };
@@ -61,6 +64,13 @@ export class LocalRateLimiter implements RateLimiterInterface {
             duration: 1,
             keyPrefix: `app:${appId}`,
         });
+    }
+
+    /**
+     * Clear the rate limiter or active connections.
+     */
+    clear(closeConnections = false): Promise<void> {
+        return Promise.resolve();
     }
 
     /**

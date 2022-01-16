@@ -19,8 +19,15 @@ export interface AppInterface {
 
 export interface WebhookInterface {
     url?: string;
+    headers?: {
+        [key: string]: string;
+    };
     lambda_function?: string;
     event_types: string[];
+    filter?: {
+        channel_name_starts_with?: string;
+        channel_name_ends_with?: string;
+    };
     lambda: {
         async?: boolean;
         region?: string;
@@ -102,10 +109,10 @@ export class App implements AppInterface {
     }
 
     /**
-     * Stripe data off the app, usually the one that's not needed from the WS's perspective.
+     * Strip data off the app, usually the one that's not needed from the WS's perspective.
      * Usually used when attached to WS connections, as they don't need these details.
      */
-     forWebSocket(): App {
+    forWebSocket(): App {
         // delete this.secret;
         delete this.maxBackendEventsPerSecond;
         delete this.maxReadRequestsPerSecond;

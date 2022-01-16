@@ -1,14 +1,25 @@
 import { JoinResponse, LeaveResponse } from './public-channel-manager';
 import { Log } from '../log';
-import { PresenceMember } from '../presence-member';
 import { PrivateChannelManager } from './private-channel-manager';
+import { PusherMessage } from '../message';
+import { Utils } from '../utils';
 import { WebSocket } from 'uWebSockets.js';
+
+export interface PresenceMemberInfo {
+    [key: string]: any;
+}
+
+export interface PresenceMember {
+    user_id: number|string;
+    user_info: PresenceMemberInfo;
+    socket_id?: string;
+}
 
 export class PresenceChannelManager extends PrivateChannelManager {
     /**
      * Join the connection to the channel.
      */
-    join(ws: WebSocket, channel: string, message?: any): Promise<JoinResponse> {
+    join(ws: WebSocket, channel: string, message?: PusherMessage): Promise<JoinResponse> {
         return this.server.adapter.getChannelMembersCount(ws.app.id, channel).then(membersCount => {
             if (membersCount + 1 > this.server.options.presence.maxMembersPerChannel) {
                 return {
@@ -20,13 +31,25 @@ export class PresenceChannelManager extends PrivateChannelManager {
                 };
             }
 
+            let member: PresenceMember = JSON.parse(message.data.channel_data);
+
+            let memberSizeInKb = Utils.dataToKilobytes(member.user_info);
+
+            if (memberSizeInKb > this.server.options.presence.maxMemberSizeInKb) {
+                return {
+                    success: false,
+                    ws,
+                    errorCode: 4301,
+                    errorMessage: `The maximum size for a channel member is ${this.server.options.presence.maxMemberSizeInKb} KB.`,
+                    type: 'LimitReached',
+                };
+            }
+
             return super.join(ws, channel, message).then(response => {
                 // Make sure to forward the response in case an error occurs.
                 if (!response.success) {
                     return response;
                 }
-
-                let member: PresenceMember = JSON.parse(message.data.channel_data);
 
                 return {
                     ...response,
@@ -64,7 +87,7 @@ export class PresenceChannelManager extends PrivateChannelManager {
     /**
      * Get the data to sign for the token for specific channel.
      */
-    protected getDataToSignForSignature(socketId: string, message: any): string {
+    protected getDataToSignForSignature(socketId: string, message: PusherMessage): string {
         return `${socketId}:${message.data.channel}:${message.data.channel_data}`;
     }
 }

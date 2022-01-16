@@ -1,8 +1,9 @@
 import { AdapterInterface } from './adapter-interface';
+import { ClusterAdapter } from './cluster-adapter';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { Namespace } from '../namespace';
-import { PresenceMember } from '../presence-member';
+import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { RedisAdapter } from './redis-adapter';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
@@ -11,7 +12,7 @@ export class Adapter implements AdapterInterface {
     /**
      * The adapter driver.
      */
-    protected driver: AdapterInterface;
+    public driver: AdapterInterface;
 
     /**
      * Initialize adapter scaling.
@@ -21,6 +22,8 @@ export class Adapter implements AdapterInterface {
             this.driver = new LocalAdapter(server);
         } else if (server.options.adapter.driver === 'redis') {
             this.driver = new RedisAdapter(server);
+        } else if (server.options.adapter.driver === 'cluster') {
+            this.driver = new ClusterAdapter(server);
         } else {
             Log.error('Adapter driver not set.');
         }
@@ -78,7 +81,7 @@ export class Adapter implements AdapterInterface {
     /**
      * Get a given presence channel's members.
      */
-    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
+    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMemberInfo>> {
         return this.driver.getChannelMembers(appId, channel, onlyLocal);
     }
 
@@ -106,7 +109,7 @@ export class Adapter implements AdapterInterface {
     /**
      * Clear the local namespaces.
      */
-    clear(namespaceId?: string): void {
-        this.driver.clear(namespaceId);
+    clear(namespaceId?: string, closeConnections = false): Promise<void> {
+        return this.driver.clear(namespaceId, closeConnections);
     }
 }

@@ -40,7 +40,7 @@ export interface Options {
         dynamodb: {
             table: string;
             region: string;
-            endpoint: string;
+            endpoint?: string;
         };
         mysql: {
             table: string;
@@ -54,6 +54,16 @@ export interface Options {
     };
     channelLimits: {
         maxNameLength: number;
+    };
+    cluster: {
+        host: string;
+        helloInterval: number;
+        checkInterval: number;
+        nodeTimeout: number,
+        masterTimeout: number;
+        port: number;
+        prefix: string;
+        ignoreProcess: boolean;
     };
     cors: {
         credentials: boolean;
@@ -76,6 +86,7 @@ export interface Options {
         maxChannelsAtOnce: string|number;
         maxNameLength: string|number;
         maxPayloadInKb: string|number;
+        maxBatchSize: string|number;
     };
     httpApi: {
         requestLimitInMb: string|number;
@@ -89,7 +100,8 @@ export interface Options {
         prometheus: {
             prefix: string;
         };
-    },
+        port: number;
+    };
     port: number;
     pathPrefix: string;
     presence: {
@@ -105,9 +117,17 @@ export interface Options {
     rateLimiter: {
         driver: string;
     };
+    shutdownGracePeriod: number;
     ssl: {
         certPath: string;
         keyPath: string;
         passphrase: string;
+        caPath: string;
+    };
+    webhooks: {
+        batching: {
+            enabled: boolean;
+            duration: number;
+        };
     };
 }

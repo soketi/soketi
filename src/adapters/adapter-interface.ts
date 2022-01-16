@@ -1,12 +1,19 @@
 import { Namespace } from '../namespace';
-import { PresenceMember } from '../presence-member';
+import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { WebSocket } from 'uWebSockets.js';
+
+const Discover = require('node-discover');
 
 export interface AdapterInterface {
     /**
      * The app connections storage class to manage connections.
      */
     namespaces?: Map<string, Namespace>;
+
+    /**
+     * The list of nodes in the current private network.
+     */
+    driver?: AdapterInterface;
 
     /**
      * Get the app namespace.
@@ -26,7 +33,7 @@ export interface AdapterInterface {
     /**
      * Clear the local namespaces.
      */
-    clear(namespaceId?: string): void;
+    clear(namespaceId?: string, closeConnections?: boolean): Promise<void>;
 
     /**
      * Get all sockets from the namespace.
@@ -56,7 +63,7 @@ export interface AdapterInterface {
     /**
      * Get a given presence channel's members.
      */
-    getChannelMembers(appId: string, channel: string, onlyLocal?: boolean): Promise<Map<string, PresenceMember>>;
+    getChannelMembers(appId: string, channel: string, onlyLocal?: boolean): Promise<Map<string, PresenceMemberInfo>>;
 
     /**
      * Get a given presence channel's members count

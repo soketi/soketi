@@ -2,7 +2,22 @@ import { App } from './../app';
 import { RateLimiterAbstract, RateLimiterRes } from 'rate-limiter-flexible';
 import { WebSocket } from 'uWebSockets.js';
 
+export interface ConsumptionResponse {
+    canContinue: boolean;
+    rateLimiterRes: RateLimiterRes|null;
+    headers: {
+        'Retry-After'?: number;
+        'X-RateLimit-Limit'?: number;
+        'X-RateLimit-Remaining'?: number;
+    };
+}
+
 export interface RateLimiterInterface {
+    /**
+     * Rate Limiter driver.
+     */
+    driver?: RateLimiterInterface;
+
     /**
      * Consume the points for backend-received events.
      */
@@ -22,14 +37,9 @@ export interface RateLimiterInterface {
      * Create a new rate limiter instance.
      */
     createNewRateLimiter(appId: string, maxPoints: number): RateLimiterAbstract;
-}
 
-export interface ConsumptionResponse {
-    canContinue: boolean;
-    rateLimiterRes: RateLimiterRes|null;
-    headers: {
-        'Retry-After'?: number;
-        'X-RateLimit-Limit'?: number;
-        'X-RateLimit-Remaining'?: number;
-    };
+    /**
+     * Clear the rate limiter or active connections.
+     */
+    clear(closeConnections?: boolean): Promise<void>;
 }

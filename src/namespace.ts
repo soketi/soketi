@@ -1,4 +1,4 @@
-import { PresenceMember } from './presence-member';
+import { PresenceMember, PresenceMemberInfo } from './channels/presence-channel-manager';
 import { WebSocket } from 'uWebSockets.js';
 
 export class Namespace {
@@ -40,8 +40,8 @@ export class Namespace {
      * Remove a socket from the namespace.
      */
     async removeSocket(wsId: string): Promise<boolean> {
-        for (let channel of this.channels.keys()){
-            await this.removeFromChannel(wsId, channel);
+        for (let channel of this.channels.keys()) {
+            this.removeFromChannel(wsId, channel);
         }
 
         return this.sockets.delete(wsId);
@@ -127,17 +127,17 @@ export class Namespace {
     /**
      * Get a given presence channel's members.
      */
-    getChannelMembers(channel: string): Promise<Map<string, PresenceMember>> {
+    getChannelMembers(channel: string): Promise<Map<string, PresenceMemberInfo>> {
         return this.getChannelSockets(channel).then(sockets => {
             return Array.from(sockets).reduce((members, [wsId, ws]) => {
                 let member: PresenceMember = ws.presence.get(channel);
 
                 if (member) {
-                    members.set(member.user_id as string, member.user_info)
+                    members.set(member.user_id as string, member.user_info);
                 }
 
                 return members;
-            }, new Map<string, PresenceMember>());
+            }, new Map<string, PresenceMemberInfo>());
         });
     }
 }

@@ -10,7 +10,7 @@ export class SyncQueueDriver implements QueueInterface {
     protected queues: Map<string, CallableFunction> = new Map();
 
     /**
-     * Initialize the Prometheus exporter.
+     * Initialize the Sync Queue Driver.
      */
     constructor(protected server: Server) {
         //

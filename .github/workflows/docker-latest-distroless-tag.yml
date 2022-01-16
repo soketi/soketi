@@ -1,4 +1,4 @@
-name: Docker Latest - Standard
+name: Docker Latest - Distroless
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
         ports:
           - 5000:5000
 
-    name: Tag & Test Latest (node:${{ matrix.node }})
+    name: Tag & Test Latest Distroless (node:${{ matrix.node }})
 
     steps:
       - uses: actions/checkout@v2.4.0
@@ -46,13 +46,14 @@ jobs:
         uses: docker/build-push-action@v2.7.0
         with:
           push: true
-          tags: localhost:5000/soketi/soketi:latest-${{ matrix.node }}-alpine
+          tags: localhost:5000/soketi/soketi:latest-${{ matrix.node }}-distroless
+          file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}
 
       - name: Test
         run: |
-          docker run -d -p 6001:6001 -e DEBUG=1 localhost:5000/soketi/soketi:latest-${{ matrix.node }}-alpine
+          docker run -d -p 6001:6001 -e DEBUG=1 localhost:5000/soketi/soketi:latest-${{ matrix.node }}-distroless
           sleep 5
           curl --silent -XGET --fail http://127.0.0.1:6001
 
@@ -68,6 +69,7 @@ jobs:
         with:
           push: true
           context: .
-          tags: quay.io/soketi/soketi:latest-${{ matrix.node }}-alpine
+          tags: quay.io/soketi/soketi:latest-${{ matrix.node }}-distroless
+          file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}

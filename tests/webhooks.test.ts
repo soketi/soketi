@@ -82,7 +82,6 @@ describe('webhooks test', () => {
         let channelName = `private-${Utils.randomChannelName()}`;
 
         Utils.newServer({
-            'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
             'database.redis.keyPrefix': 'channel-webhooks',
         }, (server: Server) => {
@@ -131,7 +130,6 @@ describe('webhooks test', () => {
         let channelName = `presence-${Utils.randomChannelName()}`;
 
         Utils.newServer({
-            'appManager.array.apps.0.enableClientMessages': true,
             'appManager.array.apps.0.webhooks': webhooks,
             'database.redis.keyPrefix': 'presence-webhooks',
         }, (server: Server) => {
@@ -262,6 +260,127 @@ describe('webhooks test', () => {
                             });
                         });
                     });
+                });
+            });
+        });
+    }, 60 * 1000);
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks filtered by channel name', done => {
+        const sharedWebhookConfig = {
+            event_types: ['channel_occupied'],
+            url: 'http://127.0.0.1:3001/webhook',
+        };
+
+        const webhooks = [
+            {
+                ...sharedWebhookConfig,
+                filter: {
+                    channel_name_starts_with: 'private-',
+                },
+            },
+            {
+                ...sharedWebhookConfig,
+                filter: {
+                    channel_name_starts_with: 'private-',
+                    channel_name_ends_with: '-foo',
+                },
+            },
+            {
+                ...sharedWebhookConfig,
+                filter: {
+                    channel_name_ends_with: '-bar',
+                },
+            },
+        ];
+
+        // We expect the webhook to be called 1 time for these channels
+        const matchedChannels = [
+            `private-${Utils.randomChannelName()}`,
+            `private-${Utils.randomChannelName()}-foo`,
+            `${Utils.randomChannelName()}-bar`,
+        ];
+
+        // We don't expect any webhooks to be called for these channels
+        const unmatchedChannels = [
+            `public-${Utils.randomChannelName()}`,
+            `public-${Utils.randomChannelName()}-foo`,
+            `${Utils.randomChannelName()}-foo`,
+        ];
+
+        Utils.newServer({
+            'appManager.array.apps.0.webhooks': webhooks,
+            'database.redis.keyPrefix': 'channel-webhooks',
+        }, (server: Server) => {
+            let receivedWebhookRequests = 0;
+
+            Utils.newWebhookServer((req, res) => {
+                let app = new App(server.options.appManager.array.apps[0]);
+                let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
+
+                expect(req.headers['x-pusher-key']).toBe('app-key');
+                expect(req.headers['x-pusher-signature']).toBe(rightSignature);
+                expect(req.body.time_ms).toBeDefined();
+                expect(req.body.events).toBeDefined();
+                expect(req.body.events.length).toBe(1);
+
+                req.body.events.forEach(webhookEvent => {
+                    if (matchedChannels.includes(webhookEvent.channel)) {
+                        receivedWebhookRequests += 1;
+                    }
+
+                    if (receivedWebhookRequests >= matchedChannels.length) {
+                        done();
+                    }
+                });
+
+                res.json({ ok: true });
+            }, (activeHttpServer) => {
+                let client = Utils.newClientForPrivateChannel();
+
+                client.connection.bind('connected', () => {
+                    [...unmatchedChannels, ...matchedChannels].forEach(channelName => client.subscribe(channelName));
+                });
+            });
+        });
+    }, 60 * 1000);
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks can have custom headers', done => {
+        const webhooks = [{
+            event_types: ['channel_occupied'],
+            url: 'http://127.0.0.1:3001/webhook',
+            headers: {
+                'X-Custom-Header': 'custom-value',
+                // These headers below should not be sent with `custom-value`
+                'X-Pusher-Key': 'custom-value',
+                'X-Pusher-Signature': 'custom-value',
+            },
+        }];
+
+        const channelName = `private-${Utils.randomChannelName()}`;
+
+        Utils.newServer({
+            'appManager.array.apps.0.webhooks': webhooks,
+            'database.redis.keyPrefix': 'channel-webhooks',
+        }, (server: Server) => {
+            Utils.newWebhookServer((req, res) => {
+                let app = new App(server.options.appManager.array.apps[0]);
+                let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
+
+                expect(req.headers['x-pusher-key']).toBe('app-key');
+                expect(req.headers['x-pusher-signature']).toBe(rightSignature);
+                expect(req.headers['x-custom-header']).toBe('custom-value');
+                expect(req.body.time_ms).toBeDefined();
+                expect(req.body.events).toBeDefined();
+                expect(req.body.events.length).toBe(1);
+
+                res.json({ ok: true });
+
+                done();
+            }, (activeHttpServer) => {
+                let client = Utils.newClientForPrivateChannel();
+
+                client.connection.bind('connected', () => {
+                    client.subscribe(channelName);
                 });
             });
         });

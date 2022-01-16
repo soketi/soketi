@@ -14,7 +14,7 @@ export class AppManager implements AppManagerInterface {
     /**
      * The application manager driver.
      */
-    protected driver: AppManagerInterface;
+    public driver: AppManagerInterface;
 
     /**
      * Create a new database instance.
