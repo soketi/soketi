@@ -6,6 +6,12 @@ on:
       - '*'
     tags:
       - '*'
+    paths-ignore:
+      - "**.md"
+      - "benchmark/**"
+      - ".github/workflows/benchmark.yml"
+      - ".github/workflows/docker-*.yml"
+      - ".github/*.yml"
   pull_request:
     branches:
       - '*'
