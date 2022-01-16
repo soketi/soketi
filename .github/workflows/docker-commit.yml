@@ -21,8 +21,7 @@ jobs:
 
       matrix:
         node:
-          - 14-alpine
-          - 16-alpine
+          - '16'
 
     services:
       registry:
@@ -55,7 +54,7 @@ jobs:
         with:
           push: true
           context: .
-          tags: quay.io/soketi/soketi:${{ github.sha }}-${{ matrix.node }}
+          tags: quay.io/soketi/soketi:${{ github.sha }}-${{ matrix.node }}-alpine
           build-args: |
             VERSION=${{ matrix.node }}
           platforms: |
