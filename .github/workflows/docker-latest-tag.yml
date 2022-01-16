@@ -71,3 +71,7 @@ jobs:
           tags: quay.io/soketi/soketi:latest-${{ matrix.node }}-alpine
           build-args: |
             VERSION=${{ matrix.node }}
+          platforms: |
+            linux/amd64
+            linux/arm64
+            linux/arm/v7
