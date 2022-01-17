@@ -21,7 +21,7 @@ Compared with Pusher, you can achieve much more for one-third of the price. For 
 
 This is because you pay only for your infrastructure. Whether it's your basement server or cloud, it fits and runs. You can also  [get free $100 on Vultr to try out soketi →](https://www.vultr.com/?ref=9032189-8H)
 
-### Ease of use 👶
+### Easy to use 👶
 
 Whether you run your infrastructure in containers or monoliths, soketi got your back. There are multiple ways to [install](getting-started/installation/) and [configure](getting-started/environment-variables.md) soketi, from single instances for development, to tens of active instances at scale with hundreds or thousands of active users.
 
