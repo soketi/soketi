@@ -15,6 +15,12 @@ soketi is your simple, fast, and resilient open-source WebSockets server. 📣
 
 The server is built on top of [uWebSockets.js](https://github.com/uNetworking/uWebSockets.js) - a C application ported to Node.js. uWebSockets.js is demonstrated to perform at levels [_8.5x that of Fastify_](https://alexhultman.medium.com/serving-100k-requests-second-from-a-fanless-raspberry-pi-4-over-ethernet-fdd2c2e05a1e) and at least [_10x that of Socket.IO_](https://medium.com/swlh/100k-secure-websockets-with-raspberry-pi-4-1ba5d2127a23). ([_source_](https://github.com/uNetworking/uWebSockets.js))
 
+### Cheaper than most competitors 🤑
+
+Compared with Pusher, you can achieve much more for one-third of the price. For a $49 plan on Pusher, you get a limited amount of connections (500) and messages (30M). With soketi, for ~ $15, you get virtually unlimited connections, messages, and some more!
+
+This is because you pay only for your infrastructure. Whether it's your basement server or cloud, it fits and runs. You can also  [get free $100 on Vultr to try out soketi →](https://www.vultr.com/?ref=9032189-8H)
+
 ### Ease of use 👶
 
 Whether you run your infrastructure in containers or monoliths, soketi got your back. There are multiple ways to [install](getting-started/installation/) and [configure](getting-started/environment-variables.md) soketi, from single instances for development, to tens of active instances at scale with hundreds or thousands of active users.
