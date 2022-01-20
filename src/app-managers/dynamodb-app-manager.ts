@@ -41,7 +41,7 @@ export class DynamoDbAppManager extends BaseAppManager {
                 return null;
             }
 
-            return new App(this.unmarshallItem(item));
+            return new App(this.unmarshallItem(item), this.server);
         }).catch(err => {
             if (this.server.options.debug) {
                 Log.error('Error loading app config from dynamodb');
@@ -72,7 +72,7 @@ export class DynamoDbAppManager extends BaseAppManager {
                 return null;
             }
 
-            return new App(this.unmarshallItem(item));
+            return new App(this.unmarshallItem(item), this.server);
         }).catch(err => {
             if (this.server.options.debug) {
                 Log.error('Error loading app config from dynamodb');

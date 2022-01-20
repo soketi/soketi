@@ -30,7 +30,7 @@ describe('webhooks test', () => {
             'database.redis.keyPrefix': 'client-event-webhook',
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
-                let app = new App(server.options.appManager.array.apps[0]);
+                let app = new App(server.options.appManager.array.apps[0], server);
                 let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
 
                 expect(req.headers['x-pusher-key']).toBe('app-key');
@@ -86,7 +86,7 @@ describe('webhooks test', () => {
             'database.redis.keyPrefix': 'channel-webhooks',
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
-                let app = new App(server.options.appManager.array.apps[0]);
+                let app = new App(server.options.appManager.array.apps[0], server);
                 let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
 
                 expect(req.headers['x-pusher-key']).toBe('app-key');
@@ -134,7 +134,7 @@ describe('webhooks test', () => {
             'database.redis.keyPrefix': 'presence-webhooks',
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
-                let app = new App(server.options.appManager.array.apps[0]);
+                let app = new App(server.options.appManager.array.apps[0], server);
                 let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
 
                 expect(req.headers['x-pusher-key']).toBe('app-key');
@@ -314,7 +314,7 @@ describe('webhooks test', () => {
             let receivedWebhookRequests = 0;
 
             Utils.newWebhookServer((req, res) => {
-                let app = new App(server.options.appManager.array.apps[0]);
+                let app = new App(server.options.appManager.array.apps[0], server);
                 let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
 
                 expect(req.headers['x-pusher-key']).toBe('app-key');
@@ -363,7 +363,7 @@ describe('webhooks test', () => {
             'database.redis.keyPrefix': 'channel-webhooks',
         }, (server: Server) => {
             Utils.newWebhookServer((req, res) => {
-                let app = new App(server.options.appManager.array.apps[0]);
+                let app = new App(server.options.appManager.array.apps[0], server);
                 let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
 
                 expect(req.headers['x-pusher-key']).toBe('app-key');

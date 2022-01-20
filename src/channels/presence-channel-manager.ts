@@ -21,7 +21,7 @@ export class PresenceChannelManager extends PrivateChannelManager {
      */
     join(ws: WebSocket, channel: string, message?: PusherMessage): Promise<JoinResponse> {
         return this.server.adapter.getChannelMembersCount(ws.app.id, channel).then(membersCount => {
-            if (membersCount + 1 > this.server.options.presence.maxMembersPerChannel) {
+            if (membersCount + 1 > ws.app.maxPresenceMembersPerChannel) {
                 return {
                     success: false,
                     ws,
@@ -35,12 +35,12 @@ export class PresenceChannelManager extends PrivateChannelManager {
 
             let memberSizeInKb = Utils.dataToKilobytes(member.user_info);
 
-            if (memberSizeInKb > this.server.options.presence.maxMemberSizeInKb) {
+            if (memberSizeInKb > ws.app.maxPresenceMemberSizeInKb) {
                 return {
                     success: false,
                     ws,
                     errorCode: 4301,
-                    errorMessage: `The maximum size for a channel member is ${this.server.options.presence.maxMemberSizeInKb} KB.`,
+                    errorMessage: `The maximum size for a channel member is ${ws.app.maxPresenceMemberSizeInKb} KB.`,
                     type: 'LimitReached',
                 };
             }

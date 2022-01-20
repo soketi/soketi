@@ -1,5 +1,6 @@
 import { HttpResponse } from 'uWebSockets.js';
 import { Lambda } from 'aws-sdk';
+import { Server } from './server';
 
 const Pusher = require('pusher');
 const pusherUtil = require('pusher/lib/util');
@@ -15,6 +16,13 @@ export interface AppInterface {
     maxClientEventsPerSecond: string|number;
     maxReadRequestsPerSecond?: string|number;
     webhooks?: WebhookInterface[];
+    maxPresenceMembersPerChannel: string|number;
+    maxPresenceMemberSizeInKb: string|number;
+    maxChannelNameLength: number;
+    maxEventChannelsAtOnce: string|number;
+    maxEventNameLength: string|number;
+    maxEventPayloadInKb: string|number;
+    maxEventBatchSize: string|number;
 }
 
 export interface WebhookInterface {
@@ -86,6 +94,41 @@ export class App implements AppInterface {
      */
     public webhooks: WebhookInterface[];
 
+    /**
+     * @type {string|number}
+     */
+    public maxPresenceMembersPerChannel: string|number;
+
+    /**
+     * @type {string|number}
+     */
+    public maxPresenceMemberSizeInKb: string|number;
+
+    /**
+     * @type {number}
+     */
+    public maxChannelNameLength: number;
+
+    /**
+     * @type {string|number}
+     */
+    public maxEventChannelsAtOnce: string|number;
+
+    /**
+     * @type {string|number}
+     */
+    public maxEventNameLength: string|number;
+
+    /**
+     * @type {string|number}
+     */
+    public maxEventPayloadInKb: string|number;
+
+    /**
+     * @type {string|number}
+     */
+    public maxEventBatchSize: string|number;
+
     static readonly CLIENT_EVENT_WEBHOOK = 'client_event';
     static readonly CHANNEL_OCCUPIED_WEBHOOK = 'channel_occupied';
     static readonly CHANNEL_VACATED_WEBHOOK = 'channel_vacated';
@@ -95,7 +138,7 @@ export class App implements AppInterface {
     /**
      * Create a new app from object.
      */
-    constructor(app: { [key: string]: any; }) {
+    constructor(app: { [key: string]: any; }, server: Server) {
         this.id = this.extractFromPassedKeys(app, ['id', 'AppId'], 'app-id');
         this.key = this.extractFromPassedKeys(app, ['key', 'AppKey'], 'app-key');
         this.secret = this.extractFromPassedKeys(app, ['secret', 'AppSecret'], 'app-secret');
@@ -106,6 +149,13 @@ export class App implements AppInterface {
         this.maxClientEventsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxClientEventsPerSecond', 'MaxClientEventsPerSecond', 'max_client_events_per_sec'], -1));
         this.maxReadRequestsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxReadRequestsPerSecond', 'MaxReadRequestsPerSecond', 'max_read_req_per_sec'], -1));
         this.webhooks = this.transformPotentialJsonToArray(this.extractFromPassedKeys(app, ['webhooks', 'Webhooks'], '[]'));
+        this.maxPresenceMembersPerChannel = parseInt(this.extractFromPassedKeys(app, ['maxPresenceMembersPerChannel', 'MaxPresenceMembersPerChannel', 'max_backend_events_per_sec'], server.options.presence.maxMembersPerChannel));
+        this.maxPresenceMemberSizeInKb = parseInt(this.extractFromPassedKeys(app, ['maxPresenceMemberSizeInKb', 'MaxPresenceMemberSizeInKb', 'max_presence_member_size_in_kb'], server.options.presence.maxMemberSizeInKb));
+        this.maxChannelNameLength = parseInt(this.extractFromPassedKeys(app, ['maxChannelNameLength', 'MaxChannelNameLength', 'max_channel_name_length'], server.options.channelLimits.maxNameLength));
+        this.maxEventChannelsAtOnce = parseInt(this.extractFromPassedKeys(app, ['maxEventChannelsAtOnce', 'MaxEventChannelsAtOnce', 'max_event_channels_at_once'], server.options.eventLimits.maxChannelsAtOnce));
+        this.maxEventNameLength = parseInt(this.extractFromPassedKeys(app, ['maxEventNameLength', 'MaxEventNameLength', 'max_event_name_length'], server.options.eventLimits.maxNameLength));
+        this.maxEventPayloadInKb = parseInt(this.extractFromPassedKeys(app, ['maxEventPayloadInKb', 'MaxEventPayloadInKb', 'max_event_payload_in_kb'], server.options.eventLimits.maxPayloadInKb));
+        this.maxEventBatchSize = parseInt(this.extractFromPassedKeys(app, ['maxEventBatchSize', 'MaxEventBatchSize', 'max_event_batch_size'], server.options.eventLimits.maxBatchSize));
     }
 
     /**
@@ -170,7 +220,7 @@ export class App implements AppInterface {
         let extractedValue = defaultValue;
 
         parameters.forEach(param => {
-            if (typeof app[param] !== 'undefined') {
+            if (typeof app[param] !== 'undefined' && app[param] !== '') {
                 extractedValue = app[param];
             }
         });

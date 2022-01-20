@@ -1,3 +1,4 @@
+import { App } from './app';
 import async from 'async';
 import { HttpResponse, RecognizedString } from 'uWebSockets.js';
 import { PusherApiMessage } from './message';
@@ -254,7 +255,7 @@ export class HttpHandler {
             this.authMiddleware,
             this.broadcastEventRateLimitingMiddleware,
         ]).then(res => {
-            this.checkMessageToBroadcast(res.body as PusherApiMessage).then(message => {
+            this.checkMessageToBroadcast(res.body as PusherApiMessage, res.app as App).then(message => {
                 this.broadcastMessage(message, res.app.id);
                 this.sendJson(res, { ok: true });
             }).catch(error => {
@@ -278,11 +279,11 @@ export class HttpHandler {
             let batch = res.body.batch as PusherApiMessage[];
 
             // Make sure the batch size is not too big.
-            if (batch.length > this.server.options.eventLimits.maxBatchSize) {
-                return this.badResponse(res, `Cannot batch-send more than ${this.server.options.eventLimits.maxBatchSize} messages at once`);
+            if (batch.length > res.app.maxEventBatchSize) {
+                return this.badResponse(res, `Cannot batch-send more than ${res.app.maxEventBatchSize} messages at once`);
             }
 
-            Promise.all(batch.map(message => this.checkMessageToBroadcast(message))).then(messages => {
+            Promise.all(batch.map(message => this.checkMessageToBroadcast(message, res.app as App))).then(messages => {
                 messages.forEach(message => this.broadcastMessage(message, res.app.id));
                 this.sendJson(res, { ok: true });
             }).catch((error: MessageCheckError) => {
@@ -295,7 +296,7 @@ export class HttpHandler {
         });
     }
 
-    protected checkMessageToBroadcast(message: PusherApiMessage): Promise<PusherApiMessage> {
+    protected checkMessageToBroadcast(message: PusherApiMessage, app: App): Promise<PusherApiMessage> {
         return new Promise((resolve, reject) => {
             if (
                 (!message.channels && !message.channel) ||
@@ -313,17 +314,17 @@ export class HttpHandler {
             message.channels = channels;
 
             // Make sure the channels length is not too big.
-            if (channels.length > this.server.options.eventLimits.maxChannelsAtOnce) {
+            if (channels.length > app.maxEventChannelsAtOnce) {
                 return reject({
-                    message: `Cannot broadcast to more than ${this.server.options.eventLimits.maxChannelsAtOnce} channels at once`,
+                    message: `Cannot broadcast to more than ${app.maxEventChannelsAtOnce} channels at once`,
                     code: 400,
                 });
             }
 
             // Make sure the event name length is not too big.
-            if (message.name.length > this.server.options.eventLimits.maxNameLength) {
+            if (message.name.length > app.maxEventNameLength) {
                 return reject({
-                    message: `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`,
+                    message: `Event name is too long. Maximum allowed size is ${app.maxEventNameLength}.`,
                     code: 400,
                 });
             }
@@ -331,9 +332,9 @@ export class HttpHandler {
             let payloadSizeInKb = Utils.dataToKilobytes(message.data);
 
             // Make sure the total payload of the message body is not too big.
-            if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
+            if (payloadSizeInKb > parseFloat(app.maxEventPayloadInKb as string)) {
                 return reject({
-                    message: `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`,
+                    message: `The event data should be less than ${app.maxEventPayloadInKb} KB.`,
                     code: 413,
                 });
             }

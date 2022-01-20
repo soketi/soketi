@@ -18,7 +18,7 @@ export class ArrayAppManager extends BaseAppManager {
             let app = this.server.options.appManager.array.apps.find(app => app.id == id);
 
             if (typeof app !== 'undefined') {
-                resolve(new App(app));
+                resolve(new App(app, this.server));
             } else {
                 resolve(null);
             }
@@ -33,7 +33,7 @@ export class ArrayAppManager extends BaseAppManager {
             let app = this.server.options.appManager.array.apps.find(app => app.key == key);
 
             if (typeof app !== 'undefined') {
-                resolve(new App(app));
+                resolve(new App(app, this.server));
             } else {
                 resolve(null);
             }
