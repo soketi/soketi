@@ -16,13 +16,13 @@ export interface AppInterface {
     maxClientEventsPerSecond: string|number;
     maxReadRequestsPerSecond?: string|number;
     webhooks?: WebhookInterface[];
-    maxPresenceMembersPerChannel: string|number;
-    maxPresenceMemberSizeInKb: string|number;
-    maxChannelNameLength: number;
-    maxEventChannelsAtOnce: string|number;
-    maxEventNameLength: string|number;
-    maxEventPayloadInKb: string|number;
-    maxEventBatchSize: string|number;
+    maxPresenceMembersPerChannel?: string|number;
+    maxPresenceMemberSizeInKb?: string|number;
+    maxChannelNameLength?: number;
+    maxEventChannelsAtOnce?: string|number;
+    maxEventNameLength?: string|number;
+    maxEventPayloadInKb?: string|number;
+    maxEventBatchSize?: string|number;
 }
 
 export interface WebhookInterface {
