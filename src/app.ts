@@ -149,7 +149,7 @@ export class App implements AppInterface {
         this.maxClientEventsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxClientEventsPerSecond', 'MaxClientEventsPerSecond', 'max_client_events_per_sec'], -1));
         this.maxReadRequestsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxReadRequestsPerSecond', 'MaxReadRequestsPerSecond', 'max_read_req_per_sec'], -1));
         this.webhooks = this.transformPotentialJsonToArray(this.extractFromPassedKeys(app, ['webhooks', 'Webhooks'], '[]'));
-        this.maxPresenceMembersPerChannel = parseInt(this.extractFromPassedKeys(app, ['maxPresenceMembersPerChannel', 'MaxPresenceMembersPerChannel', 'max_backend_events_per_sec'], server.options.presence.maxMembersPerChannel));
+        this.maxPresenceMembersPerChannel = parseInt(this.extractFromPassedKeys(app, ['maxPresenceMembersPerChannel', 'MaxPresenceMembersPerChannel', 'max_presence_members_per_channel'], server.options.presence.maxMembersPerChannel));
         this.maxPresenceMemberSizeInKb = parseInt(this.extractFromPassedKeys(app, ['maxPresenceMemberSizeInKb', 'MaxPresenceMemberSizeInKb', 'max_presence_member_size_in_kb'], server.options.presence.maxMemberSizeInKb));
         this.maxChannelNameLength = parseInt(this.extractFromPassedKeys(app, ['maxChannelNameLength', 'MaxChannelNameLength', 'max_channel_name_length'], server.options.channelLimits.maxNameLength));
         this.maxEventChannelsAtOnce = parseInt(this.extractFromPassedKeys(app, ['maxEventChannelsAtOnce', 'MaxEventChannelsAtOnce', 'max_event_channels_at_once'], server.options.eventLimits.maxChannelsAtOnce));
