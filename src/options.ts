@@ -105,6 +105,7 @@ export interface Options {
         };
         port: number;
     };
+    mode: string;
     port: number;
     pathPrefix: string;
     presence: {
