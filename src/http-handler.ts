@@ -38,6 +38,41 @@ export class HttpHandler {
         });
     }
 
+    acceptTraffic(res: HttpResponse) {
+        this.attachMiddleware(res, [
+            this.corsMiddleware,
+        ]).then(res => {
+            if (this.server.closing) {
+                return this.serverErrorResponse(res, 'The server is closing. Choose another server. :)');
+            }
+
+            let threshold = this.server.options.httpApi.acceptTraffic.memoryThreshold;
+
+            let {
+                rss,
+                heapTotal,
+                external,
+                arrayBuffers,
+            } = process.memoryUsage();
+
+            let totalSize = v8.getHeapStatistics().total_available_size;
+            let usedSize = rss + heapTotal + external + arrayBuffers;
+            let percentUsage = (usedSize / totalSize) * 100;
+
+            if (threshold < percentUsage) {
+                return this.serverErrorResponse(res, 'Low on memory here. Choose another server. :)');
+            }
+
+            this.sendJson(res, {
+                memory: {
+                    usedSize,
+                    totalSize,
+                    percentUsage,
+                },
+            });
+        });
+    }
+
     healthCheck(res: HttpResponse) {
         this.attachMiddleware(res, [
             this.corsMiddleware,

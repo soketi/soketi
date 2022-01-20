@@ -90,6 +90,9 @@ export interface Options {
     };
     httpApi: {
         requestLimitInMb: string|number;
+        acceptTraffic: {
+            memoryThreshold: number;
+        };
     };
     instance: {
         process_id: string|number;

@@ -70,6 +70,7 @@ export class Cli {
         EVENT_MAX_CHANNELS_AT_ONCE: 'eventLimits.maxChannelsAtOnce',
         EVENT_MAX_NAME_LENGTH: 'eventLimits.maxNameLength',
         EVENT_MAX_SIZE_IN_KB: 'eventLimits.maxPayloadInKb',
+        HTTP_ACCEPT_TRAFFIC_MEMORY_THRESHOLD: 'httpApi.acceptTraffic.memoryThreshold',
         METRICS_ENABLED: 'metrics.enabled',
         METRICS_DRIVER: 'metrics.driver',
         METRICS_PROMETHEUS_PREFIX: 'metrics.prometheus.prefix',

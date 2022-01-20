@@ -135,6 +135,9 @@ export class Server {
         },
         httpApi: {
             requestLimitInMb: 100,
+            acceptTraffic: {
+                memoryThreshold: 85,
+            },
         },
         instance: {
             process_id: process.pid || uuidv4(),
@@ -530,6 +533,7 @@ export class Server {
         return new Promise(resolve => {
             server.get(this.url('/'), (res, req) => this.httpHandler.healthCheck(res));
             server.get(this.url('/ready'), (res, req) => this.httpHandler.ready(res));
+            server.get(this.url('/accept-traffic'), (res, req) => this.httpHandler.acceptTraffic(res));
 
             server.get(this.url('/apps/:appId/channels'), (res, req) => {
                 res.params = { appId: req.getParameter(0) };
