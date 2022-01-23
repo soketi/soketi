@@ -144,8 +144,8 @@ describe('webhooks test', () => {
         };
 
         let channelName = `presence-${Utils.randomChannelName()}`;
-        let johnClient = Utils.newClientForPresenceUser(john);
-        let aliceClient = Utils.newClientForPresenceUser(alice);
+        let johnClient;
+        let aliceClient;
 
         Utils.newServer({
             'appManager.array.apps.0.webhooks': webhooks,
@@ -178,6 +178,8 @@ describe('webhooks test', () => {
                     done();
                 }
             }, (activeHttpServer) => {
+                johnClient = Utils.newClientForPresenceUser(john);
+
                 johnClient.connection.bind('connected', () => {
                     let johnChannel = johnClient.subscribe(channelName);
 
@@ -186,6 +188,8 @@ describe('webhooks test', () => {
                         expect(data.me.id).toBe(1);
                         expect(data.members['1'].id).toBe(1);
                         expect(data.me.info.name).toBe('John');
+
+                        aliceClient = Utils.newClientForPresenceUser(alice);
 
                         aliceClient.connection.bind('connected', () => {
                             let aliceChannel = aliceClient.subscribe(channelName);
