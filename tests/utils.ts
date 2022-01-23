@@ -220,14 +220,6 @@ export class Utils {
         }, port, key);
     }
 
-    static sendEventToChannel(pusher, channel: string|string[], event: string, body: any): any {
-        return pusher.trigger(channel, event, body);
-    }
-
-    static sendBatch(pusher, events: PusherApiMessage[]): any {
-        return pusher.triggerBatch(events);
-    }
-
     static signTokenForPrivateChannel(
         socketId: string,
         channel: any,

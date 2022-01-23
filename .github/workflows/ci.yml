@@ -103,6 +103,7 @@ jobs:
       - name: Execute tests
         run: npm run test
         env:
+          RETRY_TIMES: 2
           TEST_ADAPTER: ${{ matrix.adapter }}
           TEST_APP_MANAGER: ${{ matrix.app_manager }}
           TEST_QUEUE_DRIVER: ${{ matrix.queue_driver }}

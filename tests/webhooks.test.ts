@@ -3,7 +3,7 @@ import { Server } from '../src/server';
 import { Utils } from './utils';
 import { createWebhookHmac } from "../src/webhook-sender";
 
-jest.retryTimes(2);
+jest.retryTimes(parseInt(process.env.RETRY_TIMES || '1'));
 
 describe('webhooks test', () => {
     beforeEach(() => {
@@ -23,6 +23,8 @@ describe('webhooks test', () => {
         }];
 
         let channelName = `private-${Utils.randomChannelName()}`;
+        let client1 = Utils.newClientForPrivateChannel();
+        let client2 = Utils.newClientForPrivateChannel();
 
         Utils.newServer({
             'appManager.array.apps.0.enableClientMessages': true,
@@ -48,16 +50,14 @@ describe('webhooks test', () => {
                 expect(webhookEvent.socket_id).toBeDefined();
 
                 res.json({ ok: true });
+                client1.disconnect();
+                client2.disconnect();
                 done();
             }, (activeHttpServer) => {
-                let client1 = Utils.newClientForPrivateChannel();
-
                 client1.connection.bind('connected', () => {
                     let channel = client1.subscribe(channelName);
 
                     channel.bind('pusher:subscription_succeeded', () => {
-                        let client2 = Utils.newClientForPrivateChannel();
-
                         client2.connection.bind('connected', () => {
                             let channel = client2.subscribe(channelName);
 
@@ -80,6 +80,7 @@ describe('webhooks test', () => {
         }];
 
         let channelName = `private-${Utils.randomChannelName()}`;
+        let client = Utils.newClientForPrivateChannel();
 
         Utils.newServer({
             'appManager.array.apps.0.webhooks': webhooks,
@@ -105,11 +106,10 @@ describe('webhooks test', () => {
 
                 if (webhookEvent.name === 'channel_vacated') {
                     expect(webhookEvent.channel).toBe(channelName);
+                    client.disconnect();
                     done();
                 }
             }, (activeHttpServer) => {
-                let client = Utils.newClientForPrivateChannel();
-
                 client.connection.bind('connected', () => {
                     let channel = client.subscribe(channelName);
 
@@ -127,7 +127,25 @@ describe('webhooks test', () => {
             url: 'http://127.0.0.1:3001/webhook',
         }];
 
+        let john = {
+            user_id: 1,
+            user_info: {
+                id: 1,
+                name: 'John',
+            },
+        };
+
+        let alice = {
+            user_id: 2,
+            user_info: {
+                id: 2,
+                name: 'Alice',
+            },
+        };
+
         let channelName = `presence-${Utils.randomChannelName()}`;
+        let johnClient;
+        let aliceClient;
 
         Utils.newServer({
             'appManager.array.apps.0.webhooks': webhooks,
@@ -156,26 +174,11 @@ describe('webhooks test', () => {
                 if (webhookEvent.name === 'member_removed') {
                     expect(webhookEvent.channel).toBe(channelName);
                     expect(webhookEvent.user_id).toBe(2);
+                    johnClient.disconnect();
                     done();
                 }
             }, (activeHttpServer) => {
-                let john = {
-                    user_id: 1,
-                    user_info: {
-                        id: 1,
-                        name: 'John',
-                    },
-                };
-
-                let alice = {
-                    user_id: 2,
-                    user_info: {
-                        id: 2,
-                        name: 'Alice',
-                    },
-                };
-
-                let johnClient = Utils.newClientForPresenceUser(john);
+                johnClient = Utils.newClientForPresenceUser(john);
 
                 johnClient.connection.bind('connected', () => {
                     let johnChannel = johnClient.subscribe(channelName);
@@ -186,7 +189,7 @@ describe('webhooks test', () => {
                         expect(data.members['1'].id).toBe(1);
                         expect(data.me.info.name).toBe('John');
 
-                        let aliceClient = Utils.newClientForPresenceUser(alice);
+                        aliceClient = Utils.newClientForPresenceUser(alice);
 
                         aliceClient.connection.bind('connected', () => {
                             let aliceChannel = aliceClient.subscribe(channelName);
@@ -228,6 +231,8 @@ describe('webhooks test', () => {
         }];
 
         let channelName = `private-${Utils.randomChannelName()}`;
+        let client1 = Utils.newClientForPrivateChannel();
+        let client2 = Utils.newClientForPrivateChannel();
 
         Utils.newServer({
             'appManager.array.apps.0.enableClientMessages': true,
@@ -240,16 +245,14 @@ describe('webhooks test', () => {
                 expect(req.originalUrl).toBe('/2015-03-31/functions/some-lambda-function/invocations');
 
                 res.json({ ok: true });
+                client1.disconnect();
+                client2.disconnect();
                 done();
             }, (activeHttpServer) => {
-                let client1 = Utils.newClientForPrivateChannel();
-
                 client1.connection.bind('connected', () => {
                     let channel = client1.subscribe(channelName);
 
                     channel.bind('pusher:subscription_succeeded', () => {
-                        let client2 = Utils.newClientForPrivateChannel();
-
                         client2.connection.bind('connected', () => {
                             let channel = client2.subscribe(channelName);
 
@@ -307,6 +310,8 @@ describe('webhooks test', () => {
             `${Utils.randomChannelName()}-foo`,
         ];
 
+        let client = Utils.newClientForPrivateChannel();
+
         Utils.newServer({
             'appManager.array.apps.0.webhooks': webhooks,
             'database.redis.keyPrefix': 'channel-webhooks',
@@ -330,13 +335,12 @@ describe('webhooks test', () => {
 
                     if (receivedWebhookRequests >= matchedChannels.length) {
                         done();
+                        client.disconnect();
                     }
                 });
 
                 res.json({ ok: true });
             }, (activeHttpServer) => {
-                let client = Utils.newClientForPrivateChannel();
-
                 client.connection.bind('connected', () => {
                     [...unmatchedChannels, ...matchedChannels].forEach(channelName => client.subscribe(channelName));
                 });
@@ -357,6 +361,7 @@ describe('webhooks test', () => {
         }];
 
         const channelName = `private-${Utils.randomChannelName()}`;
+        let client = Utils.newClientForPrivateChannel();
 
         Utils.newServer({
             'appManager.array.apps.0.webhooks': webhooks,
@@ -374,11 +379,9 @@ describe('webhooks test', () => {
                 expect(req.body.events.length).toBe(1);
 
                 res.json({ ok: true });
-
+                client.disconnect();
                 done();
             }, (activeHttpServer) => {
-                let client = Utils.newClientForPrivateChannel();
-
                 client.connection.bind('connected', () => {
                     client.subscribe(channelName);
                 });
