@@ -313,13 +313,13 @@ export class WsHandler {
         let channel = message.data.channel;
         let channelManager = this.getChannelManagerFor(channel);
 
-        if (channel.length > this.server.options.channelLimits.maxNameLength) {
+        if (channel.length > ws.app.maxChannelNameLength) {
             let broadcastMessage = {
                 event: 'pusher:subscription_error',
                 channel,
                 data: {
                     type: 'LimitReached',
-                    error: `The channel name is longer than the allowed ${this.server.options.channelLimits.maxNameLength} characters.`,
+                    error: `The channel name is longer than the allowed ${ws.app.maxChannelNameLength} characters.`,
                     status: 4009,
                 },
             };
@@ -519,13 +519,13 @@ export class WsHandler {
         }
 
         // Make sure the event name length is not too big.
-        if (event.length > this.server.options.eventLimits.maxNameLength) {
+        if (event.length > ws.app.maxEventNameLength) {
             let broadcastMessage = {
                 event: 'pusher:error',
                 channel,
                 data: {
                     code: 4301,
-                    message: `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`,
+                    message: `Event name is too long. Maximum allowed size is ${ws.app.maxEventNameLength}.`,
                 },
             };
 
@@ -537,13 +537,13 @@ export class WsHandler {
         let payloadSizeInKb = Utils.dataToKilobytes(message.data);
 
         // Make sure the total payload of the message body is not too big.
-        if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
+        if (payloadSizeInKb > parseFloat(ws.app.maxEventPayloadInKb as string)) {
             let broadcastMessage = {
                 event: 'pusher:error',
                 channel,
                 data: {
                     code: 4301,
-                    message: `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`,
+                    message: `The event data should be less than ${ws.app.maxEventPayloadInKb} KB.`,
                 },
             };
 

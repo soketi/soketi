@@ -20,6 +20,19 @@ let createRecord = () => {
             MaxClientEventsPerSecond: { N: '-1' },
             MaxReadRequestsPerSecond: { N: '-1' },
             Webhooks: { S: '[]', },
+
+            /**
+             * The following fields are optional. It's not a problem, because DynamoDB is NoSQL.
+             * If one of the following fields doesn't exist,
+             * the default ones defined at the server-level will take priority.
+             */
+            // MaxPresenceMembersPerChannel: { N: '-1' },
+            // MaxPresenceMemberSizeInKb: { N: '-1' },
+            // MaxChannelNameLength: { N: '-1' },
+            // MaxEventChannelsAtOnce: { N: '-1' },
+            // MaxEventNameLength: { N: '-1' },
+            // MaxEventPayloadInKb: { N: '-1' },
+            // MaxEventBatchSize: { N: '-1' },
         },
     };
 

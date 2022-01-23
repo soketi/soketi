@@ -8,7 +8,14 @@ CREATE TABLE IF NOT EXISTS apps (
     max_backend_events_per_sec integer NOT NULL,
     max_client_events_per_sec integer NOT NULL,
     max_read_req_per_sec integer NOT NULL,
-    webhooks json
+    webhooks json,
+    max_presence_members_per_channel integer DEFAULT NULL,
+    max_presence_member_size_in_kb integer DEFAULT NULL,
+    max_channel_name_length integer DEFAULT NULL,
+    max_event_channels_at_once integer DEFAULT NULL,
+    max_event_name_length integer DEFAULT NULL,
+    max_event_payload_in_kb integer DEFAULT NULL,
+    max_event_batch_size integer DEFAULT NULL
 );
 
 INSERT INTO apps (
@@ -21,7 +28,14 @@ INSERT INTO apps (
     max_backend_events_per_sec,
     max_client_events_per_sec,
     max_read_req_per_sec,
-    webhooks
+    webhooks,
+    max_presence_members_per_channel,
+    max_presence_member_size_in_kb,
+    max_channel_name_length,
+    max_event_channels_at_once,
+    max_event_name_length,
+    max_event_payload_in_kb,
+    max_event_batch_size
 ) VALUES (
     'app-id',
     'app-key',
@@ -32,5 +46,12 @@ INSERT INTO apps (
     -1,
     -1,
     -1,
-    '[]'
+    '[]',
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
 );

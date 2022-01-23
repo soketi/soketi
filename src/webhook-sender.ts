@@ -166,11 +166,13 @@ export class WebhookSender {
         };
 
         // TODO: Maybe have one queue per app to reserve queue thresholds?
-        server.queueManager.processQueue('client_event_webhooks', queueProcessor);
-        server.queueManager.processQueue('member_added_webhooks', queueProcessor);
-        server.queueManager.processQueue('member_removed_webhooks', queueProcessor);
-        server.queueManager.processQueue('channel_vacated_webhooks', queueProcessor);
-        server.queueManager.processQueue('channel_occupied_webhooks', queueProcessor);
+        if (server.canProcessQueues()) {
+            server.queueManager.processQueue('client_event_webhooks', queueProcessor);
+            server.queueManager.processQueue('member_added_webhooks', queueProcessor);
+            server.queueManager.processQueue('member_removed_webhooks', queueProcessor);
+            server.queueManager.processQueue('channel_vacated_webhooks', queueProcessor);
+            server.queueManager.processQueue('channel_occupied_webhooks', queueProcessor);
+        }
     }
 
     /**
