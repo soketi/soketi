@@ -17,7 +17,7 @@ describe('ws test', () => {
     Utils.shouldRun(Utils.appManagerIs('array'))('client events', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
-            let client2 = Utils.newClientForPrivateChannel();
+            let client2;
             let channelName = `private-${Utils.randomChannelName()}`;
 
             client1.connection.bind('connected', () => {
@@ -33,6 +33,8 @@ describe('ws test', () => {
                 let channel = client1.subscribe(channelName);
 
                 channel.bind('pusher:subscription_succeeded', () => {
+                    client2 = Utils.newClientForPrivateChannel();
+
                     client2.connection.bind('connected', () => {
                         let channel = client2.subscribe(channelName);
 
@@ -50,7 +52,6 @@ describe('ws test', () => {
     Utils.shouldRun(Utils.appManagerIs('array'))('client events dont get emitted when client messaging is disabled', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': false }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
-            let client2 = Utils.newClientForPrivateChannel({});
             let channelName = `private-${Utils.randomChannelName()}`;
 
             client1.connection.bind('connected', () => {
@@ -63,6 +64,8 @@ describe('ws test', () => {
                 let channel = client1.subscribe(channelName);
 
                 channel.bind('pusher:subscription_succeeded', () => {
+                    let client2 = Utils.newClientForPrivateChannel();
+
                     client2.connection.bind('connected', () => {
                         let channel = client2.subscribe(channelName);
 
@@ -87,7 +90,6 @@ describe('ws test', () => {
     Utils.shouldRun(Utils.appManagerIs('array'))('client events dont get emitted when event name is big', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxNameLength': 25 }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
-            let client2 = Utils.newClientForPrivateChannel({});
             let channelName = `private-${Utils.randomChannelName()}`;
             let eventName = 'client-a8hsuNFXUhfStiWE02R'; // 26 characters
 
@@ -101,6 +103,8 @@ describe('ws test', () => {
                 let channel = client1.subscribe(channelName);
 
                 channel.bind('pusher:subscription_succeeded', () => {
+                    let client2 = Utils.newClientForPrivateChannel();
+
                     client2.connection.bind('connected', () => {
                         let channel = client2.subscribe(channelName);
 
@@ -125,7 +129,6 @@ describe('ws test', () => {
     Utils.shouldRun(Utils.appManagerIs('array'))('client events dont get emitted when event payload is big', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true, 'eventLimits.maxPayloadInKb': 1/1024/1024 }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
-            let client2 = Utils.newClientForPrivateChannel({});
             let channelName = `private-${Utils.randomChannelName()}`;
 
             client1.connection.bind('connected', () => {
@@ -138,6 +141,8 @@ describe('ws test', () => {
                 let channel = client1.subscribe(channelName);
 
                 channel.bind('pusher:subscription_succeeded', () => {
+                    let client2 = Utils.newClientForPrivateChannel({});
+
                     client2.connection.bind('connected', () => {
                         let channel = client2.subscribe(channelName);
 
