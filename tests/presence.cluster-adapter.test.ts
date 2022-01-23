@@ -71,6 +71,7 @@ describe('presence channel test for cluster adapter', () => {
                     johnChannel.bind('pusher:member_removed', data => {
                         expect(data.id).toBe(2);
                         expect(data.info.name).toBe('Alice');
+                        johnClient.disconnect();
                         done();
                     });
                 });

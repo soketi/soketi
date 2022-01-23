@@ -43,7 +43,7 @@ describe('presence channel test', () => {
                     expect(data.members['1'].id).toBe(1);
                     expect(data.me.info.name).toBe('John');
 
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' })
+                    backend.trigger(channelName, 'greeting', { message: 'hello' })
                         .catch(error => {
                             throw new Error(error);
                         });
@@ -106,6 +106,7 @@ describe('presence channel test', () => {
                 johnChannel.bind('pusher:member_removed', data => {
                     expect(data.id).toBe(2);
                     expect(data.info.name).toBe('Alice');
+                    johnClient.disconnect();
                     done();
                 });
             });
@@ -139,6 +140,7 @@ describe('presence channel test', () => {
                 if (event === 'pusher:subscription_error' && channel === channelName) {
                     expect(data.type).toBe('AuthError');
                     expect(data.status).toBe(401);
+                    client.disconnect();
                     done();
                 }
             });
@@ -169,7 +171,6 @@ describe('presence channel test', () => {
 
                     expect(namespace.sockets.size).toBe(0);
                     expect(namespace.channels.size).toBe(0);
-
                     done();
                 });
             });
@@ -190,13 +191,12 @@ describe('presence channel test', () => {
                         expect(namespace.sockets.size).toBe(1);
                         expect(socket.subscribedChannels.size).toBe(0);
                         expect(socket.presence.size).toBe(0);
-
                         client.disconnect();
                     });
                 });
 
                 channel.bind('pusher:subscription_succeeded', (data) => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                    backend.trigger(channelName, 'greeting', { message: 'hello' });
                 });
             });
         });
@@ -222,7 +222,6 @@ describe('presence channel test', () => {
 
                     expect(namespace.sockets.size).toBe(0);
                     expect(namespace.channels.size).toBe(0);
-
                     done();
                 });
             });
@@ -236,7 +235,7 @@ describe('presence channel test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', (data) => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                    backend.trigger(channelName, 'greeting', { message: 'hello' });
                 });
             });
         });
@@ -280,6 +279,7 @@ describe('presence channel test', () => {
                             server.adapter.getChannelMembers('app-id', channelName).then(members => {
                                 if (members.size === 1) {
                                     done();
+                                    aliceClient.disconnect();
                                 } else {
                                     throw new Error('The member_removed got triggered but John did not left.');
                                 }

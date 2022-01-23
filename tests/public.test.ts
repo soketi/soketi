@@ -29,7 +29,7 @@ describe('public channel test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello', weirdVariable: 'abc/d' })
+                    backend.trigger(channelName, 'greeting', { message: 'hello', weirdVariable: 'abc/d' })
                         .catch(error => {
                             throw new Error(error);
                         });
@@ -50,7 +50,6 @@ describe('public channel test', () => {
 
                     expect(namespace.sockets.size).toBe(0);
                     expect(namespace.channels.size).toBe(0);
-
                     done();
                 });
             });
@@ -77,7 +76,7 @@ describe('public channel test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                    backend.trigger(channelName, 'greeting', { message: 'hello' });
                 });
             });
         });
@@ -95,7 +94,6 @@ describe('public channel test', () => {
 
                     expect(namespace.sockets.size).toBe(0);
                     expect(namespace.channels.size).toBe(0);
-
                     done();
                 });
             });
@@ -109,7 +107,7 @@ describe('public channel test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                    backend.trigger(channelName, 'greeting', { message: 'hello' });
                 });
             });
         });
