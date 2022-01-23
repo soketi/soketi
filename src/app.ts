@@ -220,7 +220,7 @@ export class App implements AppInterface {
         let extractedValue = defaultValue;
 
         parameters.forEach(param => {
-            if (typeof app[param] !== 'undefined' && app[param] !== '') {
+            if (typeof app[param] !== 'undefined' && !['', null].includes(app[param])) {
                 extractedValue = app[param];
             }
         });
