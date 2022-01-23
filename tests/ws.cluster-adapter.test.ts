@@ -249,21 +249,20 @@ describe('ws test for cluster adapter', () => {
         Utils.newServer({}, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();
-                let client2 = Utils.newClient({}, 6002);
 
                 client1.connection.bind('connected', () => {
                     Utils.wait(3000).then(() => {
                         server1.adapter.getSockets('app-id').then(sockets => {
                             expect(sockets.size).toBe(1);
 
-                            Utils.wait(3000).then(() => {
-                                client2.connection.bind('connected', () => {
-                                    server1.adapter.getSockets('app-id').then(sockets => {
-                                        expect(sockets.size).toBe(2);
-                                        client1.disconnect();
-                                        client2.disconnect();
-                                        done();
-                                    });
+                            let client2 = Utils.newClient({}, 6002);
+
+                            client2.connection.bind('connected', () => {
+                                server1.adapter.getSockets('app-id').then(sockets => {
+                                    expect(sockets.size).toBe(2);
+                                    client1.disconnect();
+                                    client2.disconnect();
+                                    done();
                                 });
                             });
                         });
@@ -277,7 +276,6 @@ describe('ws test for cluster adapter', () => {
         Utils.newServer({}, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();
-                let client2 = Utils.newClient({}, 6002);
                 let channelName = Utils.randomChannelName();
 
                 client1.connection.bind('connected', () => {
@@ -291,24 +289,24 @@ describe('ws test for cluster adapter', () => {
                                 server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
                                     expect(sockets.size).toBe(1);
 
-                                    Utils.wait(3000).then(() => {
-                                        client2.connection.bind('connected', () => {
-                                            let channel2 = client2.subscribe(channelName);
+                                    let client2 = Utils.newClient({}, 6002);
 
-                                            channel2.bind('pusher:subscription_succeeded', () => {
-                                                Utils.wait(3000).then(() => {
-                                                    server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
-                                                        expect(sockets.size).toBe(2);
+                                    client2.connection.bind('connected', () => {
+                                        let channel2 = client2.subscribe(channelName);
 
-                                                        client2.unsubscribe(channelName);
+                                        channel2.bind('pusher:subscription_succeeded', () => {
+                                            Utils.wait(3000).then(() => {
+                                                server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                                    expect(sockets.size).toBe(2);
 
-                                                        Utils.wait(3000).then(() => {
-                                                            server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
-                                                                expect(sockets.size).toBe(1);
-                                                                client1.disconnect();
-                                                                client2.disconnect();
-                                                                done();
-                                                            });
+                                                    client2.unsubscribe(channelName);
+
+                                                    Utils.wait(3000).then(() => {
+                                                        server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
+                                                            expect(sockets.size).toBe(1);
+                                                            client1.disconnect();
+                                                            client2.disconnect();
+                                                            done();
                                                         });
                                                     });
                                                 });

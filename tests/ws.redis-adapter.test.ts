@@ -237,11 +237,12 @@ describe('ws test for redis adapter', () => {
         Utils.newServer({}, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();
-                let client2 = Utils.newClient({}, 6002);
 
                 client1.connection.bind('connected', () => {
                     server1.adapter.getSockets('app-id').then(sockets => {
                         expect(sockets.size).toBe(1);
+
+                        let client2 = Utils.newClient({}, 6002);
 
                         client2.connection.bind('connected', () => {
                             server1.adapter.getSockets('app-id').then(sockets => {
@@ -261,7 +262,6 @@ describe('ws test for redis adapter', () => {
         Utils.newServer({}, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();
-                let client2 = Utils.newClient({}, 6002);
                 let channelName = Utils.randomChannelName();
 
                 client1.connection.bind('connected', () => {
@@ -273,6 +273,8 @@ describe('ws test for redis adapter', () => {
                         channel1.bind('pusher:subscription_succeeded', () => {
                             server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
                                 expect(sockets.size).toBe(1);
+
+                                let client2 = Utils.newClient({}, 6002);
 
                                 client2.connection.bind('connected', () => {
                                     let channel2 = client2.subscribe(channelName);

@@ -303,11 +303,12 @@ describe('ws test', () => {
     test('adapter getSockets works', done => {
         Utils.newServer({}, (server: Server) => {
             let client1 = Utils.newClient();
-            let client2 = Utils.newClient();
 
             client1.connection.bind('connected', () => {
                 server.adapter.getSockets('app-id').then(sockets => {
                     expect(sockets.size).toBe(1);
+
+                    let client2 = Utils.newClient();
 
                     client2.connection.bind('connected', () => {
                         server.adapter.getSockets('app-id').then(sockets => {
@@ -325,18 +326,20 @@ describe('ws test', () => {
     test('adapter getChannelSockets works', done => {
         Utils.newServer({}, (server: Server) => {
             let client1 = Utils.newClient();
-            let client2 = Utils.newClient();
             let channelName = Utils.randomChannelName();
 
             client1.connection.bind('connected', () => {
                 server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
                     expect(sockets.size).toBe(0);
 
+                    let client1 = Utils.newClient();
                     let channel1 = client1.subscribe(channelName);
 
                     channel1.bind('pusher:subscription_succeeded', () => {
                         server.adapter.getChannelSockets('app-id', channelName).then(sockets => {
                             expect(sockets.size).toBe(1);
+
+                            let client2 = Utils.newClient();
 
                             client2.connection.bind('connected', () => {
                                 let channel2 = client2.subscribe(channelName);
