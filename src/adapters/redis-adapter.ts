@@ -33,13 +33,20 @@ export class RedisAdapter extends HorizontalAdapter {
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
 
-        let redisDefaultOptions = {
+        let redisOptions = {
             maxRetriesPerRequest: 2,
             retryStrategy: times => times * 2,
+            ...server.options.database.redis,
+            ...server.options.adapter.redis.redisOptions,
         };
 
-        this.subClient = new Redis({ ...redisDefaultOptions, ...server.options.database.redis });
-        this.pubClient = new Redis({ ...redisDefaultOptions, ...server.options.database.redis });
+        this.subClient = server.options.adapter.redis.clusterMode
+            ? new Redis.Cluster(server.options.database.redis.clusterNodes, { redisOptions })
+            : new Redis(redisOptions);
+
+        this.pubClient = server.options.adapter.redis.clusterMode
+            ? new Redis.Cluster(server.options.database.redis.clusterNodes, { redisOptions })
+            : new Redis(redisOptions);
 
         const onError = err => {
             if (err) {
@@ -112,8 +119,7 @@ export class RedisAdapter extends HorizontalAdapter {
      * Get the number of Redis subscribers.
      */
     protected getNumSub(): Promise<number> {
-        if (this.pubClient.constructor.name === 'Cluster') {
-            // Cluster
+        if (this.server.options.adapter.redis.clusterMode) {
             const nodes = this.pubClient.nodes();
 
             return Promise.all(
@@ -121,9 +127,15 @@ export class RedisAdapter extends HorizontalAdapter {
                     node.send_command('pubsub', ['numsub', this.requestChannel])
                 )
             ).then((values: any[]) => {
-                return values.reduce((numSub, value) => {
+                let number = values.reduce((numSub, value) => {
                     return numSub += parseInt(value[1], 10);
                 }, 0);
+
+                if (this.server.options.debug) {
+                    Log.info(`Found ${number} subscribers in the Redis cluster.`);
+                }
+
+                return number;
             });
         } else {
             // RedisClient or Redis
@@ -136,7 +148,13 @@ export class RedisAdapter extends HorizontalAdapter {
                             return reject(err);
                         }
 
-                        resolve(parseInt(numSub[1], 10));
+                        let number = parseInt(numSub[1], 10);
+
+                        if (this.server.options.debug) {
+                            Log.info(`Found ${number} subscribers in the Redis cluster.`);
+                        }
+
+                        resolve(number);
                     }
                 );
             });

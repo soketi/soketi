@@ -46,22 +46,28 @@ export class RedisQueueDriver implements QueueInterface {
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
         return new Promise(resolve => {
             if (!this.queueWithWorker.has(queueName)) {
-                const connection = new Redis({
+                let redisOptions = {
                     maxRetriesPerRequest: null,
                     enableReadyCheck: false,
                     ...this.server.options.database.redis,
+                    ...this.server.options.queue.redis.redisOptions,
                     // We set the key prefix on the queue, worker and scheduler instead of on the connection itself
                     keyPrefix: undefined,
-                });
+                };
 
-                // We remove a trailing `:` from the prefix because BullMQ adds that already
-                const prefix = this.server.options.database.redis.keyPrefix.replace(/:$/, '');
+                const connection = this.server.options.queue.redis.clusterMode
+                    ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { scaleReads: 'slave', redisOptions })
+                    : new Redis(redisOptions);
 
-                const sharedOptions = { prefix, connection };
+                const queueSharedOptions = {
+                    // We remove a trailing `:` from the prefix because BullMQ adds that already
+                    prefix: this.server.options.database.redis.keyPrefix.replace(/:$/, ''),
+                    connection,
+                };
 
                 this.queueWithWorker.set(queueName, {
                     queue: new Queue(queueName, {
-                        ...sharedOptions,
+                        ...queueSharedOptions,
                         defaultJobOptions: {
                             attempts: 6,
                             backoff: {
@@ -74,12 +80,12 @@ export class RedisQueueDriver implements QueueInterface {
                     }),
                     // TODO: Sandbox the worker? https://docs.bullmq.io/guide/workers/sandboxed-processors
                     worker: new Worker(queueName, callback as any, {
-                        ...sharedOptions,
+                        ...queueSharedOptions,
                         concurrency: this.server.options.queue.redis.concurrency,
                     }),
                     // TODO: Seperate this from the queue with worker when multipe workers are supported.
                     //       A single scheduler per queue is needed: https://docs.bullmq.io/guide/queuescheduler
-                    scheduler: new QueueScheduler(queueName, sharedOptions),
+                    scheduler: new QueueScheduler(queueName, queueSharedOptions),
                 });
             }
 

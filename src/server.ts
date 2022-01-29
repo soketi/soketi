@@ -30,6 +30,10 @@ export class Server {
             driver: 'local',
             redis: {
                 prefix: '',
+                redisOptions: {
+                    //
+                },
+                clusterMode: false,
             },
         },
         appManager: {
@@ -119,6 +123,7 @@ export class Server {
                 sentinels: null,
                 sentinelPassword: null,
                 name: 'mymaster',
+                clusterNodes: [],
             },
         },
         databasePooling: {
@@ -161,6 +166,10 @@ export class Server {
             driver: 'sync',
             redis: {
                 concurrency: 1,
+                redisOptions: {
+                    //
+                },
+                clusterMode: false,
             },
             sqs: {
                 region: 'us-east-1',
@@ -172,6 +181,12 @@ export class Server {
         },
         rateLimiter: {
             driver: 'local',
+            redis: {
+                redisOptions: {
+                    //
+                },
+                clusterMode: false,
+            },
         },
         shutdownGracePeriod: 3_000,
         ssl: {

@@ -12,9 +12,15 @@ interface Redis {
     sentinels: RedisSentinel[];
     sentinelPassword: string|null;
     name: string;
+    clusterNodes: ClusterNode[];
 }
 
 interface RedisSentinel {
+    host: string;
+    port: number;
+}
+
+interface ClusterNode {
     host: string;
     port: number;
 }
@@ -32,6 +38,8 @@ export interface Options {
         driver: string;
         redis: {
             prefix: string;
+            redisOptions: any;
+            clusterMode: boolean;
         };
     };
     appManager: {
@@ -118,6 +126,8 @@ export interface Options {
         driver: string;
         redis: {
             concurrency: number;
+            redisOptions: any;
+            clusterMode: boolean;
         };
         sqs: {
             region?: string;
@@ -129,6 +139,10 @@ export interface Options {
     };
     rateLimiter: {
         driver: string;
+        redis: {
+            redisOptions: any;
+            clusterMode: boolean;
+        };
     };
     shutdownGracePeriod: number;
     ssl: {
