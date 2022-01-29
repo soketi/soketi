@@ -171,6 +171,13 @@ export class Server {
                 },
                 clusterMode: false,
             },
+            sqs: {
+                region: 'us-east-1',
+                endpoint: null,
+                clientOptions: {},
+                consumerOptions: {},
+                queueUrl: '',
+            },
         },
         rateLimiter: {
             driver: 'local',
@@ -360,6 +367,7 @@ export class Server {
             return Promise.all([
                 this.metricsManager.clear(),
                 this.queueManager.clear(),
+                this.adapter.clear(null, this.closing),
                 this.rateLimiter.clear(this.closing),
             ]).then(() => {
                 if (this.options.debug) {

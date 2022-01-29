@@ -23,8 +23,8 @@ describe('webhooks test', () => {
         }];
 
         let channelName = `private-${Utils.randomChannelName()}`;
-        let client1 = Utils.newClientForPrivateChannel();
-        let client2 = Utils.newClientForPrivateChannel();
+        let client1;
+        let client2;
 
         Utils.newServer({
             'appManager.array.apps.0.enableClientMessages': true,
@@ -54,10 +54,14 @@ describe('webhooks test', () => {
                 client2.disconnect();
                 done();
             }, (activeHttpServer) => {
+                client1 = Utils.newClientForPrivateChannel();
+
                 client1.connection.bind('connected', () => {
                     let channel = client1.subscribe(channelName);
 
                     channel.bind('pusher:subscription_succeeded', () => {
+                        client2 = Utils.newClientForPrivateChannel();
+
                         client2.connection.bind('connected', () => {
                             let channel = client2.subscribe(channelName);
 

@@ -20,6 +20,7 @@ export interface ClientEventData {
 
 export interface JobData {
     appKey: string;
+    appId: string;
     payload: {
         time_ms: number;
         events: ClientEventData[];
@@ -273,6 +274,7 @@ export class WebhookSender {
 
         this.server.queueManager.addToQueue(queueName, {
             appKey: app.key,
+            appId: app.id,
             payload,
             pusherSignature,
         });
