@@ -31,7 +31,7 @@
     "bullmq": "1.64.0",
     "colors": "1.4.0",
     "dot-wild": "^3.0.1",
-    "dotenv": "^10.0.0",
+    "dotenv": "^14.3.2",
     "express": "^4.17.2",
     "ioredis": "^4.28.2",
     "knex": "^0.95.15",
@@ -45,6 +45,7 @@
     "pusher": "^5.0.0",
     "query-string": "^7.1.0",
     "rate-limiter-flexible": "^2.3.6",
+    "sqs-consumer": "^5.6.0",
     "uuid": "^8.3.2",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.6.0",
     "yargs": "^17.3.1"
