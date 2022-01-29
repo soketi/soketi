@@ -120,7 +120,6 @@ export class RedisAdapter extends HorizontalAdapter {
      */
     protected getNumSub(): Promise<number> {
         if (this.pubClient.constructor.name === 'Cluster') {
-            // Cluster
             const nodes = this.pubClient.nodes();
 
             return Promise.all(
@@ -128,9 +127,15 @@ export class RedisAdapter extends HorizontalAdapter {
                     node.send_command('pubsub', ['numsub', this.requestChannel])
                 )
             ).then((values: any[]) => {
-                return values.reduce((numSub, value) => {
+                let number = values.reduce((numSub, value) => {
                     return numSub += parseInt(value[1], 10);
                 }, 0);
+
+                if (this.server.options.debug) {
+                    Log.info(`Found ${number} subscribers in the Redis cluster.`);
+                }
+
+                return number;
             });
         } else {
             // RedisClient or Redis
@@ -143,7 +148,13 @@ export class RedisAdapter extends HorizontalAdapter {
                             return reject(err);
                         }
 
-                        resolve(parseInt(numSub[1], 10));
+                        let number = parseInt(numSub[1], 10);
+
+                        if (this.server.options.debug) {
+                            Log.info(`Found ${number} subscribers in the Redis cluster.`);
+                        }
+
+                        resolve(number);
                     }
                 );
             });
