@@ -32,8 +32,8 @@ export class SqsQueueDriver implements QueueInterface {
             let params = {
                 MessageBody: message,
                 MessageDeduplicationId: createHash('sha256').update(message).digest('hex'),
-                MessageGroupId: queueName,
-                QueueUrl: this.server.options.queue.sqs.queues[queueName],
+                MessageGroupId: `${data.appId}_${queueName}`,
+                QueueUrl: this.server.options.queue.sqs.queueUrl,
             };
 
             this.sqsClient().sendMessage(params, (err, data) => {
@@ -58,7 +58,7 @@ export class SqsQueueDriver implements QueueInterface {
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
         return new Promise(resolve => {
             let consumer = Consumer.create({
-                queueUrl: this.server.options.queue.sqs.queues[queueName],
+                queueUrl: this.server.options.queue.sqs.queueUrl,
                 sqs: this.sqsClient(),
                 ...this.server.options.queue.sqs.consumer_options,
                 handleMessage: async ({ Body }) => {

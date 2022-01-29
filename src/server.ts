@@ -166,13 +166,7 @@ export class Server {
                 region: 'us-east-1',
                 client_options: {},
                 consumer_options: {},
-                queues: {
-                    client_event_webhooks: '',
-                    member_added_webhooks: '',
-                    member_removed_webhooks: '',
-                    channel_vacated_webhooks: '',
-                    channel_occupied_webhooks: '',
-                },
+                queueUrl: '',
             },
         },
         rateLimiter: {
