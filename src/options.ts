@@ -121,6 +121,7 @@ export interface Options {
         };
         sqs: {
             region?: string;
+            endpoint?: string;
             clientOptions?: SQS.Types.ClientConfiguration;
             consumerOptions?: ConsumerOptions;
             queueUrl: string;

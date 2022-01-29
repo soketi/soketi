@@ -85,6 +85,7 @@ export class Cli {
         QUEUE_SQS_REGION: 'queue.sqs.region',
         QUEUE_SQS_CLIENT_OPTIONS: 'queue.sqs.clientOptions',
         QUEUE_SQS_URL: 'queue.sqs.queueUrl',
+        QUEUE_SQS_ENDPOINT: 'queue.sqs.endpoint',
         RATE_LIMITER_DRIVER: 'rateLimiter.driver',
         SHUTDOWN_GRACE_PERIOD: 'shutdownGracePeriod',
         SSL_CERT: 'ssl.certPath',

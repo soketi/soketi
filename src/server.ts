@@ -164,6 +164,7 @@ export class Server {
             },
             sqs: {
                 region: 'us-east-1',
+                endpoint: null,
                 clientOptions: {},
                 consumerOptions: {},
                 queueUrl: '',

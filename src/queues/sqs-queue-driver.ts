@@ -37,14 +37,14 @@ export class SqsQueueDriver implements QueueInterface {
             };
 
             this.sqsClient().sendMessage(params, (err, data) => {
-                if (this.server.options.debug) {
-                    if (err) {
-                        Log.errorTitle('❎ SQS client could not publish to the queue.');
-                        Log.error({ data, err, params, queueName });
-                    } else {
-                        Log.successTitle('✅ SQS client publsihed message to the queue.');
-                        Log.success({ data, err, params, queueName });
-                    }
+                if (err) {
+                    Log.errorTitle('❎ SQS client could not publish to the queue.');
+                    Log.error({ data, err, params, queueName });
+                }
+
+                if (this.server.options.debug && !err) {
+                    Log.successTitle('✅ SQS client publsihed message to the queue.');
+                    Log.success({ data, err, params, queueName });
                 }
 
                 resolve();
@@ -103,6 +103,7 @@ export class SqsQueueDriver implements QueueInterface {
         return new SQS({
             apiVersion: '2012-11-05',
             region: sqsOptions.region || 'us-east-1',
+            endpoint: sqsOptions.endpoint,
             ...sqsOptions.clientOptions,
         });
     }
