@@ -28,7 +28,7 @@
     "axios": "^0.24.0",
     "body-parser": "^1.19.1",
     "boolean": "^3.1.4",
-    "bullmq": "1.64.0",
+    "bullmq": "1.67.3",
     "colors": "1.4.0",
     "dot-wild": "^3.0.1",
     "dotenv": "^10.0.0",
@@ -45,6 +45,7 @@
     "pusher": "^5.0.0",
     "query-string": "^7.1.0",
     "rate-limiter-flexible": "^2.3.6",
+    "sqs-consumer": "^5.6.0",
     "uuid": "^8.3.2",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.6.0",
     "yargs": "^17.3.1"
