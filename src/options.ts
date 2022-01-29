@@ -10,9 +10,15 @@ interface Redis {
     sentinels: RedisSentinel[];
     sentinelPassword: string|null;
     name: string;
+    clusterNodes: ClusterNode[];
 }
 
 interface RedisSentinel {
+    host: string;
+    port: number;
+}
+
+interface ClusterNode {
     host: string;
     port: number;
 }

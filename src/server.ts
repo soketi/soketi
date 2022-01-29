@@ -123,6 +123,7 @@ export class Server {
                 sentinels: null,
                 sentinelPassword: null,
                 name: 'mymaster',
+                clusterNodes: [],
             },
         },
         databasePooling: {
