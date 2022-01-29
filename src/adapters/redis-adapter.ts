@@ -119,7 +119,7 @@ export class RedisAdapter extends HorizontalAdapter {
      * Get the number of Redis subscribers.
      */
     protected getNumSub(): Promise<number> {
-        if (this.pubClient.constructor.name === 'Cluster') {
+        if (this.server.options.adapter.redis.clusterMode) {
             const nodes = this.pubClient.nodes();
 
             return Promise.all(
