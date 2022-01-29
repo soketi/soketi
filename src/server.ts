@@ -30,6 +30,10 @@ export class Server {
             driver: 'local',
             redis: {
                 prefix: '',
+                redisOptions: {
+                    //
+                },
+                clusterMode: false,
             },
         },
         appManager: {
@@ -161,6 +165,10 @@ export class Server {
             driver: 'sync',
             redis: {
                 concurrency: 1,
+                redisOptions: {
+                    //
+                },
+                clusterMode: false,
             },
         },
         rateLimiter: {

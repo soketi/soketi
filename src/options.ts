@@ -30,6 +30,8 @@ export interface Options {
         driver: string;
         redis: {
             prefix: string;
+            redisOptions: any;
+            clusterMode: boolean;
         };
     };
     appManager: {
@@ -116,6 +118,8 @@ export interface Options {
         driver: string;
         redis: {
             concurrency: number;
+            redisOptions: any;
+            clusterMode: boolean;
         };
     };
     rateLimiter: {

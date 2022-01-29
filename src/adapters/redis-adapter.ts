@@ -33,13 +33,20 @@ export class RedisAdapter extends HorizontalAdapter {
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
 
-        let redisDefaultOptions = {
+        let redisOptions = {
             maxRetriesPerRequest: 2,
             retryStrategy: times => times * 2,
+            ...server.options.database.redis,
+            ...server.options.adapter.redis.redisOptions,
         };
 
-        this.subClient = new Redis({ ...redisDefaultOptions, ...server.options.database.redis });
-        this.pubClient = new Redis({ ...redisDefaultOptions, ...server.options.database.redis });
+        this.subClient = server.options.adapter.redis.clusterMode
+            ? new Redis.Cluster(redisOptions)
+            : new Redis(redisOptions);
+
+        this.pubClient = server.options.adapter.redis.clusterMode
+            ? new Redis.Cluster(redisOptions)
+            : new Redis(redisOptions);
 
         const onError = err => {
             if (err) {

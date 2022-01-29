@@ -45,13 +45,18 @@ export class RedisQueueDriver implements QueueInterface {
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
         return new Promise(resolve => {
             if (!this.queueWithWorker.has(queueName)) {
-                const connection = new Redis({
+                let redisOptions = {
                     maxRetriesPerRequest: null,
                     enableReadyCheck: false,
                     ...this.server.options.database.redis,
+                    ...this.server.options.queue.redis.redisOptions,
                     // We set the key prefix on the queue, worker and scheduler instead of on the connection itself
                     keyPrefix: undefined,
-                });
+                };
+
+                const connection = this.server.options.queue.redis.clusterMode
+                    ? new Redis.Cluster(redisOptions)
+                    : new Redis(redisOptions);
 
                 // We remove a trailing `:` from the prefix because BullMQ adds that already
                 const prefix = this.server.options.database.redis.keyPrefix.replace(/:$/, '');

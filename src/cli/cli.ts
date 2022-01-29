@@ -15,6 +15,7 @@ export class Cli {
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
         ADAPTER_REDIS_PREFIX: 'adapter.redis.prefix',
+        ADAPTER_REDIS_CLUSTER_MODE: 'adapter.redis.clusterMode',
         APP_MANAGER_DRIVER: 'appManager.driver',
         APP_MANAGER_DYNAMODB_TABLE: 'appManager.dynamodb.table',
         APP_MANAGER_DYNAMODB_REGION: 'appManager.dynamodb.region',
@@ -82,6 +83,7 @@ export class Cli {
         PRESENCE_MAX_MEMBERS: 'presence.maxMembersPerChannel',
         QUEUE_DRIVER: 'queue.driver',
         QUEUE_REDIS_CONCURRENCY: 'queue.redis.concurrency',
+        QUEUE_REDIS_CLUSTER_MODE: 'queue.redis.clusterMode',
         RATE_LIMITER_DRIVER: 'rateLimiter.driver',
         SHUTDOWN_GRACE_PERIOD: 'shutdownGracePeriod',
         SSL_CERT: 'ssl.certPath',
