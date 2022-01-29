@@ -1,3 +1,4 @@
+import { JobData } from '../webhook-sender';
 import { Log } from '../log';
 import { QueueInterface } from './queue-interface';
 import { RedisQueueDriver } from './redis-queue-driver';
@@ -29,7 +30,7 @@ export class Queue implements QueueInterface {
     /**
      * Add a new event with data to queue.
      */
-    addToQueue(queueName: string, data?: any): Promise<void> {
+    addToQueue(queueName: string, data?: JobData): Promise<void> {
         return this.driver.addToQueue(queueName, data);
     }
 

@@ -1,11 +1,12 @@
 import async from 'async';
 import { Consumer } from 'sqs-consumer';
 import { createHash } from 'crypto';
+import { Job } from '../job';
+import { JobData } from '../webhook-sender';
 import { Log } from '../log';
 import { QueueInterface } from './queue-interface';
 import { Server } from '../server';
 import { SQS } from 'aws-sdk';
-import { Job } from '../job';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SqsQueueDriver implements QueueInterface {
@@ -24,7 +25,7 @@ export class SqsQueueDriver implements QueueInterface {
     /**
      * Add a new event with data to queue.
      */
-    addToQueue(queueName: string, data: any = {}): Promise<void> {
+    addToQueue(queueName: string, data: JobData): Promise<void> {
         return new Promise(resolve => {
             let message = JSON.stringify(data);
 
