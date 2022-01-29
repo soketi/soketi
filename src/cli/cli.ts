@@ -86,6 +86,7 @@ export class Cli {
         QUEUE_REDIS_CONCURRENCY: 'queue.redis.concurrency',
         QUEUE_REDIS_CLUSTER_MODE: 'queue.redis.clusterMode',
         RATE_LIMITER_DRIVER: 'rateLimiter.driver',
+        RATE_LIMITER_REDIS_CLUSTER_MODE: 'rateLimiter.redis.clusterMode',
         SHUTDOWN_GRACE_PERIOD: 'shutdownGracePeriod',
         SSL_CERT: 'ssl.certPath',
         SSL_KEY: 'ssl.keyPath',

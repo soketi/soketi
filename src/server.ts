@@ -174,6 +174,12 @@ export class Server {
         },
         rateLimiter: {
             driver: 'local',
+            redis: {
+                redisOptions: {
+                    //
+                },
+                clusterMode: false,
+            },
         },
         shutdownGracePeriod: 3_000,
         ssl: {

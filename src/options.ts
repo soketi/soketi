@@ -130,6 +130,10 @@ export interface Options {
     };
     rateLimiter: {
         driver: string;
+        redis: {
+            redisOptions: any;
+            clusterMode: boolean;
+        };
     };
     shutdownGracePeriod: number;
     ssl: {
