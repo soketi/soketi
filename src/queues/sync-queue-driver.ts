@@ -1,4 +1,5 @@
 import { Job } from '../job';
+import { JobData } from '../webhook-sender';
 import { QueueInterface } from './queue-interface';
 import { Server } from '../server';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,7 +20,7 @@ export class SyncQueueDriver implements QueueInterface {
     /**
      * Add a new event with data to queue.
      */
-    addToQueue(queueName: string, data: any = {}): Promise<void> {
+    addToQueue(queueName: string, data: JobData): Promise<void> {
         return new Promise(resolve => {
             let jobCallback = this.queues.get(queueName);
 

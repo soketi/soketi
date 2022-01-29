@@ -1,4 +1,5 @@
 import async from 'async';
+import { JobData } from '../webhook-sender';
 import { Queue, Worker, QueueScheduler } from 'bullmq'
 import { QueueInterface } from './queue-interface';
 import { Server } from '../server';
@@ -27,7 +28,7 @@ export class RedisQueueDriver implements QueueInterface {
     /**
      * Add a new event with data to queue.
      */
-    addToQueue(queueName: string, data: any = {}): Promise<void> {
+    addToQueue(queueName: string, data: JobData): Promise<void> {
         return new Promise(resolve => {
             let queueWithWorker = this.queueWithWorker.get(queueName);
 

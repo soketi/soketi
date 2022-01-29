@@ -1,4 +1,6 @@
 import { AppInterface } from './app';
+import { ConsumerOptions } from 'sqs-consumer';
+import { SQS } from 'aws-sdk';
 
 interface Redis {
     host: string;
@@ -116,6 +118,13 @@ export interface Options {
         driver: string;
         redis: {
             concurrency: number;
+        };
+        sqs: {
+            region?: string;
+            endpoint?: string;
+            clientOptions?: SQS.Types.ClientConfiguration;
+            consumerOptions?: ConsumerOptions;
+            queueUrl: string;
         };
     };
     rateLimiter: {
