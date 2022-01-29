@@ -41,11 +41,11 @@ export class RedisAdapter extends HorizontalAdapter {
         };
 
         this.subClient = server.options.adapter.redis.clusterMode
-            ? new Redis.Cluster(server.options.database.redis.clusterNodes, redisOptions)
+            ? new Redis.Cluster(server.options.database.redis.clusterNodes, { redisOptions })
             : new Redis(redisOptions);
 
         this.pubClient = server.options.adapter.redis.clusterMode
-            ? new Redis.Cluster(server.options.database.redis.clusterNodes, redisOptions)
+            ? new Redis.Cluster(server.options.database.redis.clusterNodes, { redisOptions })
             : new Redis(redisOptions);
 
         const onError = err => {

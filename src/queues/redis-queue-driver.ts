@@ -55,7 +55,7 @@ export class RedisQueueDriver implements QueueInterface {
                 };
 
                 const connection = this.server.options.queue.redis.clusterMode
-                    ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, redisOptions)
+                    ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { scaleReads: 'slave', redisOptions })
                     : new Redis(redisOptions);
 
                 // We remove a trailing `:` from the prefix because BullMQ adds that already
