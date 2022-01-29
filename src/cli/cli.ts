@@ -83,7 +83,7 @@ export class Cli {
         QUEUE_DRIVER: 'queue.driver',
         QUEUE_REDIS_CONCURRENCY: 'queue.redis.concurrency',
         QUEUE_SQS_REGION: 'queue.sqs.region',
-        QUEUE_SQS_CLIENT_OPTIONS: 'queue.sqs.client_options',
+        QUEUE_SQS_CLIENT_OPTIONS: 'queue.sqs.clientOptions',
         QUEUE_SQS_URL: 'queue.sqs.queueUrl',
         RATE_LIMITER_DRIVER: 'rateLimiter.driver',
         SHUTDOWN_GRACE_PERIOD: 'shutdownGracePeriod',

@@ -121,8 +121,8 @@ export interface Options {
         };
         sqs: {
             region?: string;
-            client_options?: SQS.Types.ClientConfiguration;
-            consumer_options?: ConsumerOptions;
+            clientOptions?: SQS.Types.ClientConfiguration;
+            consumerOptions?: ConsumerOptions;
             queueUrl: string;
         };
     };

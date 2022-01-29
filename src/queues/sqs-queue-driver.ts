@@ -60,7 +60,7 @@ export class SqsQueueDriver implements QueueInterface {
             let consumer = Consumer.create({
                 queueUrl: this.server.options.queue.sqs.queueUrl,
                 sqs: this.sqsClient(),
-                ...this.server.options.queue.sqs.consumer_options,
+                ...this.server.options.queue.sqs.consumerOptions,
                 handleMessage: async ({ Body }) => {
                     callback(
                         new Job(uuidv4(), JSON.parse(Body)),
@@ -103,7 +103,7 @@ export class SqsQueueDriver implements QueueInterface {
         return new SQS({
             apiVersion: '2012-11-05',
             region: sqsOptions.region || 'us-east-1',
-            ...sqsOptions.client_options,
+            ...sqsOptions.clientOptions,
         });
     }
 }
