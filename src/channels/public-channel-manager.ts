@@ -1,6 +1,7 @@
-import { PresenceMember } from '../presence-member';
-import { WebSocket } from 'uWebSockets.js';
+import { PresenceMember } from '../channels/presence-channel-manager';
 import { Server } from '../server';
+import { PusherMessage } from '../message';
+import { WebSocket } from 'uWebSockets.js';
 
 export interface JoinResponse {
     ws: WebSocket;
@@ -27,7 +28,16 @@ export class PublicChannelManager {
     /**
      * Join the connection to the channel.
      */
-    join(ws: WebSocket, channel: string, message?: any): Promise<JoinResponse> {
+    join(ws: WebSocket, channel: string, message?: PusherMessage): Promise<JoinResponse> {
+        if (!ws.app) {
+            return Promise.resolve({
+                ws,
+                success: false,
+                errorCode: 4007,
+                errorMessage: 'Subscriptions messages should be sent after the pusher:connection_established event is received.',
+            });
+        }
+
         return this.server.adapter.getNamespace(ws.app.id).addToChannel(ws, channel).then(connections => {
             return {
                 ws,

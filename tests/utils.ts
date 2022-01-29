@@ -1,5 +1,6 @@
 import async from 'async';
 import { Log } from '../src/log';
+import { PusherApiMessage } from '../src/message';
 import { Server } from './../src/server';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -43,11 +44,19 @@ export class Utils {
             'cluster.port': parseInt((Math.random() * (20000 - 10000) + 10000).toString()), // random: 10000-20000
             'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
             'cluster.ignoreProcess': false,
+            'webhooks.batching.enabled': false, // TODO: Find out why batching works but fails tests
+            'webhooks.batching.duration': 1,
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
             'queue.driver': process.env.TEST_QUEUE_DRIVER || 'sync',
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
+            'database.mysql.user': process.env.TEST_MYSQL_USER || 'testing',
+            'database.mysql.password': process.env.TEST_MYSQL_PASSWORD || 'testing',
+            'database.mysql.database': process.env.TEST_MYSQL_DATABASE || 'testing',
+            'database.postgres.user': process.env.TEST_POSTGRES_USER || 'testing',
+            'database.postgres.password': process.env.TEST_POSTGRES_PASSWORD || 'testing',
+            'database.postgres.database': process.env.TEST_POSTGRES_DATABASE || 'testing',
         };
 
         return (new Server(options)).start((server: Server) => {
@@ -209,10 +218,6 @@ export class Utils {
             }),
             ...clientOptions,
         }, port, key);
-    }
-
-    static sendEventToChannel(pusher, channel: string|string[], event: string, body: any): any {
-        return pusher.trigger(channel, event, body);
     }
 
     static signTokenForPrivateChannel(

@@ -1,7 +1,7 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
-jest.retryTimes(2);
+jest.retryTimes(parseInt(process.env.RETRY_TIMES || '1'));
 
 describe('private channel test', () => {
     beforeEach(() => {
@@ -30,7 +30,7 @@ describe('private channel test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' })
+                    backend.trigger(channelName, 'greeting', { message: 'hello' })
                         .catch(error => {
                             throw new Error(error);
                         });
@@ -58,6 +58,7 @@ describe('private channel test', () => {
                 if (event === 'pusher:subscription_error' && channel === channelName) {
                     expect(data.type).toBe('AuthError');
                     expect(data.status).toBe(401);
+                    client.disconnect();
                     done();
                 }
             });
@@ -80,7 +81,6 @@ describe('private channel test', () => {
 
                     expect(namespace.sockets.size).toBe(0);
                     expect(namespace.channels.size).toBe(0);
-
                     done();
                 });
             });
@@ -107,7 +107,7 @@ describe('private channel test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                    backend.trigger(channelName, 'greeting', { message: 'hello' });
                 });
             });
         });
@@ -125,7 +125,6 @@ describe('private channel test', () => {
 
                     expect(namespace.sockets.size).toBe(0);
                     expect(namespace.channels.size).toBe(0);
-
                     done();
                 });
             });
@@ -139,7 +138,7 @@ describe('private channel test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello' });
+                    backend.trigger(channelName, 'greeting', { message: 'hello' });
                 });
             });
         });

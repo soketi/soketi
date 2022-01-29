@@ -3,6 +3,7 @@ import { AttributeMap } from 'aws-sdk/clients/dynamodb';
 import { BaseAppManager } from './base-app-manager';
 import { boolean } from 'boolean';
 import { DynamoDB } from 'aws-sdk';
+import { Log } from '../log';
 import { Server } from '../server';
 
 export class DynamoDbAppManager extends BaseAppManager {
@@ -40,8 +41,13 @@ export class DynamoDbAppManager extends BaseAppManager {
                 return null;
             }
 
-            return new App(this.unmarshallItem(item));
+            return new App(this.unmarshallItem(item), this.server);
         }).catch(err => {
+            if (this.server.options.debug) {
+                Log.error('Error loading app config from dynamodb');
+                Log.error(err);
+            }
+
             return null;
         });
     }
@@ -66,8 +72,13 @@ export class DynamoDbAppManager extends BaseAppManager {
                 return null;
             }
 
-            return new App(this.unmarshallItem(item));
+            return new App(this.unmarshallItem(item), this.server);
         }).catch(err => {
+            if (this.server.options.debug) {
+                Log.error('Error loading app config from dynamodb');
+                Log.error(err);
+            }
+
             return null;
         });
     }

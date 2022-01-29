@@ -4,7 +4,6 @@ export * from './job';
 export * from './log';
 export * from './namespace';
 export * from './options';
-export * from './presence-member';
 export * from './server';
 export * from './utils';
 export * from './webhook-sender';

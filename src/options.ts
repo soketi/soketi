@@ -42,7 +42,7 @@ export interface Options {
         dynamodb: {
             table: string;
             region: string;
-            endpoint: string;
+            endpoint?: string;
         };
         mysql: {
             table: string;
@@ -88,9 +88,13 @@ export interface Options {
         maxChannelsAtOnce: string|number;
         maxNameLength: string|number;
         maxPayloadInKb: string|number;
+        maxBatchSize: string|number;
     };
     httpApi: {
         requestLimitInMb: string|number;
+        acceptTraffic: {
+            memoryThreshold: number;
+        };
     };
     instance: {
         process_id: string|number;
@@ -102,7 +106,8 @@ export interface Options {
             prefix: string;
         };
         port: number;
-    },
+    };
+    mode: string;
     port: number;
     pathPrefix: string;
     presence: {
@@ -135,5 +140,12 @@ export interface Options {
         certPath: string;
         keyPath: string;
         passphrase: string;
+        caPath: string;
+    };
+    webhooks: {
+        batching: {
+            enabled: boolean;
+            duration: number;
+        };
     };
 }

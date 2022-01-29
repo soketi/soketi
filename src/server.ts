@@ -11,6 +11,7 @@ import { Queue } from './queues/queue';
 import { QueueInterface } from './queues/queue-interface';
 import { RateLimiter } from './rate-limiters/rate-limiter';
 import { RateLimiterInterface } from './rate-limiters/rate-limiter-interface';
+import { uWebSocketMessage } from './message';
 import { v4 as uuidv4 } from 'uuid';
 import { WebhookSender } from './webhook-sender';
 import { WebSocket } from 'uWebSockets.js';
@@ -52,7 +53,7 @@ export class Server {
             dynamodb: {
                 table: 'apps',
                 region: 'us-east-1',
-                endpoint: '',
+                endpoint: null,
             },
             mysql: {
                 table: 'apps',
@@ -130,9 +131,13 @@ export class Server {
             maxChannelsAtOnce: 100,
             maxNameLength: 200,
             maxPayloadInKb: 100,
+            maxBatchSize: 10,
         },
         httpApi: {
             requestLimitInMb: 100,
+            acceptTraffic: {
+                memoryThreshold: 85,
+            },
         },
         instance: {
             process_id: process.pid || uuidv4(),
@@ -145,6 +150,7 @@ export class Server {
             },
             port: 9601,
         },
+        mode: 'full',
         port: 6001,
         pathPrefix: '',
         presence: {
@@ -177,6 +183,13 @@ export class Server {
             certPath: '',
             keyPath: '',
             passphrase: '',
+            caPath: '',
+        },
+        webhooks: {
+            batching: {
+                enabled: false,
+                duration: 50,
+            },
         },
     };
 
@@ -288,6 +301,7 @@ export class Server {
                     key_file_name: this.options.ssl.keyPath,
                     cert_file_name: this.options.ssl.certPath,
                     passphrase: this.options.ssl.passphrase,
+                    ca_file_name: this.options.ssl.caPath,
                 })
                 : uWS.App();
 
@@ -512,15 +526,17 @@ export class Server {
      */
     protected configureWebsockets(server: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
-            server = server.ws(this.url('/app/:id'), {
-                idleTimeout: 120, // According to protocol
-                maxBackpressure: 1024 * 1024,
-                maxPayloadLength: 100 * 1024 * 1024, // 100 MB
-                message: (ws: WebSocket, message: any, isBinary: boolean) => this.wsHandler.onMessage(ws, message, isBinary),
-                open: (ws: WebSocket) => this.wsHandler.onOpen(ws),
-                close: (ws: WebSocket, code: number, message: any) => this.wsHandler.onClose(ws, code, message),
-                upgrade: (res: HttpResponse, req: HttpRequest, context) => this.wsHandler.handleUpgrade(res, req, context),
-            });
+            if (this.canProcessRequests()) {
+                server = server.ws(this.url('/app/:id'), {
+                    idleTimeout: 120, // According to protocol
+                    maxBackpressure: 1024 * 1024,
+                    maxPayloadLength: 100 * 1024 * 1024, // 100 MB
+                    message: (ws: WebSocket, message: uWebSocketMessage, isBinary: boolean) => this.wsHandler.onMessage(ws, message, isBinary),
+                    open: (ws: WebSocket) => this.wsHandler.onOpen(ws),
+                    close: (ws: WebSocket, code: number, message: uWebSocketMessage) => this.wsHandler.onClose(ws, code, message),
+                    upgrade: (res: HttpResponse, req: HttpRequest, context) => this.wsHandler.handleUpgrade(res, req, context),
+                });
+            }
 
             resolve(server);
         });
@@ -534,41 +550,54 @@ export class Server {
             server.get(this.url('/'), (res, req) => this.httpHandler.healthCheck(res));
             server.get(this.url('/ready'), (res, req) => this.httpHandler.ready(res));
 
-            server.get(this.url('/apps/:appId/channels'), (res, req) => {
-                res.params = { appId: req.getParameter(0) };
-                res.query = queryString.parse(req.getQuery());
-                res.method = req.getMethod().toUpperCase();
-                res.url = req.getUrl();
+            if (this.canProcessRequests()) {
+                server.get(this.url('/accept-traffic'), (res, req) => this.httpHandler.acceptTraffic(res));
 
-                return this.httpHandler.channels(res);
-            });
+                server.get(this.url('/apps/:appId/channels'), (res, req) => {
+                    res.params = { appId: req.getParameter(0) };
+                    res.query = queryString.parse(req.getQuery());
+                    res.method = req.getMethod().toUpperCase();
+                    res.url = req.getUrl();
 
-            server.get(this.url('/apps/:appId/channels/:channelName'), (res, req) => {
-                res.params = { appId: req.getParameter(0), channel: req.getParameter(1) };
-                res.query = queryString.parse(req.getQuery());
-                res.method = req.getMethod().toUpperCase();
-                res.url = req.getUrl();
+                    return this.httpHandler.channels(res);
+                });
 
-                return this.httpHandler.channel(res);
-            });
+                server.get(this.url('/apps/:appId/channels/:channelName'), (res, req) => {
+                    res.params = { appId: req.getParameter(0), channel: req.getParameter(1) };
+                    res.query = queryString.parse(req.getQuery());
+                    res.method = req.getMethod().toUpperCase();
+                    res.url = req.getUrl();
 
-            server.get(this.url('/apps/:appId/channels/:channelName/users'), (res, req) => {
-                res.params = { appId: req.getParameter(0), channel: req.getParameter(1) };
-                res.query = queryString.parse(req.getQuery());
-                res.method = req.getMethod().toUpperCase();
-                res.url = req.getUrl();
+                    return this.httpHandler.channel(res);
+                });
 
-                return this.httpHandler.channelUsers(res);
-            });
+                server.get(this.url('/apps/:appId/channels/:channelName/users'), (res, req) => {
+                    res.params = { appId: req.getParameter(0), channel: req.getParameter(1) };
+                    res.query = queryString.parse(req.getQuery());
+                    res.method = req.getMethod().toUpperCase();
+                    res.url = req.getUrl();
 
-            server.post(this.url('/apps/:appId/events'), (res, req) => {
-                res.params = { appId: req.getParameter(0) };
-                res.query = queryString.parse(req.getQuery());
-                res.method = req.getMethod().toUpperCase();
-                res.url = req.getUrl();
+                    return this.httpHandler.channelUsers(res);
+                });
 
-                return this.httpHandler.events(res);
-            });
+                server.post(this.url('/apps/:appId/events'), (res, req) => {
+                    res.params = { appId: req.getParameter(0) };
+                    res.query = queryString.parse(req.getQuery());
+                    res.method = req.getMethod().toUpperCase();
+                    res.url = req.getUrl();
+
+                    return this.httpHandler.events(res);
+                });
+
+                server.post(this.url('/apps/:appId/batch_events'), (res, req) => {
+                    res.params = { appId: req.getParameter(0) };
+                    res.query = queryString.parse(req.getQuery());
+                    res.method = req.getMethod().toUpperCase();
+                    res.url = req.getUrl();
+
+                    return this.httpHandler.batchEvents(res);
+                });
+            }
 
             server.any(this.url('/*'), (res, req) => {
                 return this.httpHandler.notFound(res);
@@ -606,7 +635,21 @@ export class Server {
      */
     protected shouldConfigureSsl(): boolean {
         return this.options.ssl.certPath !== '' ||
-            this.options.ssl.keyPath !== '' ||
-            this.options.ssl.passphrase !== '';
+            this.options.ssl.keyPath !== '';
+    }
+
+    /**
+     * Check if the server instance can process queues.
+     */
+    public canProcessQueues(): boolean {
+        return ['worker', 'full'].includes(this.options.mode);
+    }
+
+    /**
+     * Check if the server instance can process requests
+     * for the Pusher protocol API (both REST and WebSockets).
+     */
+    public canProcessRequests(): boolean {
+        return ['server', 'full'].includes(this.options.mode);
     }
 }

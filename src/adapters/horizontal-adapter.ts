@@ -1,6 +1,6 @@
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
-import { PresenceMember } from '../presence-member';
+import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'uWebSockets.js';
 
@@ -27,7 +27,7 @@ export interface RequestExtra {
     numSub?: number;
     msgCount?: number;
     sockets?: Map<string, any>;
-    members?: Map<string, PresenceMember>;
+    members?: Map<string, PresenceMemberInfo>;
     channels?: Map<string, Set<string>>;
     totalCount?: number;
 }
@@ -53,7 +53,7 @@ export interface RequestBody extends RequestOptions {
 export interface Response {
     requestId: string;
     sockets?: Map<string, WebSocket>;
-    members?: [string, PresenceMember][];
+    members?: [string, PresenceMemberInfo][];
     channels?: [string, string[]][];
     totalCount?: number;
     exists?: boolean;
@@ -284,7 +284,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Get all the channel sockets associated with a namespace.
      */
-    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
+    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMemberInfo>> {
         return new Promise((resolve, reject) => {
             super.getChannelMembers(appId, channel).then(localMembers => {
                 if (onlyLocal) {

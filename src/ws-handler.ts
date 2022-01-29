@@ -5,9 +5,10 @@ import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { Log } from './log';
 import { Namespace } from './namespace';
 import { PresenceChannelManager } from './channels';
-import { PresenceMember } from './presence-member';
+import { PresenceMember, PresenceMemberInfo } from './channels/presence-channel-manager';
 import { PrivateChannelManager } from './channels';
 import { PublicChannelManager } from './channels';
+import { PusherMessage, uWebSocketMessage } from './message';
 import { Server } from './server';
 import { Utils } from './utils';
 import { WebSocket } from 'uWebSockets.js';
@@ -55,7 +56,9 @@ export class WsHandler {
         }
 
         ws.sendJson = (data) => {
-            if (ws.send(JSON.stringify(data))) {
+            try {
+                ws.send(JSON.stringify(data));
+
                 this.updateTimeout(ws);
 
                 if (ws.app) {
@@ -66,6 +69,8 @@ export class WsHandler {
                     Log.websocketTitle('✈ Sent message to client:');
                     Log.websocket({ ws, data });
                 }
+            } catch (e) {
+                //
             }
         }
 
@@ -84,7 +89,7 @@ export class WsHandler {
 
         ws.id = this.generateSocketId();
         ws.subscribedChannels = new Set();
-        ws.presence = new Map<string, PresenceMember>();
+        ws.presence = new Map<string, PresenceMemberInfo>();
 
         this.checkForValidApp(ws).then(validApp => {
             if (!validApp) {
@@ -152,10 +157,10 @@ export class WsHandler {
     /**
      * Handle a received message from the client.
      */
-    onMessage(ws: WebSocket, message: any, isBinary: boolean): any {
+    onMessage(ws: WebSocket, message: uWebSocketMessage, isBinary: boolean): any {
         if (message instanceof ArrayBuffer) {
             try {
-                message = JSON.parse(ab2str(message));
+                message = JSON.parse(ab2str(message)) as PusherMessage;
             } catch (err) {
                 return;
             }
@@ -191,7 +196,7 @@ export class WsHandler {
     /**
      * Handle the event of the client closing the connection.
      */
-    onClose(ws: WebSocket, code: number, message: any): any {
+    onClose(ws: WebSocket, code: number, message: uWebSocketMessage): any {
         if (this.server.options.debug) {
             Log.websocketTitle('❌ Connection closed:');
             Log.websocket({ ws, code, message });
@@ -291,7 +296,7 @@ export class WsHandler {
     /**
      * Instruct the server to subscribe the connection to the channel.
      */
-    subscribeToChannel(ws: WebSocket, message: any): any {
+    subscribeToChannel(ws: WebSocket, message: PusherMessage): any {
         if (this.server.closing) {
             ws.sendJson({
                 event: 'pusher:error',
@@ -308,13 +313,13 @@ export class WsHandler {
         let channel = message.data.channel;
         let channelManager = this.getChannelManagerFor(channel);
 
-        if (channel.length > this.server.options.channelLimits.maxNameLength) {
+        if (channel.length > ws.app.maxChannelNameLength) {
             let broadcastMessage = {
                 event: 'pusher:subscription_error',
                 channel,
                 data: {
                     type: 'LimitReached',
-                    error: `The channel name is longer than the allowed ${this.server.options.channelLimits.maxNameLength} characters.`,
+                    error: `The channel name is longer than the allowed ${ws.app.maxChannelNameLength} characters.`,
                     status: 4009,
                 },
             };
@@ -378,26 +383,24 @@ export class WsHandler {
             }
 
             // Otherwise, prepare a response for the presence channel.
-            let { user_id, user_info } = response.member;
-
             this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
-                let member = { user_id, user_info };
+                let { user_id, user_info } = response.member;
 
-                ws.presence.set(channel, member);
+                ws.presence.set(channel, response.member);
 
                 // Make sure to update the socket after new data was pushed in.
                 this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
 
                 // If the member already exists in the channel, don't resend the member_added event.
                 if (!members.has(user_id as string)) {
-                    this.server.webhookSender.sendMemberAdded(ws.app, channel, member.user_id as string);
+                    this.server.webhookSender.sendMemberAdded(ws.app, channel, user_id as string);
 
                     this.server.adapter.send(ws.app.id, channel, JSON.stringify({
                         event: 'pusher_internal:member_added',
                         channel,
                         data: JSON.stringify({
-                            user_id: member.user_id,
-                            user_info: member.user_info,
+                            user_id: user_id,
+                            user_info: user_info,
                         }),
                     }), ws.id);
 
@@ -501,7 +504,7 @@ export class WsHandler {
     /**
      * Handle the events coming from the client.
      */
-    handleClientEvent(ws: WebSocket, message: any): any {
+    handleClientEvent(ws: WebSocket, message: PusherMessage): any {
         let { event, data, channel } = message;
 
         if (!ws.app.enableClientMessages) {
@@ -516,13 +519,13 @@ export class WsHandler {
         }
 
         // Make sure the event name length is not too big.
-        if (event.length > this.server.options.eventLimits.maxNameLength) {
+        if (event.length > ws.app.maxEventNameLength) {
             let broadcastMessage = {
                 event: 'pusher:error',
                 channel,
                 data: {
                     code: 4301,
-                    message: `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`,
+                    message: `Event name is too long. Maximum allowed size is ${ws.app.maxEventNameLength}.`,
                 },
             };
 
@@ -534,13 +537,13 @@ export class WsHandler {
         let payloadSizeInKb = Utils.dataToKilobytes(message.data);
 
         // Make sure the total payload of the message body is not too big.
-        if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
+        if (payloadSizeInKb > parseFloat(ws.app.maxEventPayloadInKb as string)) {
             let broadcastMessage = {
                 event: 'pusher:error',
                 channel,
                 data: {
                     code: 4301,
-                    message: `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`,
+                    message: `The event data should be less than ${ws.app.maxEventPayloadInKb} KB.`,
                 },
             };
 
@@ -647,7 +650,7 @@ export class WsHandler {
      * Clear WebSocket timeout.
      */
     protected clearTimeout(ws: WebSocket): void {
-        if(ws.timeout) {
+        if (ws.timeout) {
             clearTimeout(ws.timeout);
         }
     }

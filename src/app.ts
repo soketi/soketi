@@ -1,5 +1,6 @@
 import { HttpResponse } from 'uWebSockets.js';
 import { Lambda } from 'aws-sdk';
+import { Server } from './server';
 
 const Pusher = require('pusher');
 const pusherUtil = require('pusher/lib/util');
@@ -15,10 +16,20 @@ export interface AppInterface {
     maxClientEventsPerSecond: string|number;
     maxReadRequestsPerSecond?: string|number;
     webhooks?: WebhookInterface[];
+    maxPresenceMembersPerChannel?: string|number;
+    maxPresenceMemberSizeInKb?: string|number;
+    maxChannelNameLength?: number;
+    maxEventChannelsAtOnce?: string|number;
+    maxEventNameLength?: string|number;
+    maxEventPayloadInKb?: string|number;
+    maxEventBatchSize?: string|number;
 }
 
 export interface WebhookInterface {
     url?: string;
+    headers?: {
+        [key: string]: string;
+    };
     lambda_function?: string;
     event_types: string[];
     filter?: {
@@ -83,6 +94,41 @@ export class App implements AppInterface {
      */
     public webhooks: WebhookInterface[];
 
+    /**
+     * @type {string|number}
+     */
+    public maxPresenceMembersPerChannel: string|number;
+
+    /**
+     * @type {string|number}
+     */
+    public maxPresenceMemberSizeInKb: string|number;
+
+    /**
+     * @type {number}
+     */
+    public maxChannelNameLength: number;
+
+    /**
+     * @type {string|number}
+     */
+    public maxEventChannelsAtOnce: string|number;
+
+    /**
+     * @type {string|number}
+     */
+    public maxEventNameLength: string|number;
+
+    /**
+     * @type {string|number}
+     */
+    public maxEventPayloadInKb: string|number;
+
+    /**
+     * @type {string|number}
+     */
+    public maxEventBatchSize: string|number;
+
     static readonly CLIENT_EVENT_WEBHOOK = 'client_event';
     static readonly CHANNEL_OCCUPIED_WEBHOOK = 'channel_occupied';
     static readonly CHANNEL_VACATED_WEBHOOK = 'channel_vacated';
@@ -92,7 +138,7 @@ export class App implements AppInterface {
     /**
      * Create a new app from object.
      */
-    constructor(app: { [key: string]: any; }) {
+    constructor(app: { [key: string]: any; }, server: Server) {
         this.id = this.extractFromPassedKeys(app, ['id', 'AppId'], 'app-id');
         this.key = this.extractFromPassedKeys(app, ['key', 'AppKey'], 'app-key');
         this.secret = this.extractFromPassedKeys(app, ['secret', 'AppSecret'], 'app-secret');
@@ -103,13 +149,20 @@ export class App implements AppInterface {
         this.maxClientEventsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxClientEventsPerSecond', 'MaxClientEventsPerSecond', 'max_client_events_per_sec'], -1));
         this.maxReadRequestsPerSecond = parseInt(this.extractFromPassedKeys(app, ['maxReadRequestsPerSecond', 'MaxReadRequestsPerSecond', 'max_read_req_per_sec'], -1));
         this.webhooks = this.transformPotentialJsonToArray(this.extractFromPassedKeys(app, ['webhooks', 'Webhooks'], '[]'));
+        this.maxPresenceMembersPerChannel = parseInt(this.extractFromPassedKeys(app, ['maxPresenceMembersPerChannel', 'MaxPresenceMembersPerChannel', 'max_presence_members_per_channel'], server.options.presence.maxMembersPerChannel));
+        this.maxPresenceMemberSizeInKb = parseFloat(this.extractFromPassedKeys(app, ['maxPresenceMemberSizeInKb', 'MaxPresenceMemberSizeInKb', 'max_presence_member_size_in_kb'], server.options.presence.maxMemberSizeInKb));
+        this.maxChannelNameLength = parseInt(this.extractFromPassedKeys(app, ['maxChannelNameLength', 'MaxChannelNameLength', 'max_channel_name_length'], server.options.channelLimits.maxNameLength));
+        this.maxEventChannelsAtOnce = parseInt(this.extractFromPassedKeys(app, ['maxEventChannelsAtOnce', 'MaxEventChannelsAtOnce', 'max_event_channels_at_once'], server.options.eventLimits.maxChannelsAtOnce));
+        this.maxEventNameLength = parseInt(this.extractFromPassedKeys(app, ['maxEventNameLength', 'MaxEventNameLength', 'max_event_name_length'], server.options.eventLimits.maxNameLength));
+        this.maxEventPayloadInKb = parseFloat(this.extractFromPassedKeys(app, ['maxEventPayloadInKb', 'MaxEventPayloadInKb', 'max_event_payload_in_kb'], server.options.eventLimits.maxPayloadInKb));
+        this.maxEventBatchSize = parseInt(this.extractFromPassedKeys(app, ['maxEventBatchSize', 'MaxEventBatchSize', 'max_event_batch_size'], server.options.eventLimits.maxBatchSize));
     }
 
     /**
-     * Stripe data off the app, usually the one that's not needed from the WS's perspective.
+     * Strip data off the app, usually the one that's not needed from the WS's perspective.
      * Usually used when attached to WS connections, as they don't need these details.
      */
-     forWebSocket(): App {
+    forWebSocket(): App {
         // delete this.secret;
         delete this.maxBackendEventsPerSecond;
         delete this.maxReadRequestsPerSecond;
@@ -167,7 +220,7 @@ export class App implements AppInterface {
         let extractedValue = defaultValue;
 
         parameters.forEach(param => {
-            if (typeof app[param] !== 'undefined') {
+            if (typeof app[param] !== 'undefined' && !['', null].includes(app[param])) {
                 extractedValue = app[param];
             }
         });

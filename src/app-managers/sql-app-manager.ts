@@ -45,7 +45,7 @@ export abstract class SqlAppManager extends BaseAppManager {
         return this.selectById(id).then(apps => {
             return apps.length === 0
                 ? null
-                : new App(apps[0] || apps);
+                : new App(apps[0] || apps, this.server);
         });
     }
 
@@ -56,7 +56,7 @@ export abstract class SqlAppManager extends BaseAppManager {
         return this.selectByKey(key).then(apps => {
             return apps.length === 0
                 ? null
-                : new App(apps[0] || apps);
+                : new App(apps[0] || apps, this.server);
         });
     }
 
