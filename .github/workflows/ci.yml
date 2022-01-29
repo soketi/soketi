@@ -42,6 +42,9 @@ jobs:
           - adapter: local
             rate_limiter: local
             queue_driver: sync
+          - adapter: local
+            rate_limiter: local
+            queue_driver: sqs
           - adapter: cluster
             rate_limiter: cluster
             queue_driver: sync
@@ -99,6 +102,26 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
+
+      - name: Setup Localstack
+        if: "matrix.queue_driver == 'sqs'"
+        run: |
+          pip install localstack awscli-local[ver1]
+          docker pull localstack/localstack
+          localstack start -d
+          echo "Waiting for LocalStack startup..."
+          localstack wait -t 30
+          echo "Startup complete"
+          awslocal s3 mb s3://test
+          awslocal s3 ls
+          echo "Localstack test complete!"
+          awslocal sqs create-queue --queue-name test.fifo \
+            --attributes FifoQueue=true \
+            --attributes DeduplicationScope=messageGroup \
+            --attributes FifoThroughputLimit=perMessageGroupId \
+            --region us-east-1
+          awslocal sqs list-queues
+
 
       - name: Execute tests
         run: npm run test
