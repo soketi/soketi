@@ -35,6 +35,15 @@ export class Server {
                 },
                 clusterMode: false,
             },
+            nats: {
+                prefix: '',
+                servers: [],
+                port: 4222,
+                user: null,
+                pass: null,
+                token: null,
+                timeout: 10_000,
+            },
         },
         appManager: {
             driver: 'array',

@@ -32,6 +32,7 @@ jobs:
           - local
           - redis
           - cluster
+          - nats
         app_manager:
           - array
           - mysql
@@ -51,6 +52,9 @@ jobs:
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis
+          - adapter: nats
+            rate_limiter: redis
+            queue_driver: sync
 
     name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
@@ -71,7 +75,7 @@ jobs:
           npm run build
 
       - name: Setup Redis
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats'"
         run: docker run -p 6379:6379 redis:6-alpine &
 
       # Setup MySQL with user `root`, password `root` and database `testing`
@@ -126,6 +130,14 @@ jobs:
             --region us-east-1
           awslocal sqs list-queues
 
+      - name: Setup NATS
+        if: "matrix.adapter_driver == 'nats'"
+        run: |
+          docker run -d --name nats-main \
+            -p 4222:4222 \
+            -p 6222:6222 \
+            -p 8222:8222 \
+            nats --jetstream --user="" --pass=""
 
       - name: Execute tests
         run: npm run test

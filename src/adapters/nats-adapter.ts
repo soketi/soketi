@@ -1,12 +1,6 @@
-import { connect, JSONCodec, Msg, NatsConnection, StringCodec } from 'nats';
-import { LocalAdapter } from './local-adapter';
-import { Log } from '../log';
-import { PresenceMemberInfo } from '../channels/presence-channel-manager';
+import { connect, JSONCodec, NatsConnection, StringCodec } from 'nats';
 import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
 import { Server } from '../server';
-import { WebSocket } from 'uWebSockets.js';
-
-const Redis = require('ioredis');
 
 export class NatsAdapter extends HorizontalAdapter {
     /**
@@ -35,13 +29,25 @@ export class NatsAdapter extends HorizontalAdapter {
     constructor(server: Server) {
         super(server);
 
+        if (server.options.adapter.nats.prefix) {
+            this.channel = server.options.adapter.nats.prefix + '#' + this.channel;
+        }
+
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
 
         this.jc = JSONCodec();
         this.sc = StringCodec();
 
-        connect({ servers: ['127.0.0.1'], port: 4222, user: 'test', pass: 'test' }).then((connection) => {
+        connect({
+            servers: server.options.adapter.nats.servers,
+            port: server.options.adapter.nats.port,
+            user: server.options.adapter.nats.user,
+            pass: server.options.adapter.nats.pass,
+            token: server.options.adapter.nats.token,
+            pingInterval: 30_000,
+            timeout: server.options.adapter.nats.timeout,
+        }).then((connection) => {
             this.connection = connection;
 
             this.connection.subscribe(this.requestChannel, { callback: (_err, msg) => this.onRequest(msg) });

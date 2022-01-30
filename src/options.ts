@@ -41,6 +41,15 @@ export interface Options {
             redisOptions: any;
             clusterMode: boolean;
         };
+        nats: {
+            prefix: string;
+            servers: string[];
+            port: number;
+            user?: string;
+            pass?: string|null;
+            token: string|null;
+            timeout: number;
+        },
     };
     appManager: {
         driver: string;
