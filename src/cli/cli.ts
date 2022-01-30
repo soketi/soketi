@@ -145,6 +145,10 @@ export class Cli {
      * Inject the variables from a config file.
      */
     protected overwriteOptionsFromConfig(path?: string): void {
+        if (!path) {
+            return;
+        }
+
         try {
             let config = JSON.parse(readFileSync(path, { encoding: 'utf-8' }));
 
@@ -179,7 +183,7 @@ export class Cli {
      * Start the server.
      */
     async start(cliArgs: any): Promise<any> {
-        this.overwriteOptionsFromConfig(cliArgs.config);
+        this.overwriteOptionsFromConfig(cliArgs.config ?? null);
         this.overwriteOptionsFromEnv();
 
         const handleFailure = () => {
