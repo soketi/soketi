@@ -83,7 +83,7 @@ export class NatsAdapter extends HorizontalAdapter {
      * a specific message to the local sockets.
      */
     protected onMessage(msg: any): void {
-        if ((msg && msg.data) || msg instanceof ArrayBuffer) {
+        if (msg && msg.data) {
             msg = this.jc.decode(msg.data);
         }
 
