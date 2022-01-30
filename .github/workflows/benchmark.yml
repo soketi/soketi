@@ -126,7 +126,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: fake-secret
 
       - name: Setup NATS
-        if: "matrix.adapter_driver == 'nats'"
+        if: "matrix.adapter == 'nats'"
         run: |
           docker run -d --name nats-main \
             -p 4222:4222 \
