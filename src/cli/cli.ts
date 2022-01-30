@@ -183,7 +183,7 @@ export class Cli {
      * Start the server.
      */
     async start(cliArgs: any): Promise<any> {
-        this.overwriteOptionsFromConfig(cliArgs.config ?? null);
+        this.overwriteOptionsFromConfig(cliArgs ? cliArgs.config : null);
         this.overwriteOptionsFromEnv();
 
         const handleFailure = () => {
