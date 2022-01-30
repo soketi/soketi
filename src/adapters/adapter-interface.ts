@@ -26,6 +26,28 @@ export interface AdapterInterface {
     getNamespaces(): Map<string, Namespace>;
 
     /**
+     * Add a new socket to the namespace.
+     */
+    addSocket(appId: string, ws: WebSocket): Promise<boolean>;
+
+    /**
+     * Remove a socket from the namespace.
+     */
+    removeSocket(appId: string, wsId: string): Promise<boolean>;
+
+    /**
+     * Add a socket ID to the channel identifier.
+     * Return the total number of connections after the connection.
+     */
+    addToChannel(appId: string, channel: string, ws: WebSocket): Promise<number>;
+
+    /**
+     * Remove a socket ID from the channel identifier.
+     * Return the total number of connections remaining to the channel.
+     */
+    removeFromChannel(appId: string, channel: string, wsId: string): Promise<number>;
+
+    /**
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string|null): any;

@@ -8,7 +8,6 @@ import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { RedisAdapter } from './redis-adapter';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
-import { WsStubAttributes } from '../ws-stub';
 
 export class Adapter implements AdapterInterface {
     /**
@@ -50,7 +49,7 @@ export class Adapter implements AdapterInterface {
     /**
      * Add a new socket to the namespace.
      */
-    async addSocket(appId: string, ws: WebSocket|WsStubAttributes): Promise<boolean> {
+    async addSocket(appId: string, ws: WebSocket): Promise<boolean> {
         return this.driver.addSocket(appId, ws);
     }
 

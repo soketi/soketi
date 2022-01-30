@@ -38,7 +38,7 @@ export class PublicChannelManager {
             });
         }
 
-        return this.server.adapter.getNamespace(ws.app.id).addToChannel(ws, channel).then(connections => {
+        return this.server.adapter.addToChannel(ws.app.id, channel, ws).then(connections => {
             return {
                 ws,
                 success: true,
@@ -51,7 +51,7 @@ export class PublicChannelManager {
      * Mark the connection as closed and unsubscribe it.
      */
     leave(ws: WebSocket, channel: string): Promise<LeaveResponse> {
-        return this.server.adapter.getNamespace(ws.app.id).removeFromChannel(ws.id, channel).then((remainingConnections) => {
+        return this.server.adapter.removeFromChannel(ws.app.id, channel, ws.id).then((remainingConnections) => {
             return {
                 left: true,
                 remainingConnections,

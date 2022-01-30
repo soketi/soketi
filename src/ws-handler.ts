@@ -135,7 +135,7 @@ export class WsHandler {
                         ws.end(1013);
                     } else {
                         // Make sure to update the socket after new data was pushed in.
-                        this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+                        this.server.adapter.addSocket(ws.app.id, ws);
 
                         let broadcastMessage = {
                             event: 'pusher:connection_established',
@@ -204,7 +204,7 @@ export class WsHandler {
 
         this.unsubscribeFromAllChannels(ws).then(() => {
             if (ws.app) {
-                this.server.adapter.getNamespace(ws.app.id).removeSocket(ws.id);
+                this.server.adapter.removeSocket(ws.app.id, ws.id);
                 this.server.metricsManager.markDisconnection(ws);
             }
 
@@ -363,7 +363,7 @@ export class WsHandler {
             }
 
             // Make sure to update the socket after new data was pushed in.
-            this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+            this.server.adapter.addSocket(ws.app.id, ws);
 
             // If the connection freshly joined, send the webhook:
             if (response.channelConnections === 1) {
@@ -389,7 +389,7 @@ export class WsHandler {
                 ws.presence.set(channel, response.member);
 
                 // Make sure to update the socket after new data was pushed in.
-                this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+                this.server.adapter.addSocket(ws.app.id, ws);
 
                 // If the member already exists in the channel, don't resend the member_added event.
                 if (!members.has(user_id as string)) {
@@ -452,7 +452,7 @@ export class WsHandler {
                     ws.presence.delete(channel);
 
                     // Make sure to update the socket after new data was pushed in.
-                    this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+                    this.server.adapter.addSocket(ws.app.id, ws);
 
                     this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
                         if (!members.has(member.user_id as string)) {
@@ -472,7 +472,7 @@ export class WsHandler {
                 ws.subscribedChannels.delete(channel);
 
                 // Make sure to update the socket after new data was pushed in.
-                this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+                this.server.adapter.addSocket(ws.app.id, ws);
 
                 if (response.remainingConnections === 0) {
                     this.server.webhookSender.sendChannelVacated(ws.app, channel);

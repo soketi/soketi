@@ -39,6 +39,36 @@ export class LocalAdapter implements AdapterInterface {
     }
 
     /**
+     * Add a new socket to the namespace.
+     */
+    async addSocket(appId: string, ws: WebSocket): Promise<boolean> {
+        return this.getNamespace(appId).addSocket(ws);
+    }
+
+    /**
+     * Remove a socket from the namespace.
+     */
+    async removeSocket(appId: string, wsId: string): Promise<boolean> {
+        return this.getNamespace(appId).removeSocket(wsId);
+    }
+
+    /**
+     * Add a socket ID to the channel identifier.
+     * Return the total number of connections after the connection.
+     */
+    async addToChannel(appId: string, channel: string, ws: WebSocket): Promise<number> {
+        return this.getNamespace(appId).addToChannel(ws, channel);
+    }
+
+    /**
+     * Remove a socket ID from the channel identifier.
+     * Return the total number of connections remaining to the channel.
+     */
+    async removeFromChannel(appId: string, channel: string, wsId: string): Promise<number> {
+        return this.getNamespace(appId).removeFromChannel(wsId, channel);
+    }
+
+    /**
      * Get all sockets from the namespace.
      */
     async getSockets(appId: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
