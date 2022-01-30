@@ -94,7 +94,7 @@ export class NatsAdapter extends LocalAdapter {
     }
 
     listenForMessagesToBroadcast(): void {
-        this.connection.subscribe('broadcastMessage', {
+        this.connection.subscribe('broadcastMessage.*.*', {
             callback: (_err, m) => {
                 let decodedMessage: PubsubBroadcastedMessage = this.jc.decode(m.data);
 
@@ -102,7 +102,7 @@ export class NatsAdapter extends LocalAdapter {
                     return;
                 }
 
-                const { uuid, appId, channel, data, exceptingId } = decodedMessage;
+                const { appId, channel, data, exceptingId } = decodedMessage;
 
                 if (!appId || !channel || !data) {
                     return;
@@ -117,7 +117,7 @@ export class NatsAdapter extends LocalAdapter {
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId: string|null = null): any {
-        this.connection.publish('broadcastMessage', this.jc.encode({
+        this.connection.publish(`broadcastMessage.${appId}.${channel}`, this.jc.encode({
             appId,
             channel,
             data,
