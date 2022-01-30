@@ -3,10 +3,12 @@ import { ClusterAdapter } from './cluster-adapter';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { Namespace } from '../namespace';
+import { NatsAdapter } from './nats-adapter';
 import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { RedisAdapter } from './redis-adapter';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
+import { WsStubAttributes } from '../ws-stub';
 
 export class Adapter implements AdapterInterface {
     /**
@@ -22,6 +24,8 @@ export class Adapter implements AdapterInterface {
             this.driver = new LocalAdapter(server);
         } else if (server.options.adapter.driver === 'redis') {
             this.driver = new RedisAdapter(server);
+        } else if (server.options.adapter.driver === 'nats') {
+            this.driver = new NatsAdapter(server);
         } else if (server.options.adapter.driver === 'cluster') {
             this.driver = new ClusterAdapter(server);
         } else {
@@ -41,6 +45,36 @@ export class Adapter implements AdapterInterface {
      */
     getNamespaces(): Map<string, Namespace> {
         return this.driver.getNamespaces();
+    }
+
+    /**
+     * Add a new socket to the namespace.
+     */
+    async addSocket(appId: string, ws: WebSocket|WsStubAttributes): Promise<boolean> {
+        return this.driver.addSocket(appId, ws);
+    }
+
+    /**
+     * Remove a socket from the namespace.
+     */
+    async removeSocket(appId: string, wsId: string): Promise<boolean> {
+        return this.driver.removeSocket(appId, wsId);
+    }
+
+    /**
+     * Add a socket ID to the channel identifier.
+     * Return the total number of connections after the connection.
+     */
+    async addToChannel(appId: string, channel: string, ws: WebSocket): Promise<number> {
+        return this.driver.addToChannel(appId, channel, ws);
+    }
+
+    /**
+     * Remove a socket ID from the channel identifier.
+     * Return the total number of connections remaining to the channel.
+     */
+    async removeFromChannel(appId: string, channel: string, wsId: string): Promise<number> {
+        return this.driver.removeFromChannel(appId, channel, wsId);
     }
 
     /**
