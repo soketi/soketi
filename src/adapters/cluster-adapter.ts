@@ -48,14 +48,8 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Listen for message coming from other nodes to broadcast
      * a specific message to the local sockets.
      */
-    protected onMessage(msg: any): void {
-        if (typeof msg === 'string') {
-            msg = JSON.parse(msg);
-        }
-
-        let message: PubsubBroadcastedMessage = msg;
-
-        const { uuid, appId, channel, data, exceptingId } = message;
+    protected onMessage(msg: PubsubBroadcastedMessage): void {
+        const { uuid, appId, channel, data, exceptingId } = msg;
 
         if (uuid === this.uuid || !appId || !channel || !data) {
             return;

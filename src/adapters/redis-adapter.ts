@@ -88,9 +88,9 @@ export class RedisAdapter extends HorizontalAdapter {
         msg = msg.toString();
 
         if (redisChannel.startsWith(this.responseChannel)) {
-            this.onResponse(redisChannel, msg);
+            this.onResponse(redisChannel, JSON.parse(msg));
         } else if (redisChannel.startsWith(this.requestChannel)) {
-            this.onRequest(redisChannel, msg);
+            this.onRequest(redisChannel, JSON.parse(msg));
         }
     }
 

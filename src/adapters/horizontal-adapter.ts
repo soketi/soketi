@@ -368,15 +368,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Listen for requests coming from other nodes.
      */
-    protected onRequest(channel: string, msg: string): void {
-        let request: Request;
-
-        try {
-            request = JSON.parse(msg);
-        } catch (err) {
-            return;
-        }
-
+    protected onRequest(channel: string, request: Request): void {
         let { appId } = request;
 
         if (this.server.options.debug) {
@@ -470,15 +462,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Handle a response from another node.
      */
-    protected onResponse(channel: string, msg: string): void {
-        let response: Response;
-
-        try {
-            response = JSON.parse(msg);
-        } catch (err) {
-            return;
-        }
-
+    protected onResponse(channel: string, response: Response): void {
         const requestId = response.requestId;
 
         if (!requestId || !this.requests.has(requestId)) {
@@ -489,7 +473,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
 
         if (this.server.options.debug) {
             Log.clusterTitle('🧠 Received response from another node to our request');
-            Log.cluster(msg);
+            Log.cluster(response);
         }
 
         switch (request.type) {
