@@ -11,5 +11,6 @@ module.exports = {
         'ts-jest': {
             isolatedModules: true,
         },
+        Uint8Array: Uint8Array,
     },
 };

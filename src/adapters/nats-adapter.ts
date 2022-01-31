@@ -60,22 +60,14 @@ export class NatsAdapter extends HorizontalAdapter {
      * Listen for requests coming from other nodes.
      */
     protected onRequest(msg: any): void {
-        if (typeof msg === 'object') {
-            msg = JSON.stringify(this.jc.decode(msg.data));
-        }
-
-        super.onRequest(this.requestChannel, msg);
+        super.onRequest(this.requestChannel, JSON.stringify(this.jc.decode(msg.data)));
     }
 
     /**
      * Handle a response from another node.
      */
     protected onResponse(msg: any): void {
-        if (typeof msg === 'object') {
-            msg = JSON.stringify(this.jc.decode(msg.data));
-        }
-
-        super.onResponse(this.responseChannel, msg);
+        super.onResponse(this.responseChannel, JSON.stringify(this.jc.decode(msg.data)));
     }
 
     /**
@@ -83,15 +75,7 @@ export class NatsAdapter extends HorizontalAdapter {
      * a specific message to the local sockets.
      */
     protected onMessage(msg: any): void {
-        if (msg && msg.data) {
-            msg = this.jc.decode(msg.data);
-        }
-
-        if (typeof msg === 'string') {
-            msg = JSON.parse(msg);
-        }
-
-        let message: PubsubBroadcastedMessage = msg;
+        let message: PubsubBroadcastedMessage = JSON.parse(this.jc.decode(msg.data));
 
         const { uuid, appId, channel, data, exceptingId } = message;
 
@@ -105,12 +89,8 @@ export class NatsAdapter extends HorizontalAdapter {
     /**
      * Broadcast data to a given channel.
      */
-    protected broadcastToChannel(channel: string, data: any): void {
-        if (typeof data === 'string') {
-            data = JSON.parse(data);
-        }
-
-        this.connection.publish(channel, this.jc.encode(data));
+    protected broadcastToChannel(channel: string, data: string): void {
+        this.connection.publish(channel, this.jc.encode(JSON.parse(data)));
     }
 
     /**
