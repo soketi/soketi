@@ -110,17 +110,25 @@ export class NatsAdapter extends HorizontalAdapter {
             data = JSON.parse(data);
         }
 
-        this.connection.publish(channel, this.jc.encode(data))
+        this.connection.publish(channel, this.jc.encode(data));
     }
 
     /**
      * Get the number of Discover nodes.
      */
     protected getNumSub(): Promise<number> {
-        return this.connection.request('$SYS.REQ.SERVER.PING.CONNZ').then(response => {
-            let { data } = JSON.parse(this.sc.decode(response.data)) as any;
+        return new Promise(resolve => {
+            let interval = setInterval(() => {
+                if (this.connection) {
+                    clearInterval(interval);
 
-            return data.total;
+                    this.connection.request('$SYS.REQ.SERVER.PING.CONNZ').then(response => {
+                        let { data } = JSON.parse(this.sc.decode(response.data)) as any;
+
+                        resolve(data.total);
+                    });
+                }
+            }, 100);
         });
     }
 }
