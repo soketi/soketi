@@ -21,6 +21,13 @@ export class LocalAdapter implements AdapterInterface {
     }
 
     /**
+     * Initialize the adapter.
+     */
+    async init(): Promise<AdapterInterface> {
+        return this;
+    }
+
+    /**
      * Get the app namespace.
      */
     getNamespace(appId: string): Namespace {

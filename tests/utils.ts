@@ -32,7 +32,7 @@ export class Utils {
         ]);
     }
 
-    static newServer(options = {}, callback): any {
+    static async newServer(options = {}, callback): Promise<any> {
         options = {
             'cluster.prefix': uuidv4(),
             'adapter.redis.prefix': uuidv4(),
@@ -61,9 +61,8 @@ export class Utils {
             'queue.sqs.queueUrl': 'http://localhost:4566/000000000000/test.fifo',
         };
 
-        return (new Server(options)).start((server: Server) => {
+        return await (new Server(options)).start((server: Server) => {
             this.wsServers.push(server);
-
             callback(server);
         });
     }

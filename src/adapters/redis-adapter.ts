@@ -1,3 +1,4 @@
+import { AdapterInterface } from './adapter-interface';
 import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
 import { Log } from '../log';
 import { Server } from '../server';
@@ -32,20 +33,25 @@ export class RedisAdapter extends HorizontalAdapter {
 
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
+    }
 
+    /**
+     * Initialize the adapter.
+     */
+    async init(): Promise<AdapterInterface> {
         let redisOptions = {
             maxRetriesPerRequest: 2,
             retryStrategy: times => times * 2,
-            ...server.options.database.redis,
-            ...server.options.adapter.redis.redisOptions,
+            ...this.server.options.database.redis,
+            ...this.server.options.adapter.redis.redisOptions,
         };
 
-        this.subClient = server.options.adapter.redis.clusterMode
-            ? new Redis.Cluster(server.options.database.redis.clusterNodes, { redisOptions })
+        this.subClient = this.server.options.adapter.redis.clusterMode
+            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions })
             : new Redis(redisOptions);
 
-        this.pubClient = server.options.adapter.redis.clusterMode
-            ? new Redis.Cluster(server.options.database.redis.clusterNodes, { redisOptions })
+        this.pubClient = this.server.options.adapter.redis.clusterMode
+            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions })
             : new Redis(redisOptions);
 
         const onError = err => {
@@ -63,6 +69,8 @@ export class RedisAdapter extends HorizontalAdapter {
 
         this.pubClient.on('error', onError);
         this.subClient.on('error', onError);
+
+        return this;
     }
 
     /**

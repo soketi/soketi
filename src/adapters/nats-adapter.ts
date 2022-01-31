@@ -1,3 +1,4 @@
+import { AdapterInterface } from './adapter-interface';
 import { connect, JSONCodec, NatsConnection, StringCodec } from 'nats';
 import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
 import { Server } from '../server';
@@ -38,36 +39,41 @@ export class NatsAdapter extends HorizontalAdapter {
 
         this.jc = JSONCodec();
         this.sc = StringCodec();
+    }
 
-        connect({
-            servers: server.options.adapter.nats.servers,
-            port: server.options.adapter.nats.port,
-            user: server.options.adapter.nats.user,
-            pass: server.options.adapter.nats.pass,
-            token: server.options.adapter.nats.token,
+    /**
+     * Initialize the adapter.
+     */
+    async init(): Promise<AdapterInterface> {
+        this.connection = await connect({
+            servers: this.server.options.adapter.nats.servers,
+            port: this.server.options.adapter.nats.port,
+            user: this.server.options.adapter.nats.user,
+            pass: this.server.options.adapter.nats.pass,
+            token: this.server.options.adapter.nats.token,
             pingInterval: 30_000,
-            timeout: server.options.adapter.nats.timeout,
-        }).then((connection) => {
-            this.connection = connection;
-
-            this.connection.subscribe(this.requestChannel, { callback: (_err, msg) => this.onRequest(msg) });
-            this.connection.subscribe(this.responseChannel, { callback: (_err, msg) => this.onResponse(msg) });
-            this.connection.subscribe(this.channel, { callback: (_err, msg) => this.onMessage(msg) });
+            timeout: this.server.options.adapter.nats.timeout,
         });
+
+        this.connection.subscribe(this.requestChannel, { callback: (_err, msg) => this.onRequest(msg) });
+        this.connection.subscribe(this.responseChannel, { callback: (_err, msg) => this.onResponse(msg) });
+        this.connection.subscribe(this.channel, { callback: (_err, msg) => this.onMessage(msg) });
+
+        return this;
     }
 
     /**
      * Listen for requests coming from other nodes.
      */
     protected onRequest(msg: any): void {
-        super.onRequest(this.requestChannel, JSON.stringify(this.jc.decode(msg.data)));
+        super.onRequest(this.requestChannel, this.jc.decode(msg.data));
     }
 
     /**
      * Handle a response from another node.
      */
     protected onResponse(msg: any): void {
-        super.onResponse(this.responseChannel, JSON.stringify(this.jc.decode(msg.data)));
+        super.onResponse(this.responseChannel, this.jc.decode(msg.data));
     }
 
     /**
@@ -75,7 +81,7 @@ export class NatsAdapter extends HorizontalAdapter {
      * a specific message to the local sockets.
      */
     protected onMessage(msg: any): void {
-        let message: PubsubBroadcastedMessage = JSON.parse(this.jc.decode(msg.data));
+        let message: PubsubBroadcastedMessage = this.jc.decode(msg.data);
 
         const { uuid, appId, channel, data, exceptingId } = message;
 
@@ -97,18 +103,10 @@ export class NatsAdapter extends HorizontalAdapter {
      * Get the number of Discover nodes.
      */
     protected getNumSub(): Promise<number> {
-        return new Promise(resolve => {
-            let interval = setInterval(() => {
-                if (this.connection) {
-                    clearInterval(interval);
+        return this.connection.request('$SYS.REQ.SERVER.PING.CONNZ').then(response => {
+            let { data } = JSON.parse(this.sc.decode(response.data)) as any;
 
-                    this.connection.request('$SYS.REQ.SERVER.PING.CONNZ').then(response => {
-                        let { data } = JSON.parse(this.sc.decode(response.data)) as any;
-
-                        resolve(data.total);
-                    });
-                }
-            }, 100);
+            return data.total;
         });
     }
 }

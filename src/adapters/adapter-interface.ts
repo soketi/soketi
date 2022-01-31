@@ -16,6 +16,11 @@ export interface AdapterInterface {
     driver?: AdapterInterface;
 
     /**
+     * Initialize the adapter.
+     */
+    init(): Promise<AdapterInterface>;
+
+    /**
      * Get the app namespace.
      */
     getNamespace(appId: string): Namespace;

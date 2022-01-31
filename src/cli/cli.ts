@@ -172,14 +172,14 @@ export class Cli {
      * Start the server.
      */
     static async start(cliArgs: any): Promise<any> {
-        return (new Cli).start(cliArgs);
+        return await (new Cli).start(cliArgs);
     }
 
     /**
      * Start the server with PM2 support.
      */
     static async startWithPm2(cliArgs: any): Promise<any> {
-        return (new Cli(true)).start(cliArgs);
+        return await (new Cli(true)).start(cliArgs);
     }
 
     /**
@@ -189,16 +189,15 @@ export class Cli {
         this.overwriteOptionsFromConfig(cliArgs.config);
         this.overwriteOptionsFromEnv();
 
-        const handleFailure = () => {
-            this.server.stop().then(() => {
-                process.exit();
-            });
+        const handleFailure = async () => {
+            await this.server.stop();
+            process.exit();
         }
 
         process.on('SIGINT', handleFailure);
         process.on('SIGHUP', handleFailure);
         process.on('SIGTERM', handleFailure);
 
-        return this.server.start();
+        return await this.server.start();
     }
 }

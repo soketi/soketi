@@ -33,6 +33,13 @@ export class Adapter implements AdapterInterface {
     }
 
     /**
+     * Initialize the adapter.
+     */
+    async init(): Promise<AdapterInterface> {
+        return await this.driver.init();
+    }
+
+    /**
      * Get the app namespace.
      */
     getNamespace(appId: string): Namespace {
