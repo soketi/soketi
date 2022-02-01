@@ -45,21 +45,23 @@ export class NatsAdapter extends HorizontalAdapter {
      * Initialize the adapter.
      */
     async init(): Promise<AdapterInterface> {
-        this.connection = await connect({
-            servers: this.server.options.adapter.nats.servers,
-            port: this.server.options.adapter.nats.port,
-            user: this.server.options.adapter.nats.user,
-            pass: this.server.options.adapter.nats.pass,
-            token: this.server.options.adapter.nats.token,
-            pingInterval: 30_000,
-            timeout: this.server.options.adapter.nats.timeout,
+        return new Promise(resolve => {
+            connect({
+                servers: this.server.options.adapter.nats.servers,
+                port: this.server.options.adapter.nats.port,
+                user: this.server.options.adapter.nats.user,
+                pass: this.server.options.adapter.nats.pass,
+                token: this.server.options.adapter.nats.token,
+                pingInterval: 30_000,
+                timeout: this.server.options.adapter.nats.timeout,
+            }).then(() => {
+                this.connection.subscribe(this.requestChannel, { callback: (_err, msg) => this.onRequest(msg) });
+                this.connection.subscribe(this.responseChannel, { callback: (_err, msg) => this.onResponse(msg) });
+                this.connection.subscribe(this.channel, { callback: (_err, msg) => this.onMessage(msg) });
+
+                resolve(this);
+            });
         });
-
-        this.connection.subscribe(this.requestChannel, { callback: (_err, msg) => this.onRequest(msg) });
-        this.connection.subscribe(this.responseChannel, { callback: (_err, msg) => this.onResponse(msg) });
-        this.connection.subscribe(this.channel, { callback: (_err, msg) => this.onMessage(msg) });
-
-        return this;
     }
 
     /**
