@@ -109,4 +109,15 @@ export class NatsAdapter extends HorizontalAdapter {
             return data.total;
         });
     }
+
+    /**
+     * Clear the local namespaces.
+     */
+    clear(namespaceId?: string, closeConnections = false): Promise<void> {
+        return super.clear(namespaceId, closeConnections).then(() => {
+            if (closeConnections) {
+                this.connection.close();
+            }
+        });
+    }
 }
