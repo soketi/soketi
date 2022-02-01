@@ -54,7 +54,9 @@ export class NatsAdapter extends HorizontalAdapter {
                 token: this.server.options.adapter.nats.token,
                 pingInterval: 30_000,
                 timeout: this.server.options.adapter.nats.timeout,
-            }).then(() => {
+            }).then((connection) => {
+                this.connection = connection;
+
                 this.connection.subscribe(this.requestChannel, { callback: (_err, msg) => this.onRequest(msg) });
                 this.connection.subscribe(this.responseChannel, { callback: (_err, msg) => this.onResponse(msg) });
                 this.connection.subscribe(this.channel, { callback: (_err, msg) => this.onMessage(msg) });
@@ -68,14 +70,14 @@ export class NatsAdapter extends HorizontalAdapter {
      * Listen for requests coming from other nodes.
      */
     protected onRequest(msg: any): void {
-        super.onRequest(this.requestChannel, this.jc.decode(msg.data));
+        super.onRequest(this.requestChannel, JSON.stringify(this.jc.decode(msg.data)));
     }
 
     /**
      * Handle a response from another node.
      */
     protected onResponse(msg: any): void {
-        super.onResponse(this.responseChannel, this.jc.decode(msg.data));
+        super.onResponse(this.responseChannel, JSON.stringify(this.jc.decode(msg.data)));
     }
 
     /**
@@ -109,17 +111,6 @@ export class NatsAdapter extends HorizontalAdapter {
             let { data } = JSON.parse(this.sc.decode(response.data)) as any;
 
             return data.total;
-        });
-    }
-
-    /**
-     * Clear the local namespaces.
-     */
-    clear(namespaceId?: string, closeConnections = false): Promise<void> {
-        return super.clear(namespaceId, closeConnections).then(() => {
-            if (closeConnections) {
-                this.connection.close();
-            }
         });
     }
 }

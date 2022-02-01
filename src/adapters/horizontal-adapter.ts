@@ -374,7 +374,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         try {
             request = JSON.parse(msg);
         } catch (err) {
-            return;
+            //
         }
 
         let { appId } = request;
@@ -476,7 +476,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         try {
             response = JSON.parse(msg);
         } catch (err) {
-            return;
+            //
         }
 
         const requestId = response.requestId;
