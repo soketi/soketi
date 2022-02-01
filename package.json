@@ -17,7 +17,7 @@
     "pusher"
   ],
   "author": "Alex Renoki",
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "jshintConfig": {
     "esversion": 9
   },
@@ -64,7 +64,7 @@
     "@types/node": "^16.11.19",
     "@types/pusher-js": "^5.1.0",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
-    "@typescript-eslint/parser": "^5.9.0",
+    "@typescript-eslint/parser": "^5.10.2",
     "eslint": "^8.6.0",
     "jest": "^26.6.3",
     "jest-circus": "^26.6.3",
