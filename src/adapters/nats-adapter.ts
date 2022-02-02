@@ -54,6 +54,7 @@ export class NatsAdapter extends HorizontalAdapter {
                 token: this.server.options.adapter.nats.token,
                 pingInterval: 30_000,
                 timeout: this.server.options.adapter.nats.timeout,
+                reconnect: false,
             }).then((connection) => {
                 this.connection = connection;
 
@@ -118,8 +119,6 @@ export class NatsAdapter extends HorizontalAdapter {
      * Clear the connections.
      */
     disconnect(): Promise<void> {
-        // TODO: Disconnect.
-        // return this.connection.close();
-        return Promise.resolve();
+        return this.connection.close();
     }
 }

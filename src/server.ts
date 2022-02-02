@@ -374,12 +374,7 @@ export class Server {
         Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
 
         return this.wsHandler.closeAllLocalSockets().then(() => {
-            return Promise.all([
-                this.metricsManager.clear(),
-                this.queueManager.disconnect(),
-                this.adapter.disconnect(),
-                this.rateLimiter.disconnect(),
-            ]).then(() => {
+            return new Promise(resolve => {
                 if (this.options.debug) {
                     Log.warningTitle('⚡ All sockets were closed. Now closing the server.');
                 }
@@ -392,7 +387,15 @@ export class Server {
                     uWS.us_listen_socket_close(this.metricsServerProcess);
                 }
 
-                return new Promise(resolve => setTimeout(resolve, this.options.shutdownGracePeriod));
+                setTimeout(() => {
+                    Promise.all([
+                        this.metricsManager.clear(),
+                        this.queueManager.disconnect(),
+                        this.rateLimiter.disconnect(),
+                    ]).then(() => {
+                        this.adapter.disconnect().then(() => resolve());
+                    });
+                }, this.options.shutdownGracePeriod);
             });
         });
     }

@@ -5,7 +5,7 @@ import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { Log } from './log';
 import { Namespace } from './namespace';
 import { PresenceChannelManager } from './channels';
-import { PresenceMember, PresenceMemberInfo } from './channels/presence-channel-manager';
+import { PresenceMemberInfo } from './channels/presence-channel-manager';
 import { PrivateChannelManager } from './channels';
 import { PublicChannelManager } from './channels';
 import { PusherMessage, uWebSocketMessage } from './message';
@@ -202,7 +202,17 @@ export class WsHandler {
             Log.websocket({ ws, code, message });
         }
 
-        this.unsubscribeFromAllChannels(ws).then(() => {
+        // If code 1012 (reconnect immediately) is called, it means the `closeAllLocalSockets()` was called.
+        if (code !== 1012) {
+            this.evictSocketFromMemory(ws);
+        }
+    }
+
+    /**
+     * Evict the local socket.
+     */
+    evictSocketFromMemory(ws: WebSocket): Promise<void> {
+        return this.unsubscribeFromAllChannels(ws).then(() => {
             if (ws.app) {
                 this.server.adapter.removeSocket(ws.app.id, ws.id);
                 this.server.metricsManager.markDisconnection(ws);
@@ -240,7 +250,9 @@ export class WsHandler {
                         //
                     }
 
-                    wsCallback();
+                    this.evictSocketFromMemory(ws).then(() => {
+                        wsCallback();
+                    });
                 }).then(() => {
                     this.server.adapter.clearNamespace(namespaceId).then(() => {
                         nsCallback();
@@ -289,7 +301,9 @@ export class WsHandler {
             });
 
             // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-            return ws.end(1012);
+            ws.end(1012);
+
+            this.evictSocketFromMemory(ws);
         }
     }
 
@@ -307,7 +321,11 @@ export class WsHandler {
             });
 
             // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-            return ws.end(1012);
+            ws.end(1012);
+
+            this.evictSocketFromMemory(ws);
+
+            return;
         }
 
         let channel = message.data.channel;
