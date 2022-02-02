@@ -58,9 +58,19 @@ export interface AdapterInterface {
     send(appId: string, channel: string, data: string, exceptingId?: string|null): any;
 
     /**
-     * Clear the local namespaces.
+     * Clear the connection for the adapter.
      */
-    clear(namespaceId?: string, closeConnections?: boolean): Promise<void>;
+    disconnect(): Promise<void>;
+
+    /**
+     * Clear the namespace from the local adapter.
+     */
+    clearNamespace(namespaceId: string): Promise<void>;
+
+    /**
+     * Clear all namespaces from the local adapter.
+     */
+    clearNamespaces(): Promise<void>;
 
     /**
      * Get all sockets from the namespace.

@@ -42,4 +42,14 @@ export class RedisRateLimiter extends LocalRateLimiter {
             // insuranceLimiter: super.createNewRateLimiter(appId, maxPoints),
         }));
     }
+
+    /**
+     * Clear the rate limiter or active connections.
+     */
+    disconnect(): Promise<void> {
+        // TODO: Disconnect
+        // this.redisConnection.disconnect();
+
+        return Promise.resolve();
+    }
 }

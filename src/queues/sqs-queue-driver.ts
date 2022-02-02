@@ -85,7 +85,7 @@ export class SqsQueueDriver implements QueueInterface {
     /**
      * Clear the queues for a graceful shutdown.
      */
-    clear(): Promise<void> {
+    disconnect(): Promise<void> {
         return async.each([...this.queueWithConsumer], ([queueName, consumer]: [string, Consumer], callback) => {
             if (consumer.isRunning) {
                 consumer.stop();

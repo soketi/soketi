@@ -74,11 +74,11 @@ export class ClusterRateLimiter extends LocalRateLimiter {
     /**
      * Clear the rate limiter or active connections.
      */
-    clear(closeConnections = false): Promise<void> {
-        return super.clear(closeConnections).then(() => {
+    disconnect(): Promise<void> {
+        return super.disconnect().then(() => {
             // If the current instance is the master and the server is closing,
             // demote and send the rate limiter of the current instance to the new master.
-            if (closeConnections && this.server.nodes.get('self').isMaster) {
+            if (this.server.nodes.get('self').isMaster) {
                 this.server.discover.demote();
                 this.server.discover.send('rate_limiter:limiters', this.rateLimiters);
             }

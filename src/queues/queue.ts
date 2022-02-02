@@ -44,7 +44,7 @@ export class Queue implements QueueInterface {
     /**
      * Clear the queues for a graceful shutdown.
      */
-    clear(): Promise<void> {
-        return this.driver.clear();
+    disconnect(): Promise<void> {
+        return this.driver.disconnect();
     }
 }

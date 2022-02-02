@@ -376,9 +376,9 @@ export class Server {
         return this.wsHandler.closeAllLocalSockets().then(() => {
             return Promise.all([
                 this.metricsManager.clear(),
-                this.queueManager.clear(),
-                this.adapter.clear(null, this.closing),
-                this.rateLimiter.clear(this.closing),
+                this.queueManager.disconnect(),
+                this.adapter.disconnect(),
+                this.rateLimiter.disconnect(),
             ]).then(() => {
                 if (this.options.debug) {
                     Log.warningTitle('⚡ All sockets were closed. Now closing the server.');

@@ -147,9 +147,23 @@ export class Adapter implements AdapterInterface {
     }
 
     /**
-     * Clear the local namespaces.
+     * Clear the namespace from the local adapter.
      */
-    clear(namespaceId?: string, closeConnections = false): Promise<void> {
-        return this.driver.clear(namespaceId, closeConnections);
+    clearNamespace(namespaceId: string): Promise<void> {
+        return this.driver.clearNamespace(namespaceId);
+    }
+
+    /**
+     * Clear all namespaces from the local adapter.
+     */
+    clearNamespaces(): Promise<void> {
+        return this.driver.clearNamespaces();
+    }
+
+    /**
+     * Clear the connections.
+     */
+    disconnect(): Promise<void> {
+        return this.driver.disconnect();
     }
 }

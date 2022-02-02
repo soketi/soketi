@@ -113,4 +113,13 @@ export class NatsAdapter extends HorizontalAdapter {
             return data.total;
         });
     }
+
+    /**
+     * Clear the connections.
+     */
+    disconnect(): Promise<void> {
+        // TODO: Disconnect.
+        // return this.connection.close();
+        return Promise.resolve();
+    }
 }

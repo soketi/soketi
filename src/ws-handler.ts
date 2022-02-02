@@ -242,14 +242,14 @@ export class WsHandler {
 
                     wsCallback();
                 }).then(() => {
-                    this.server.adapter.clear(namespaceId).then(() => {
+                    this.server.adapter.clearNamespace(namespaceId).then(() => {
                         nsCallback();
                     });
                 });
             });
         }).then(() => {
             // One last clear to make sure everything went away.
-            return this.server.adapter.clear(null, this.server.closing);
+            return this.server.adapter.clearNamespaces();
         });
     }
 
