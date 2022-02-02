@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import { Log } from '..';
 import { Server } from './../server';
 
 export class Cli {
@@ -161,7 +162,7 @@ export class Cli {
                 this.server.setOptions(settingObject);
             }
         } catch (e) {
-            //
+            Log.error('There was an error while parsing the JSON in your config file. It has not been loaded.');
         }
     }
 
