@@ -71,14 +71,14 @@ export class NatsAdapter extends HorizontalAdapter {
      * Listen for requests coming from other nodes.
      */
     protected onRequest(msg: any): void {
-        super.onRequest(this.requestChannel, JSON.stringify(this.jc.decode(msg.data)));
+        super.onRequest(this.requestChannel, this.jc.decode(msg.data));
     }
 
     /**
      * Handle a response from another node.
      */
     protected onResponse(msg: any): void {
-        super.onResponse(this.responseChannel, JSON.stringify(this.jc.decode(msg.data)));
+        super.onResponse(this.responseChannel, this.jc.decode(msg.data));
     }
 
     /**
