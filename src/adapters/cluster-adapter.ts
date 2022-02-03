@@ -1,3 +1,4 @@
+import { AdapterInterface } from './adapter-interface';
 import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
 import { Server } from '../server';
 
@@ -16,10 +17,17 @@ export class ClusterAdapter extends HorizontalAdapter {
         this.channel = server.clusterPrefix(this.channel);
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
+    }
 
-        server.discover.join(this.requestChannel, this.onRequest.bind(this));
-        server.discover.join(this.responseChannel, this.onResponse.bind(this));
-        server.discover.join(this.channel, this.onMessage.bind(this));
+    /**
+     * Initialize the adapter.
+     */
+    async init(): Promise<AdapterInterface> {
+        this.server.discover.join(this.requestChannel, this.onRequest.bind(this));
+        this.server.discover.join(this.responseChannel, this.onResponse.bind(this));
+        this.server.discover.join(this.channel, this.onMessage.bind(this));
+
+        return this;
     }
 
     /**

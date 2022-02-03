@@ -24,7 +24,7 @@ export class LocalAdapter implements AdapterInterface {
      * Initialize the adapter.
      */
     async init(): Promise<AdapterInterface> {
-        return this;
+        return Promise.resolve(this);
     }
 
     /**
@@ -159,14 +159,26 @@ export class LocalAdapter implements AdapterInterface {
     }
 
     /**
-     * Clear the local namespaces.
+     * Clear the connections.
      */
-    clear(namespaceId?: string, closeConnections = false): Promise<void> {
-        if (namespaceId) {
-            this.namespaces.set(namespaceId, new Namespace(namespaceId));
-        } else {
-            this.namespaces = new Map<string, Namespace>();
-        }
+    disconnect(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    /**
+     * Clear the namespace from the local adapter.
+     */
+    clearNamespace(namespaceId: string): Promise<void> {
+        this.namespaces.set(namespaceId, new Namespace(namespaceId));
+
+        return Promise.resolve();
+    }
+
+     /**
+      * Clear all namespaces from the local adapter.
+      */
+    clearNamespaces(): Promise<void> {
+        this.namespaces = new Map<string, Namespace>();
 
         return Promise.resolve();
     }

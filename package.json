@@ -17,7 +17,7 @@
     "pusher"
   ],
   "author": "Alex Renoki",
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "jshintConfig": {
     "esversion": 9
   },

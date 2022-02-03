@@ -152,6 +152,10 @@ export class Cli {
      * Inject the variables from a config file.
      */
     protected overwriteOptionsFromConfig(path?: string): void {
+        if (!path) {
+            return;
+        }
+
         try {
             let config = JSON.parse(readFileSync(path, { encoding: 'utf-8' }));
 
@@ -172,32 +176,33 @@ export class Cli {
      * Start the server.
      */
     static async start(cliArgs: any): Promise<any> {
-        return await (new Cli).start(cliArgs);
+        return (new Cli).start(cliArgs);
     }
 
     /**
      * Start the server with PM2 support.
      */
     static async startWithPm2(cliArgs: any): Promise<any> {
-        return await (new Cli(true)).start(cliArgs);
+        return (new Cli(true)).start(cliArgs);
     }
 
     /**
      * Start the server.
      */
     async start(cliArgs: any): Promise<any> {
-        this.overwriteOptionsFromConfig(cliArgs.config);
+        this.overwriteOptionsFromConfig(cliArgs ? cliArgs.config : null);
         this.overwriteOptionsFromEnv();
 
-        const handleFailure = async () => {
-            await this.server.stop();
-            process.exit();
+        const handleFailure = () => {
+            this.server.stop().then(() => {
+                process.exit();
+            });
         }
 
         process.on('SIGINT', handleFailure);
         process.on('SIGHUP', handleFailure);
         process.on('SIGTERM', handleFailure);
 
-        return await this.server.start();
+        return this.server.start();
     }
 }

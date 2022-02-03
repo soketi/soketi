@@ -168,4 +168,14 @@ export class RedisAdapter extends HorizontalAdapter {
             });
         }
     }
+
+    /**
+     * Clear the connections.
+     */
+    disconnect(): Promise<void> {
+        this.subClient.disconnect();
+        this.pubClient.disconnect();
+
+        return Promise.resolve();
+    }
 }

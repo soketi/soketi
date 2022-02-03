@@ -45,35 +45,40 @@ export class NatsAdapter extends HorizontalAdapter {
      * Initialize the adapter.
      */
     async init(): Promise<AdapterInterface> {
-        this.connection = await connect({
-            servers: this.server.options.adapter.nats.servers,
-            port: this.server.options.adapter.nats.port,
-            user: this.server.options.adapter.nats.user,
-            pass: this.server.options.adapter.nats.pass,
-            token: this.server.options.adapter.nats.token,
-            pingInterval: 30_000,
-            timeout: this.server.options.adapter.nats.timeout,
+        return new Promise(resolve => {
+            connect({
+                servers: this.server.options.adapter.nats.servers,
+                port: this.server.options.adapter.nats.port,
+                user: this.server.options.adapter.nats.user,
+                pass: this.server.options.adapter.nats.pass,
+                token: this.server.options.adapter.nats.token,
+                pingInterval: 30_000,
+                timeout: this.server.options.adapter.nats.timeout,
+                reconnect: false,
+            }).then((connection) => {
+                this.connection = connection;
+
+                this.connection.subscribe(this.requestChannel, { callback: (_err, msg) => this.onRequest(msg) });
+                this.connection.subscribe(this.responseChannel, { callback: (_err, msg) => this.onResponse(msg) });
+                this.connection.subscribe(this.channel, { callback: (_err, msg) => this.onMessage(msg) });
+
+                resolve(this);
+            });
         });
-
-        this.connection.subscribe(this.requestChannel, { callback: (_err, msg) => this.onRequest(msg) });
-        this.connection.subscribe(this.responseChannel, { callback: (_err, msg) => this.onResponse(msg) });
-        this.connection.subscribe(this.channel, { callback: (_err, msg) => this.onMessage(msg) });
-
-        return this;
     }
 
     /**
      * Listen for requests coming from other nodes.
      */
     protected onRequest(msg: any): void {
-        super.onRequest(this.requestChannel, this.jc.decode(msg.data));
+        super.onRequest(this.requestChannel, JSON.stringify(this.jc.decode(msg.data)));
     }
 
     /**
      * Handle a response from another node.
      */
     protected onResponse(msg: any): void {
-        super.onResponse(this.responseChannel, this.jc.decode(msg.data));
+        super.onResponse(this.responseChannel, JSON.stringify(this.jc.decode(msg.data)));
     }
 
     /**
@@ -108,5 +113,12 @@ export class NatsAdapter extends HorizontalAdapter {
 
             return data.total;
         });
+    }
+
+    /**
+     * Clear the connections.
+     */
+    disconnect(): Promise<void> {
+        return this.connection.close();
     }
 }
