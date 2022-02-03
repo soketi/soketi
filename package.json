@@ -24,7 +24,7 @@
   "dependencies": {
     "arraybuffer-to-string": "^1.0.2",
     "async": "^3.2.3",
-    "aws-sdk": "^2.1053.0",
+    "aws-sdk": "^2.1067.0",
     "axios": "^0.24.0",
     "body-parser": "^1.19.1",
     "boolean": "^3.1.4",
@@ -37,6 +37,7 @@
     "knex": "^0.95.15",
     "mysql": "^2.18.1",
     "mysql2": "^2.3.3",
+    "nats": "^2.5.0",
     "node-discover": "^1.2.1",
     "pg": "^8.7.1",
     "pm2": "^5.1.2",
