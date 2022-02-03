@@ -39,15 +39,18 @@ jobs:
           - adapter: local
             rate_limiter: local
             queue_driver: sync
+          - adapter: local
+            rate_limiter: local
+            queue_driver: sqs
           - adapter: cluster
             rate_limiter: cluster
-            queue_driver: sync
-          - adapter: nats
-            rate_limiter: redis
             queue_driver: sync
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis
+          - adapter: nats
+            rate_limiter: redis
+            queue_driver: sync
 
     name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
@@ -124,6 +127,38 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
+
+      - name: Setup Localstack
+        if: "matrix.queue_driver == 'sqs'"
+        run: |
+          pip install localstack awscli-local[ver1]
+          docker pull localstack/localstack
+          localstack start -d
+          localstack wait -t 30
+          echo "Startup complete"
+          awslocal s3 mb s3://test
+          awslocal s3 ls
+          awslocal sqs create-queue --queue-name test.fifo \
+            --attributes='{
+              "FifoQueue": "true",
+              "ContentBasedDeduplication": "true",
+              "DeduplicationScope": "messageGroup",
+              "FifoThroughputLimit": "perMessageGroupId",
+              "MessageRetentionPeriod": "3600",
+              "ReceiveMessageWaitTimeSeconds": "1",
+              "VisibilityTimeout": "5"
+            }' \
+            --region us-east-1
+          awslocal sqs list-queues
+
+      - name: Setup NATS
+        if: "matrix.adapter == 'nats'"
+        run: |
+          docker run -d --name nats-main \
+            -p 4222:4222 \
+            -p 6222:6222 \
+            -p 8222:8222 \
+            nats --jetstream --user="" --pass=""
 
       - name: Setup NATS
         if: "matrix.adapter == 'nats'"
