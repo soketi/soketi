@@ -589,16 +589,11 @@ export class HttpHandler {
     protected sendJson(res: HttpResponse, data: any, status: RecognizedString = '200 OK') {
         return res.writeStatus(status)
             .writeHeader('Content-Type', 'application/json')
-            // TODO: Remove after uWS19.4
-            // @ts-ignore Remove after uWS 19.4 release
             .end(JSON.stringify(data), true);
     }
 
     protected send(res: HttpResponse, data: RecognizedString, status: RecognizedString = '200 OK') {
-        return res.writeStatus(status)
-            // TODO: Remove after uWS19.4
-            // @ts-ignore Remove after uWS 19.4 release
-            .end(data, true);
+        return res.writeStatus(status).end(data, true);
     }
 
     /**

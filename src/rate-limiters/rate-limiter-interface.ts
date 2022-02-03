@@ -41,5 +41,5 @@ export interface RateLimiterInterface {
     /**
      * Clear the rate limiter or active connections.
      */
-    clear(closeConnections?: boolean): Promise<void>;
+    disconnect(): Promise<void>;
 }

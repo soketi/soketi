@@ -101,7 +101,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Broadcast data to a given channel.
      */
-    protected abstract broadcastToChannel(channel: string, data: any): void;
+    protected abstract broadcastToChannel(channel: string, data: string): void;
 
     /**
      * Get the number of total subscribers subscribers.
@@ -111,15 +111,15 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Send a response through the response channel.
      */
-    protected sendToResponseChannel(response: any): void {
-        this.broadcastToChannel(this.responseChannel, response);
+    protected sendToResponseChannel(data: string): void {
+        this.broadcastToChannel(this.responseChannel, data);
     }
 
     /**
      * Send a request through the request channel.
      */
-    protected sendToRequestChannel(request: any): void {
-        this.broadcastToChannel(this.requestChannel, request);
+    protected sendToRequestChannel(data: string): void {
+        this.broadcastToChannel(this.requestChannel, data);
     }
 
     /**
@@ -374,7 +374,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         try {
             request = JSON.parse(msg);
         } catch (err) {
-            return;
+            //
         }
 
         let { appId } = request;
@@ -476,7 +476,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         try {
             response = JSON.parse(msg);
         } catch (err) {
-            return;
+            //
         }
 
         const requestId = response.requestId;

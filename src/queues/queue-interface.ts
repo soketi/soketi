@@ -19,5 +19,5 @@ export interface QueueInterface {
     /**
      * Clear the queues for a graceful shutdown.
      */
-    clear(): Promise<void>;
+    disconnect(): Promise<void>;
 }

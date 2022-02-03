@@ -16,6 +16,11 @@ export interface AdapterInterface {
     driver?: AdapterInterface;
 
     /**
+     * Initialize the adapter.
+     */
+    init(): Promise<AdapterInterface>;
+
+    /**
      * Get the app namespace.
      */
     getNamespace(appId: string): Namespace;
@@ -26,14 +31,46 @@ export interface AdapterInterface {
     getNamespaces(): Map<string, Namespace>;
 
     /**
+     * Add a new socket to the namespace.
+     */
+    addSocket(appId: string, ws: WebSocket): Promise<boolean>;
+
+    /**
+     * Remove a socket from the namespace.
+     */
+    removeSocket(appId: string, wsId: string): Promise<boolean>;
+
+    /**
+     * Add a socket ID to the channel identifier.
+     * Return the total number of connections after the connection.
+     */
+    addToChannel(appId: string, channel: string, ws: WebSocket): Promise<number>;
+
+    /**
+     * Remove a socket ID from the channel identifier.
+     * Return the total number of connections remaining to the channel.
+     */
+    removeFromChannel(appId: string, channel: string, wsId: string): Promise<number>;
+
+    /**
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string|null): any;
 
     /**
-     * Clear the local namespaces.
+     * Clear the connection for the adapter.
      */
-    clear(namespaceId?: string, closeConnections?: boolean): Promise<void>;
+    disconnect(): Promise<void>;
+
+    /**
+     * Clear the namespace from the local adapter.
+     */
+    clearNamespace(namespaceId: string): Promise<void>;
+
+    /**
+     * Clear all namespaces from the local adapter.
+     */
+    clearNamespaces(): Promise<void>;
 
     /**
      * Get all sockets from the namespace.

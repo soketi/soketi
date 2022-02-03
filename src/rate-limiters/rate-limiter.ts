@@ -60,7 +60,7 @@ export class RateLimiter implements RateLimiterInterface {
     /**
      * Clear the rate limiter or active connections.
      */
-    clear(closeConnections?: boolean): Promise<void> {
-        return this.driver.clear(closeConnections);
+     disconnect(): Promise<void> {
+        return this.driver.disconnect();
     }
 }

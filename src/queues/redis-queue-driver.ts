@@ -96,7 +96,7 @@ export class RedisQueueDriver implements QueueInterface {
     /**
      * Clear the queues for a graceful shutdown.
      */
-    clear(): Promise<void> {
+    disconnect(): Promise<void> {
         return async.each([...this.queueWithWorker], ([queueName, { queue, worker, scheduler }]: [string, QueueWithWorker], callback) => {
             scheduler.close().then(() => {
                 worker.close().then(() => callback());

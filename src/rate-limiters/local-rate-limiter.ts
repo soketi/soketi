@@ -69,7 +69,7 @@ export class LocalRateLimiter implements RateLimiterInterface {
     /**
      * Clear the rate limiter or active connections.
      */
-    clear(closeConnections = false): Promise<void> {
+    disconnect(): Promise<void> {
         return Promise.resolve();
     }
 

@@ -73,7 +73,7 @@ export class PrometheusMetricsDriver implements MetricsInterface {
      * Handle a new connection.
      */
     markNewConnection(ws: WebSocket): void {
-        this.server.adapter.getNamespace(ws.app.id).getSockets().then(sockets => {
+        this.server.adapter.getSockets(ws.app.id).then(sockets => {
             this.metrics.connectedSockets.set(this.getTags(ws.app.id), sockets.size);
             this.metrics.newConnectionsTotal.inc(this.getTags(ws.app.id));
         });
@@ -83,7 +83,7 @@ export class PrometheusMetricsDriver implements MetricsInterface {
      * Handle a disconnection.
      */
     markDisconnection(ws: WebSocket): void {
-        this.server.adapter.getNamespace(ws.app.id).getSockets().then(sockets => {
+        this.server.adapter.getSockets(ws.app.id).then(sockets => {
             this.metrics.connectedSockets.set(this.getTags(ws.app.id), sockets.size);
             this.metrics.newDisconnectionsTotal.inc(this.getTags(ws.app.id));
         });

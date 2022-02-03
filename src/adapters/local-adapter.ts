@@ -21,6 +21,13 @@ export class LocalAdapter implements AdapterInterface {
     }
 
     /**
+     * Initialize the adapter.
+     */
+    async init(): Promise<AdapterInterface> {
+        return Promise.resolve(this);
+    }
+
+    /**
      * Get the app namespace.
      */
     getNamespace(appId: string): Namespace {
@@ -36,6 +43,36 @@ export class LocalAdapter implements AdapterInterface {
      */
     getNamespaces(): Map<string, Namespace> {
         return this.namespaces;
+    }
+
+    /**
+     * Add a new socket to the namespace.
+     */
+    async addSocket(appId: string, ws: WebSocket): Promise<boolean> {
+        return this.getNamespace(appId).addSocket(ws);
+    }
+
+    /**
+     * Remove a socket from the namespace.
+     */
+    async removeSocket(appId: string, wsId: string): Promise<boolean> {
+        return this.getNamespace(appId).removeSocket(wsId);
+    }
+
+    /**
+     * Add a socket ID to the channel identifier.
+     * Return the total number of connections after the connection.
+     */
+    async addToChannel(appId: string, channel: string, ws: WebSocket): Promise<number> {
+        return this.getNamespace(appId).addToChannel(ws, channel);
+    }
+
+    /**
+     * Remove a socket ID from the channel identifier.
+     * Return the total number of connections remaining to the channel.
+     */
+    async removeFromChannel(appId: string, channel: string, wsId: string): Promise<number> {
+        return this.getNamespace(appId).removeFromChannel(wsId, channel);
     }
 
     /**
@@ -122,14 +159,26 @@ export class LocalAdapter implements AdapterInterface {
     }
 
     /**
-     * Clear the local namespaces.
+     * Clear the connections.
      */
-    clear(namespaceId?: string, closeConnections = false): Promise<void> {
-        if (namespaceId) {
-            this.namespaces.set(namespaceId, new Namespace(namespaceId));
-        } else {
-            this.namespaces = new Map<string, Namespace>();
-        }
+    disconnect(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    /**
+     * Clear the namespace from the local adapter.
+     */
+    clearNamespace(namespaceId: string): Promise<void> {
+        this.namespaces.set(namespaceId, new Namespace(namespaceId));
+
+        return Promise.resolve();
+    }
+
+     /**
+      * Clear all namespaces from the local adapter.
+      */
+    clearNamespaces(): Promise<void> {
+        this.namespaces = new Map<string, Namespace>();
 
         return Promise.resolve();
     }
