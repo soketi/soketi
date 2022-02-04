@@ -18,7 +18,6 @@ export class Cli {
         ADAPTER_REDIS_CLUSTER_MODE: 'adapter.redis.clusterMode',
         ADAPTER_NATS_PREFIX: 'adapter.nats.prefix',
         ADAPTER_NATS_SERVERS: 'adapter.nats.servers',
-        ADAPTER_NATS_PORT: 'adapter.nats.port',
         ADAPTER_NATS_USER: 'adapter.nats.user',
         ADAPTER_NATS_PASSWORD: 'adapter.nats.pass',
         ADAPTER_NATS_TOKEN: 'adapter.nats.token',

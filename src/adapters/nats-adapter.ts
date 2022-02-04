@@ -48,7 +48,6 @@ export class NatsAdapter extends HorizontalAdapter {
         return new Promise(resolve => {
             connect({
                 servers: this.server.options.adapter.nats.servers,
-                port: this.server.options.adapter.nats.port,
                 user: this.server.options.adapter.nats.user,
                 pass: this.server.options.adapter.nats.pass,
                 token: this.server.options.adapter.nats.token,

@@ -44,7 +44,6 @@ export interface Options {
         nats: {
             prefix: string;
             servers: string[];
-            port: number;
             user?: string;
             pass?: string|null;
             token: string|null;

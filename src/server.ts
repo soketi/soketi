@@ -37,8 +37,7 @@ export class Server {
             },
             nats: {
                 prefix: '',
-                servers: ['127.0.0.1'],
-                port: 4222,
+                servers: ['127.0.0.1:4222'],
                 user: null,
                 pass: null,
                 token: null,
