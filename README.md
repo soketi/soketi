@@ -19,9 +19,13 @@ The server is built on top of [uWebSockets.js](https://github.com/uNetworking/uW
 
 ### Cheaper than most competitors 🤑
 
-Compared with Pusher, you can achieve much more for one-third of the price. For a $49 plan on Pusher, you get a limited amount of connections (500) and messages (30M). With soketi, for ~ $15, you get virtually unlimited connections, messages, and some more!
+Compared with Pusher, you can achieve much more for less than one-third of the price.
 
-This is because you pay only for your infrastructure. Whether it's your basement server or cloud, it fits and runs. You can also  [get free $100 on Vultr to try out soketi →](https://www.vultr.com/?ref=9032189-8H)
+For a $49 plan on Pusher, you get a limited amount of connections (500) and messages (30M).
+
+With Soketi, for the price of an instance on Vultr or DigitalOcean ($5-$10), you get virtually unlimited connections, messages, and some more!
+
+Soketi is capable to hold 500 active connections with high traffic on just **1 GB and 1 CPU machines** in the cloud. You can also [get free $100 on Vultr to try out soketi →](https://www.vultr.com/?ref=9032189-8H)
 
 ### Easy to use 👶
 
