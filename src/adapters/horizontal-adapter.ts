@@ -71,7 +71,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * The time (in ms) for the request to be fulfilled.
      */
-    public requestsTimeout = 2_000;
+    public requestsTimeout = 5_000;
 
     /**
      * The channel to listen for new requests.

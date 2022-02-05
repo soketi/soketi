@@ -37,18 +37,23 @@ export interface Options {
     adapter: {
         driver: string;
         redis: {
+            requestsTimeout: number;
             prefix: string;
             redisOptions: any;
             clusterMode: boolean;
         };
+        cluster: {
+            requestsTimeout: 5_000,
+        },
         nats: {
+            requestsTimeout: number;
             prefix: string;
             servers: string[];
             user?: string;
             pass?: string|null;
             token: string|null;
             timeout: number;
-        },
+        };
     };
     appManager: {
         driver: string;

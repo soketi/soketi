@@ -14,14 +14,17 @@ export class Cli {
      */
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
+        ADAPTER_CLUSTER_REQUESTS_TIMEOUT: 'adapter.cluster.requestsTimeout',
         ADAPTER_REDIS_PREFIX: 'adapter.redis.prefix',
         ADAPTER_REDIS_CLUSTER_MODE: 'adapter.redis.clusterMode',
+        ADAPTER_REDIS_REQUESTS_TIMEOUT: 'adapter.redis.requestsTimeout',
         ADAPTER_NATS_PREFIX: 'adapter.nats.prefix',
         ADAPTER_NATS_SERVERS: 'adapter.nats.servers',
         ADAPTER_NATS_USER: 'adapter.nats.user',
         ADAPTER_NATS_PASSWORD: 'adapter.nats.pass',
         ADAPTER_NATS_TOKEN: 'adapter.nats.token',
         ADAPTER_NATS_TIMEOUT: 'adapter.nats.timeout',
+        ADAPTER_NATS_REQUESTS_TIMEOUT: 'adapter.nats.requestsTimeout',
         APP_MANAGER_DRIVER: 'appManager.driver',
         APP_MANAGER_DYNAMODB_TABLE: 'appManager.dynamodb.table',
         APP_MANAGER_DYNAMODB_REGION: 'appManager.dynamodb.region',

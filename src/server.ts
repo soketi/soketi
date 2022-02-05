@@ -29,13 +29,18 @@ export class Server {
         adapter: {
             driver: 'local',
             redis: {
+                requestsTimeout: 5_000,
                 prefix: '',
                 redisOptions: {
                     //
                 },
                 clusterMode: false,
             },
+            cluster: {
+                requestsTimeout: 5_000,
+            },
             nats: {
+                requestsTimeout: 5_000,
                 prefix: '',
                 servers: ['127.0.0.1:4222'],
                 user: null,

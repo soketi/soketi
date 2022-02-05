@@ -33,6 +33,8 @@ export class RedisAdapter extends HorizontalAdapter {
 
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
+
+        this.requestsTimeout = server.options.adapter.redis.requestsTimeout;
     }
 
     /**
