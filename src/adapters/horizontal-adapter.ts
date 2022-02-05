@@ -71,7 +71,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * The time (in ms) for the request to be fulfilled.
      */
-    public requestsTimeout = 5_000;
+    public requestsTimeout = 2_000;
 
     /**
      * The channel to listen for new requests.
@@ -97,6 +97,100 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * The UUID assigned for the current instance.
      */
     protected uuid: string = uuidv4();
+
+    /**
+     * The list of resolvers for each response type.
+     */
+    protected resolvers = {
+        [RequestType.SOCKETS]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (response.sockets) {
+                    response.sockets.forEach(ws => request.sockets.set(ws.id, ws));
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.sockets;
+            },
+        },
+        [RequestType.CHANNEL_SOCKETS]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (response.sockets) {
+                    response.sockets.forEach(ws => request.sockets.set(ws.id, ws));
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.sockets;
+            },
+        },
+        [RequestType.CHANNELS]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (response.channels) {
+                    response.channels.forEach(([channel, connections]) => {
+                        if (request.channels.has(channel)) {
+                            connections.forEach(connection => {
+                                request.channels.set(channel, request.channels.get(channel).add(connection));
+                            });
+                        } else {
+                            request.channels.set(channel, new Set(connections));
+                        }
+                    });
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.channels;
+            },
+        },
+        [RequestType.CHANNEL_MEMBERS]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (response.members) {
+                    response.members.forEach(([id, member]) => request.members.set(id, member));
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.members;
+            },
+        },
+        [RequestType.SOCKETS_COUNT]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (typeof response.totalCount !== 'undefined') {
+                    request.totalCount += response.totalCount;
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.totalCount;
+            },
+        },
+        [RequestType.CHANNEL_MEMBERS_COUNT]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (typeof response.totalCount !== 'undefined') {
+                    request.totalCount += response.totalCount;
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.totalCount;
+            },
+        },
+        [RequestType.CHANNEL_SOCKETS_COUNT]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (typeof response.totalCount !== 'undefined') {
+                    request.totalCount += response.totalCount;
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.totalCount;
+            },
+        },
+        [RequestType.SOCKET_EXISTS_IN_CHANNEL]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (typeof response.exists !== 'undefined' && response.exists === true) {
+                    request.exists = true;
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.exists || false;
+            },
+        },
+    };
 
     /**
      * Broadcast data to a given channel.
@@ -492,78 +586,11 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             Log.cluster(msg);
         }
 
-        switch (request.type) {
-            case RequestType.SOCKETS:
-            case RequestType.CHANNEL_SOCKETS:
-                this.processReceivedResponse(
-                    response,
-                    (request: Request) => {
-                        if (response.sockets) {
-                            response.sockets.forEach(ws => request.sockets.set(ws.id, ws));
-                        }
-                    },
-                    (response: Response, request: Request) => request.sockets,
-                );
-                break;
-
-            case RequestType.CHANNELS:
-                this.processReceivedResponse(
-                    response,
-                    (request: Request) => {
-                        if (response.channels) {
-                            response.channels.forEach(([channel, connections]) => {
-                                if (request.channels.has(channel)) {
-                                    connections.forEach(connection => {
-                                        request.channels.set(channel, request.channels.get(channel).add(connection));
-                                    });
-                                } else {
-                                    request.channels.set(channel, new Set(connections));
-                                }
-                            });
-                        }
-                    },
-                    (response: Response, request: Request) => request.channels,
-                );
-                break;
-
-            case RequestType.CHANNEL_MEMBERS:
-                this.processReceivedResponse(
-                    response,
-                    (request: Request) => {
-                        if (response.members) {
-                            response.members.forEach(([id, member]) => request.members.set(id, member));
-                        }
-                    },
-                    (response: Response, request: Request) => request.members,
-                );
-                break;
-
-            case RequestType.SOCKETS_COUNT:
-            case RequestType.CHANNEL_MEMBERS_COUNT:
-            case RequestType.CHANNEL_SOCKETS_COUNT:
-                this.processReceivedResponse(
-                    response,
-                    (request: Request) => {
-                        if (typeof response.totalCount !== 'undefined') {
-                            request.totalCount += response.totalCount;
-                        }
-                    },
-                    (response: Response, request: Request) => request.totalCount,
-                );
-                break;
-
-            case RequestType.SOCKET_EXISTS_IN_CHANNEL:
-                this.processReceivedResponse(
-                    response,
-                    (request: Request) => {
-                        if (typeof response.exists !== 'undefined' && response.exists === true) {
-                            request.exists = true;
-                        }
-                    },
-                    (response: Response, request: Request) => request.exists || false,
-                );
-                break;
-        }
+        this.processReceivedResponse(
+            response,
+            this.resolvers[request.type].computeResponse.bind(this),
+            this.resolvers[request.type].resolveValue.bind(this),
+        );
     }
 
     /**
@@ -572,7 +599,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      */
     protected sendRequest(
         appId: string,
-        type: number,
+        type: RequestType,
         resolve: CallableFunction,
         reject: CallableFunction,
         requestExtra: RequestExtra = {},
@@ -589,8 +616,14 @@ export abstract class HorizontalAdapter extends LocalAdapter {
 
         const timeout = setTimeout(() => {
             if (this.requests.has(requestId)) {
-                reject(new Error(`timeout reached while waiting for response in type ${type}`));
-                this.requests.delete(requestId);
+                Log.error(`Timeout reached while waiting for response in type ${type}. Forcing resolve with the current values.`);
+
+                this.processReceivedResponse(
+                    { requestId },
+                    this.resolvers[type].computeResponse.bind(this),
+                    this.resolvers[type].resolveValue.bind(this),
+                    true
+                );
             }
         }, this.requestsTimeout);
 
@@ -639,20 +672,21 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      */
     protected processReceivedResponse(
         response: Response,
-        callbackResolver: CallableFunction,
+        responseComputer: CallableFunction,
         promiseResolver: CallableFunction,
+        forceResolve = false
     ) {
         const request = this.requests.get(response.requestId);
 
         request.msgCount++;
 
-        callbackResolver(request);
+        responseComputer(request, response);
 
-        if (request.msgCount === request.numSub) {
+        if (forceResolve || request.msgCount === request.numSub) {
             clearTimeout(request.timeout);
 
             if (request.resolve) {
-                request.resolve(promiseResolver(response, request));
+                request.resolve(promiseResolver(request, response));
                 this.requests.delete(response.requestId);
             }
         }
