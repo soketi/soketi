@@ -153,7 +153,10 @@ export class LocalAdapter implements AdapterInterface {
                     return;
                 }
 
-                ws.sendJson(JSON.parse(data));
+                // Fix race conditions.
+                if (ws.sendJson) {
+                    ws.sendJson(JSON.parse(data));
+                }
             });
         });
     }

@@ -74,6 +74,10 @@ export class WsHandler {
             }
         }
 
+        ws.id = this.generateSocketId();
+        ws.subscribedChannels = new Set();
+        ws.presence = new Map<string, PresenceMemberInfo>();
+
         if (this.server.closing) {
             ws.sendJson({
                 event: 'pusher:error',
@@ -86,10 +90,6 @@ export class WsHandler {
             // See: https://www.iana.org/assignments/websocket/websocket.xhtml
             return ws.end(1012);
         }
-
-        ws.id = this.generateSocketId();
-        ws.subscribedChannels = new Set();
-        ws.presence = new Map<string, PresenceMemberInfo>();
 
         this.checkForValidApp(ws).then(validApp => {
             if (!validApp) {
