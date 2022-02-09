@@ -154,7 +154,7 @@ jobs:
       - name: Setup NATS
         if: "matrix.adapter == 'nats'"
         run: |
-          docker run -d --name nats-main \
+          docker run -d \
             -p 4222:4222 \
             -p 6222:6222 \
             -p 8222:8222 \
@@ -163,7 +163,7 @@ jobs:
       - name: Setup NATS
         if: "matrix.adapter == 'nats'"
         run: |
-          docker run -d --name nats-main \
+          docker run -d \
             -p 4222:4222 \
             -p 6222:6222 \
             -p 8222:8222 \
