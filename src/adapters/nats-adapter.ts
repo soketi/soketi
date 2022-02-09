@@ -39,6 +39,8 @@ export class NatsAdapter extends HorizontalAdapter {
 
         this.jc = JSONCodec();
         this.sc = StringCodec();
+
+        this.requestsTimeout = server.options.adapter.nats.requestsTimeout;
     }
 
     /**

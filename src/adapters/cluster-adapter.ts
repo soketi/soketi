@@ -17,6 +17,7 @@ export class ClusterAdapter extends HorizontalAdapter {
         this.channel = server.clusterPrefix(this.channel);
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
+        this.requestsTimeout = server.options.adapter.cluster.requestsTimeout;
     }
 
     /**
