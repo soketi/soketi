@@ -1,5 +1,6 @@
 import { App } from '../app';
 import { BaseAppManager } from './base-app-manager';
+import { Log } from '../log';
 import { Server } from '../server';
 
 export class ArrayAppManager extends BaseAppManager {
@@ -20,6 +21,10 @@ export class ArrayAppManager extends BaseAppManager {
             if (typeof app !== 'undefined') {
                 resolve(new App(app, this.server));
             } else {
+                if (this.server.options.debug) {
+                    Log.error(`App ID not found: ${id}`);
+                }
+
                 resolve(null);
             }
         });
@@ -35,6 +40,10 @@ export class ArrayAppManager extends BaseAppManager {
             if (typeof app !== 'undefined') {
                 resolve(new App(app, this.server));
             } else {
+                if (this.server.options.debug) {
+                    Log.error(`App key not found: ${key}`);
+                }
+
                 resolve(null);
             }
         });
