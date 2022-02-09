@@ -33,7 +33,9 @@ export interface RequestExtra {
 }
 
 export interface Request extends RequestExtra {
+    appId: string;
     type: RequestType;
+    time: number;
     resolve: Function;
     reject: Function;
     timeout: any;
@@ -463,7 +465,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * Listen for requests coming from other nodes.
      */
     protected onRequest(channel: string, msg: string): void {
-        let request: Request;
+        let request: RequestBody;
 
         try {
             request = JSON.parse(msg);
@@ -607,13 +609,6 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     ) {
         const requestId = uuidv4();
 
-        const request = JSON.stringify({
-            requestId,
-            appId,
-            type,
-            ...requestOptions,
-        });
-
         const timeout = setTimeout(() => {
             if (this.requests.has(requestId)) {
                 Log.error(`Timeout reached while waiting for response in type ${type}. Forcing resolve with the current values.`);
@@ -627,8 +622,11 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             }
         }, this.requestsTimeout);
 
+        // Add the request to the local memory.
         this.requests.set(requestId, {
+            appId,
             type,
+            time: Date.now(),
             timeout,
             msgCount: 1,
             resolve,
@@ -636,19 +634,29 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             ...requestExtra,
         });
 
-        this.sendToRequestChannel(request);
+        // The message to send to other nodes.
+        const requestToSend = JSON.stringify({
+            requestId,
+            appId,
+            type,
+            ...requestOptions,
+        });
+
+        this.sendToRequestChannel(requestToSend);
 
         if (this.server.options.debug) {
             Log.clusterTitle('✈ Sent message to other instances');
             Log.cluster({ request: this.requests.get(requestId) });
         }
+
+        this.server.metricsManager.markHorizontalAdapterRequestSent(appId);
     }
 
     /**
      * Process the incoming request from other subscriber.
      */
-    protected processRequestFromAnotherInstance(request: Request, callbackResolver: Function): void {
-        let { requestId } = request;
+    protected processRequestFromAnotherInstance(request: RequestBody, callbackResolver: Function): void {
+        let { requestId, appId } = request;
 
         // Do not process requests for the same node that created the request.
         if (this.requests.has(requestId)) {
@@ -664,6 +672,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                 Log.clusterTitle('✈ Sent response to the instance');
                 Log.cluster({ response });
             }
+
+            this.server.metricsManager.markHorizontalAdapterRequestReceived(appId);
         });
     }
 
@@ -682,12 +692,18 @@ export abstract class HorizontalAdapter extends LocalAdapter {
 
         responseComputer(request, response);
 
+        this.server.metricsManager.markHorizontalAdapterResponseReceived(request.appId);
+
         if (forceResolve || request.msgCount === request.numSub) {
             clearTimeout(request.timeout);
 
             if (request.resolve) {
                 request.resolve(promiseResolver(request, response));
                 this.requests.delete(response.requestId);
+
+                // If the resolve was forced, it means not all nodes fulfilled the request, thus leading to timeout.
+                this.server.metricsManager.trackHorizontalAdapterResolvedPromises(request.appId, !forceResolve);
+                this.server.metricsManager.trackHorizontalAdapterResolveTime(request.appId, Date.now() - request.time);
             }
         }
     }
