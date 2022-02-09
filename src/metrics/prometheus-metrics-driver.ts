@@ -240,6 +240,42 @@ export class PrometheusMetricsDriver implements MetricsInterface {
                 labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),
+            horizontalAdapterResolveTime: new prom.Histogram({
+                name: `${prefix}horizontal_adapter_`,
+                help: 'The average resolve time for requests to other nodes.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            horizontalAdapterResolvedPromises: new prom.Counter({
+                name: `${prefix}horizontal_adapter_resolved_promises`,
+                help: 'The total amount of promises that were fulfilled by other nodes.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            horizontalAdapterUncompletePromises: new prom.Counter({
+                name: `${prefix}horizontal_adapter_uncomplete_promises`,
+                help: 'The total amount of promises that were not fulfilled entirely by other nodes.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            horizontalAdapterSentRequests: new prom.Counter({
+                name: `${prefix}horizontal_adapter_sent_requests`,
+                help: 'The total amount of sent requests to other nodes.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            horizontalAdapterReceivedRequests: new prom.Counter({
+                name: `${prefix}horizontal_adapter_received_requests`,
+                help: 'The total amount of received requests from other nodes.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            horizontalAdapterReceivedResponses: new prom.Counter({
+                name: `${prefix}horizontal_adapter_received_responses`,
+                help: 'The total amount of received responses from other nodes.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
         };
     }
 }
