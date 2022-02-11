@@ -148,6 +148,9 @@ export interface Options {
             clientOptions?: SQS.Types.ClientConfiguration;
             consumerOptions?: ConsumerOptions;
             queueUrl: string;
+            processBatch: boolean;
+            batchSize: number;
+            pollingWaitTimeMs: number;
         };
     };
     rateLimiter: {

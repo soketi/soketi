@@ -22,6 +22,10 @@ export class Utils {
         return (process.env.TEST_ADAPTER || 'local') === adapter;
     }
 
+    static queueDriverIs(queueDriver: string) {
+        return (process.env.TEST_QUEUE_DRIVER || 'sync') === queueDriver;
+    }
+
     static waitForPortsToFreeUp(): Promise<any> {
         return Promise.all([
             tcpPortUsed.waitUntilFree(6001, 500, 5 * 1000),

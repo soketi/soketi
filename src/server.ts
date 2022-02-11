@@ -190,6 +190,9 @@ export class Server {
                 clientOptions: {},
                 consumerOptions: {},
                 queueUrl: '',
+                processBatch: false,
+                batchSize: 1,
+                pollingWaitTimeMs: 0,
             },
         },
         rateLimiter: {

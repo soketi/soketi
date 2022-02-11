@@ -392,4 +392,68 @@ describe('webhooks test', () => {
             });
         });
     }, 60 * 1000);
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local') && Utils.queueDriverIs('sqs'))('sqs batching', done => {
+        let webhooks = [{
+            event_types: ['client_event'],
+            url: 'http://127.0.0.1:3001/webhook',
+        }];
+
+        let channelName = `private-${Utils.randomChannelName()}`;
+        let client1;
+        let client2;
+
+        Utils.newServer({
+            'appManager.array.apps.0.enableClientMessages': true,
+            'appManager.array.apps.0.webhooks': webhooks,
+            'database.redis.keyPrefix': 'client-event-webhook',
+            'queue.sqs.processBatch': true,
+            'queue.sqs.batchSize': 2,
+            'queue.sqs.pollingWaitTimeMs': 1000,
+        }, (server: Server) => {
+            Utils.newWebhookServer((req, res) => {
+                let app = new App(server.options.appManager.array.apps[0], server);
+                let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
+
+                expect(req.headers['x-pusher-key']).toBe('app-key');
+                expect(req.headers['x-pusher-signature']).toBe(rightSignature);
+                expect(req.body.time_ms).toBeDefined();
+                expect(req.body.events).toBeDefined();
+                expect(req.body.events.length).toBe(1);
+
+                const webhookEvent = req.body.events[0];
+
+                expect(webhookEvent.name).toBe('client_event');
+                expect(webhookEvent.channel).toBe(channelName);
+                expect(webhookEvent.event).toBe('client-greeting');
+                expect(webhookEvent.data.message).toBe('hello');
+                expect(webhookEvent.socket_id).toBeDefined();
+
+                res.json({ ok: true });
+                client1.disconnect();
+                client2.disconnect();
+                done();
+            }, (activeHttpServer) => {
+                client1 = Utils.newClientForPrivateChannel();
+
+                client1.connection.bind('connected', () => {
+                    let channel = client1.subscribe(channelName);
+
+                    channel.bind('pusher:subscription_succeeded', () => {
+                        client2 = Utils.newClientForPrivateChannel();
+
+                        client2.connection.bind('connected', () => {
+                            let channel = client2.subscribe(channelName);
+
+                            channel.bind('pusher:subscription_succeeded', () => {
+                                channel.trigger('client-greeting', {
+                                    message: 'hello',
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    }, 60 * 1000);
 });
