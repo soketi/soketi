@@ -611,7 +611,9 @@ export abstract class HorizontalAdapter extends LocalAdapter {
 
         const timeout = setTimeout(() => {
             if (this.requests.has(requestId)) {
-                Log.error(`Timeout reached while waiting for response in type ${type}. Forcing resolve with the current values.`);
+                if (this.server.options.debug) {
+                    Log.error(`Timeout reached while waiting for response in type ${type}. Forcing resolve with the current values.`);
+                }
 
                 this.processReceivedResponse(
                     { requestId },
