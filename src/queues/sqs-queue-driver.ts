@@ -61,16 +61,20 @@ export class SqsQueueDriver implements QueueInterface {
                 queueUrl: this.server.options.queue.sqs.queueUrl,
                 sqs: this.sqsClient(),
                 ...this.server.options.queue.sqs.consumerOptions,
-                handleMessage: async ({ Body }) => {
-                    callback(
-                        new Job(uuidv4(), JSON.parse(Body)),
-                        () => {
-                            if (this.server.options.debug) {
-                                Log.successTitle('✅ SQS message processed.');
-                                Log.success({ Body, queueName });
-                            }
-                        },
-                    );
+                handleMessage: ({ Body }) => {
+                    return new Promise(resolve => {
+                        callback(
+                            new Job(uuidv4(), JSON.parse(Body)),
+                            () => {
+                                if (this.server.options.debug) {
+                                    Log.successTitle('✅ SQS message processed.');
+                                    Log.success({ Body, queueName });
+                                }
+
+                                resolve();
+                            },
+                        );
+                    });
                 },
             });
 
