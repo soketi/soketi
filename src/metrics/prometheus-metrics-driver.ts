@@ -241,7 +241,7 @@ export class PrometheusMetricsDriver implements MetricsInterface {
                 registers: [this.register],
             }),
             horizontalAdapterResolveTime: new prom.Histogram({
-                name: `${prefix}horizontal_adapter_`,
+                name: `${prefix}horizontal_adapter_resolve_time`,
                 help: 'The average resolve time for requests to other nodes.',
                 labelNames: ['app_id', 'port'],
                 registers: [this.register],
