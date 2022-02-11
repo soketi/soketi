@@ -83,8 +83,10 @@ export class SqsQueueDriver implements QueueInterface {
 
             if (this.server.options.queue.sqs.processBatch) {
                 consumerOptions.handleMessageBatch = (messages) => {
-                    return Promise.all(messages.map(({ Body }) => handleMessage({ Body }))).then(() => { });
-                };
+                    return Promise.all(messages.map(({ Body }) => handleMessage({ Body }))).then(() => {
+                        //
+                    });
+            };
             } else {
                 consumerOptions.handleMessage = handleMessage;
             }
