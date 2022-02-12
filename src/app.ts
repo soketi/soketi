@@ -23,6 +23,11 @@ export interface AppInterface {
     maxEventNameLength?: string|number;
     maxEventPayloadInKb?: string|number;
     maxEventBatchSize?: string|number;
+    hasClientEventWebhooks?: boolean;
+    hasChannelOccupiedWebhooks?: boolean;
+    hasChannelVacatedWebhooks?: boolean;
+    hasMemberAddedWebhooks?: boolean;
+    hasMemberRemovedWebhooks?: boolean;
 }
 
 export interface WebhookInterface {
@@ -132,7 +137,27 @@ export class App implements AppInterface {
     /**
      * @type {boolean}
      */
-    public hasWebhooks = false;
+    public hasClientEventWebhooks = false;
+
+    /**
+     * @type {boolean}
+     */
+    public hasChannelOccupiedWebhooks = false;
+
+    /**
+     * @type {boolean}
+     */
+    public hasChannelVacatedWebhooks = false;
+
+    /**
+     * @type {boolean}
+     */
+    public hasMemberAddedWebhooks = false;
+
+    /**
+     * @type {boolean}
+     */
+    public hasMemberRemovedWebhooks = false;
 
     static readonly CLIENT_EVENT_WEBHOOK = 'client_event';
     static readonly CHANNEL_OCCUPIED_WEBHOOK = 'channel_occupied';
@@ -162,7 +187,11 @@ export class App implements AppInterface {
         this.maxEventPayloadInKb = parseFloat(this.extractFromPassedKeys(app, ['maxEventPayloadInKb', 'MaxEventPayloadInKb', 'max_event_payload_in_kb'], server.options.eventLimits.maxPayloadInKb));
         this.maxEventBatchSize = parseInt(this.extractFromPassedKeys(app, ['maxEventBatchSize', 'MaxEventBatchSize', 'max_event_batch_size'], server.options.eventLimits.maxBatchSize));
 
-        this.hasWebhooks = this.webhooks.length > 0;
+        this.hasClientEventWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.CLIENT_EVENT_WEBHOOK)).length > 0;
+        this.hasChannelOccupiedWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.CHANNEL_OCCUPIED_WEBHOOK)).length > 0;
+        this.hasChannelVacatedWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.CHANNEL_VACATED_WEBHOOK)).length > 0;
+        this.hasMemberAddedWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.MEMBER_ADDED_WEBHOOK)).length > 0;
+        this.hasMemberRemovedWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.MEMBER_REMOVED_WEBHOOK)).length > 0;
     }
 
     /**

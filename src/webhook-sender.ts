@@ -161,6 +161,10 @@ export class WebhookSender {
      * Send a webhook for the client event.
      */
     public sendClientEvent(app: App, channel: string, event: string, data: any, socketId?: string, userId?: string) {
+        if (!app.hasClientEventWebhooks) {
+            return;
+        }
+
         let formattedData: ClientEventData = {
             name: App.CLIENT_EVENT_WEBHOOK,
             channel,
@@ -183,6 +187,10 @@ export class WebhookSender {
      * Send a member_added event.
      */
     public sendMemberAdded(app: App, channel: string, userId: string): void {
+        if (!app.hasMemberAddedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.MEMBER_ADDED_WEBHOOK,
             channel,
@@ -194,6 +202,10 @@ export class WebhookSender {
      * Send a member_removed event.
      */
     public sendMemberRemoved(app: App, channel: string, userId: string): void {
+        if (!app.hasMemberRemovedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.MEMBER_REMOVED_WEBHOOK,
             channel,
@@ -205,6 +217,10 @@ export class WebhookSender {
      * Send a channel_vacated event.
      */
     public sendChannelVacated(app: App, channel: string): void {
+        if (!app.hasChannelVacatedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.CHANNEL_VACATED_WEBHOOK,
             channel,
@@ -215,6 +231,10 @@ export class WebhookSender {
      * Send a channel_occupied event.
      */
     public sendChannelOccupied(app: App, channel: string): void {
+        if (!app.hasChannelOccupiedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.CHANNEL_OCCUPIED_WEBHOOK,
             channel,
@@ -225,10 +245,6 @@ export class WebhookSender {
      * Send a webhook for the app with the given data.
      */
     protected send(app: App, data: ClientEventData, queueName: string): void {
-        if (!app.hasWebhooks) {
-            return;
-        }
-
         if (this.server.options.webhooks.batching.enabled) {
             this.sendWebhookByBatching(app, data, queueName);
         } else {
