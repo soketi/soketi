@@ -113,7 +113,7 @@ export class NatsAdapter extends HorizontalAdapter {
         let nodesNumber = this.server.options.adapter.nats.nodesNumber;
 
         if (nodesNumber && nodesNumber > 0) {
-            return nodesNumber;
+            return Promise.resolve(nodesNumber);
         }
 
         return new Promise(resolve => {
