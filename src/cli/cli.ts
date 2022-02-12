@@ -18,6 +18,7 @@ export class Cli {
         ADAPTER_REDIS_PREFIX: 'adapter.redis.prefix',
         ADAPTER_REDIS_CLUSTER_MODE: 'adapter.redis.clusterMode',
         ADAPTER_REDIS_REQUESTS_TIMEOUT: 'adapter.redis.requestsTimeout',
+        ADAPTER_REDIS_OPTIONS: 'adapter.redis.redisOptions',
         ADAPTER_NATS_PREFIX: 'adapter.nats.prefix',
         ADAPTER_NATS_SERVERS: 'adapter.nats.servers',
         ADAPTER_NATS_USER: 'adapter.nats.user',
