@@ -31,7 +31,10 @@ export class Server {
             redis: {
                 requestsTimeout: 5_000,
                 prefix: '',
-                redisOptions: {
+                redisPubOptions: {
+                    //
+                },
+                redisSubOptions: {
                     //
                 },
                 clusterMode: false,

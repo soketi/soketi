@@ -39,7 +39,8 @@ export interface Options {
         redis: {
             requestsTimeout: number;
             prefix: string;
-            redisOptions: any;
+            redisPubOptions: any;
+            redisSubOptions: any;
             clusterMode: boolean;
         };
         cluster: {
