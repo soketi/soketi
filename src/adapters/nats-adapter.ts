@@ -110,6 +110,12 @@ export class NatsAdapter extends HorizontalAdapter {
      * Get the number of Discover nodes.
      */
     protected async getNumSub(): Promise<number> {
+        let nodesNumber = this.server.options.adapter.nats.nodesNumber;
+
+        if (nodesNumber && nodesNumber > 0) {
+            return nodesNumber;
+        }
+
         return new Promise(resolve => {
             let responses: Msg[] = [];
 

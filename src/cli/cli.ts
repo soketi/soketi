@@ -25,6 +25,7 @@ export class Cli {
         ADAPTER_NATS_TOKEN: 'adapter.nats.token',
         ADAPTER_NATS_TIMEOUT: 'adapter.nats.timeout',
         ADAPTER_NATS_REQUESTS_TIMEOUT: 'adapter.nats.requestsTimeout',
+        ADAPTER_NATS_NODES_NUMBER: 'adapter.nats.nodesNumber',
         APP_MANAGER_DRIVER: 'appManager.driver',
         APP_MANAGER_DYNAMODB_TABLE: 'appManager.dynamodb.table',
         APP_MANAGER_DYNAMODB_REGION: 'appManager.dynamodb.region',

@@ -53,6 +53,7 @@ export interface Options {
             pass?: string|null;
             token: string|null;
             timeout: number;
+            nodesNumber: number|null;
         };
     };
     appManager: {
