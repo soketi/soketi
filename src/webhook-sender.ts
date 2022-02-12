@@ -225,6 +225,10 @@ export class WebhookSender {
      * Send a webhook for the app with the given data.
      */
     protected send(app: App, data: ClientEventData, queueName: string): void {
+        if (!app.hasWebhooks) {
+            return;
+        }
+
         if (this.server.options.webhooks.batching.enabled) {
             this.sendWebhookByBatching(app, data, queueName);
         } else {

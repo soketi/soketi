@@ -129,6 +129,11 @@ export class App implements AppInterface {
      */
     public maxEventBatchSize: string|number;
 
+    /**
+     * @type {boolean}
+     */
+    public hasWebhooks = false;
+
     static readonly CLIENT_EVENT_WEBHOOK = 'client_event';
     static readonly CHANNEL_OCCUPIED_WEBHOOK = 'channel_occupied';
     static readonly CHANNEL_VACATED_WEBHOOK = 'channel_vacated';
@@ -156,6 +161,8 @@ export class App implements AppInterface {
         this.maxEventNameLength = parseInt(this.extractFromPassedKeys(app, ['maxEventNameLength', 'MaxEventNameLength', 'max_event_name_length'], server.options.eventLimits.maxNameLength));
         this.maxEventPayloadInKb = parseFloat(this.extractFromPassedKeys(app, ['maxEventPayloadInKb', 'MaxEventPayloadInKb', 'max_event_payload_in_kb'], server.options.eventLimits.maxPayloadInKb));
         this.maxEventBatchSize = parseInt(this.extractFromPassedKeys(app, ['maxEventBatchSize', 'MaxEventBatchSize', 'max_event_batch_size'], server.options.eventLimits.maxBatchSize));
+
+        this.hasWebhooks = this.webhooks.length > 0;
     }
 
     /**
