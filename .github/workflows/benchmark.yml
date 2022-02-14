@@ -160,15 +160,6 @@ jobs:
             -p 8222:8222 \
             nats --jetstream --user="" --pass=""
 
-      - name: Setup NATS
-        if: "matrix.adapter == 'nats'"
-        run: |
-          docker run -d \
-            -p 4222:4222 \
-            -p 6222:6222 \
-            -p 8222:8222 \
-            nats --jetstream --user="" --pass=""
-
       - name: Run Soketi (port 6001)
         run: |
           node bin/server.js start &
