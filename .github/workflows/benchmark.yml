@@ -181,11 +181,12 @@ jobs:
           APP_MANAGER_MYSQL_USE_V2: true
           METRICS_ENABLED: true
           QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          QUEUE_SQS_URL: http://localhost:4566/000000000000/test.fifo
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
-          TEST_MYSQL_USER: root
-          TEST_MYSQL_PASSWORD: root
+          DB_MYSQL_USERNAME: root
+          DB_MYSQL_PASSWORD: root
 
       - name: Run Soketi (port 6002)
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats'"
@@ -200,11 +201,12 @@ jobs:
           APP_MANAGER_MYSQL_USE_V2: true
           METRICS_ENABLED: true
           QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          QUEUE_SQS_URL: http://localhost:4566/000000000000/test.fifo
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
-          TEST_MYSQL_USER: root
-          TEST_MYSQL_PASSWORD: root
+          DB_MYSQL_USERNAME: root
+          DB_MYSQL_PASSWORD: root
 
       - name: Run message sender (port 6001)
         run: ./benchmark/send --interval 1 --port 6001 &
