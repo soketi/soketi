@@ -1,4 +1,5 @@
 import { App, WebhookInterface } from './app';
+import async from 'async';
 import axios from 'axios';
 import { Utils } from './utils';
 import { Lambda } from 'aws-sdk';
@@ -58,42 +59,25 @@ export class WebhookSender {
             const { appKey, payload, pusherSignature } = rawData;
 
             server.appManager.findByKey(appKey).then(app => {
-                app.webhooks.forEach((webhook: WebhookInterface) => {
+                async.each(app.webhooks, (webhook: WebhookInterface, resolveWebhook) => {
                     // Apply filters only if batching is disabled.
                     if (!server.options.webhooks.batching.enabled) {
                         if (!webhook.event_types.includes(payload.events[0].name)) {
-                            return;
+                            return resolveWebhook();
                         }
 
                         if (webhook.filter) {
                             if (webhook.filter.channel_name_starts_with && !payload.events[0].channel.startsWith(webhook.filter.channel_name_starts_with)) {
-                                return;
+                                return resolveWebhook();
                             }
 
                             if (webhook.filter.channel_name_ends_with && !payload.events[0].channel.endsWith(webhook.filter.channel_name_ends_with)) {
-                                return;
+                                return resolveWebhook();
                             }
                         }
                     }
 
                     // TODO: For batches, you can filter the messages, but recalculate the pusherSignature value.
-                    /* payload.events = payload.events.filter(event => {
-                        if (!webhook.event_types.includes(event.name)) {
-                            return false;
-                        }
-
-                        if (webhook.filter) {
-                            if (webhook.filter.channel_name_starts_with && !event.channel.startsWith(webhook.filter.channel_name_starts_with)) {
-                                return false;
-                            }
-
-                            if (webhook.filter.channel_name_ends_with && !event.channel.endsWith(webhook.filter.channel_name_ends_with)) {
-                                return false;
-                            }
-                        }
-
-                        return true;
-                    }); */
 
                     if (this.server.options.debug) {
                         Log.webhookSenderTitle('🚀 Processing webhook from queue.');
@@ -124,11 +108,7 @@ export class WebhookSender {
                                 Log.webhookSenderTitle('❎ Webhook could not be sent.');
                                 Log.webhookSender({ err, webhook, payload });
                             }
-                        }).then(() => {
-                            if (typeof done === 'function') {
-                                done();
-                            }
-                        });
+                        }).then(() => resolveWebhook());
                     } else if (webhook.lambda_function) {
                         // Invoke a Lambda function
                         const params = {
@@ -156,11 +136,12 @@ export class WebhookSender {
                                 }
                             }
 
-                            if (typeof done === 'function') {
-                                // TODO: Maybe retry exponentially?
-                                done();
-                            }
+                            resolveWebhook();
                         });
+                    }
+                }).then(() => {
+                    if (typeof done === 'function') {
+                        done();
                     }
                 });
             });
@@ -180,6 +161,10 @@ export class WebhookSender {
      * Send a webhook for the client event.
      */
     public sendClientEvent(app: App, channel: string, event: string, data: any, socketId?: string, userId?: string) {
+        if (!app.hasClientEventWebhooks) {
+            return;
+        }
+
         let formattedData: ClientEventData = {
             name: App.CLIENT_EVENT_WEBHOOK,
             channel,
@@ -202,6 +187,10 @@ export class WebhookSender {
      * Send a member_added event.
      */
     public sendMemberAdded(app: App, channel: string, userId: string): void {
+        if (!app.hasMemberAddedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.MEMBER_ADDED_WEBHOOK,
             channel,
@@ -213,6 +202,10 @@ export class WebhookSender {
      * Send a member_removed event.
      */
     public sendMemberRemoved(app: App, channel: string, userId: string): void {
+        if (!app.hasMemberRemovedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.MEMBER_REMOVED_WEBHOOK,
             channel,
@@ -224,6 +217,10 @@ export class WebhookSender {
      * Send a channel_vacated event.
      */
     public sendChannelVacated(app: App, channel: string): void {
+        if (!app.hasChannelVacatedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.CHANNEL_VACATED_WEBHOOK,
             channel,
@@ -234,6 +231,10 @@ export class WebhookSender {
      * Send a channel_occupied event.
      */
     public sendChannelOccupied(app: App, channel: string): void {
+        if (!app.hasChannelOccupiedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.CHANNEL_OCCUPIED_WEBHOOK,
             channel,

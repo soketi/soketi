@@ -22,6 +22,10 @@ export class Utils {
         return (process.env.TEST_ADAPTER || 'local') === adapter;
     }
 
+    static queueDriverIs(queueDriver: string) {
+        return (process.env.TEST_QUEUE_DRIVER || 'sync') === queueDriver;
+    }
+
     static waitForPortsToFreeUp(): Promise<any> {
         return Promise.all([
             tcpPortUsed.waitUntilFree(6001, 500, 5 * 1000),
@@ -58,7 +62,7 @@ export class Utils {
             'database.postgres.user': process.env.TEST_POSTGRES_USER || 'testing',
             'database.postgres.password': process.env.TEST_POSTGRES_PASSWORD || 'testing',
             'database.postgres.database': process.env.TEST_POSTGRES_DATABASE || 'testing',
-            'queue.sqs.queueUrl': 'http://localhost:4566/000000000000/test.fifo',
+            'queue.sqs.queueUrl': process.env.TEST_SQS_URL || 'http://localhost:4566/000000000000/test.fifo',
         };
 
         return (new Server(options)).start((server: Server) => {

@@ -130,7 +130,7 @@ export class Namespace {
     getChannelMembers(channel: string): Promise<Map<string, PresenceMemberInfo>> {
         return this.getChannelSockets(channel).then(sockets => {
             return Array.from(sockets).reduce((members, [wsId, ws]) => {
-                let member: PresenceMember = ws.presence.get(channel);
+                let member: PresenceMember = ws.presence ? ws.presence.get(channel) : null;
 
                 if (member) {
                     members.set(member.user_id as string, member.user_info);

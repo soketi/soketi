@@ -39,7 +39,8 @@ export interface Options {
         redis: {
             requestsTimeout: number;
             prefix: string;
-            redisOptions: any;
+            redisPubOptions: any;
+            redisSubOptions: any;
             clusterMode: boolean;
         };
         cluster: {
@@ -53,6 +54,7 @@ export interface Options {
             pass?: string|null;
             token: string|null;
             timeout: number;
+            nodesNumber: number|null;
         };
     };
     appManager: {
@@ -148,6 +150,9 @@ export interface Options {
             clientOptions?: SQS.Types.ClientConfiguration;
             consumerOptions?: ConsumerOptions;
             queueUrl: string;
+            processBatch: boolean;
+            batchSize: number;
+            pollingWaitTimeMs: number;
         };
     };
     rateLimiter: {

@@ -31,7 +31,10 @@ export class Server {
             redis: {
                 requestsTimeout: 5_000,
                 prefix: '',
-                redisOptions: {
+                redisPubOptions: {
+                    //
+                },
+                redisSubOptions: {
                     //
                 },
                 clusterMode: false,
@@ -47,6 +50,7 @@ export class Server {
                 pass: null,
                 token: null,
                 timeout: 10_000,
+                nodesNumber: null,
             },
         },
         appManager: {
@@ -190,6 +194,9 @@ export class Server {
                 clientOptions: {},
                 consumerOptions: {},
                 queueUrl: '',
+                processBatch: false,
+                batchSize: 1,
+                pollingWaitTimeMs: 0,
             },
         },
         rateLimiter: {

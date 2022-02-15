@@ -68,6 +68,41 @@ export class Metrics implements MetricsInterface {
     }
 
     /**
+     * Track the time in which horizontal adapter resolves requests from other nodes.
+     */
+    trackHorizontalAdapterResolveTime(appId: string, time: number): void {
+        this.driver.trackHorizontalAdapterResolveTime(appId, time);
+    }
+
+    /**
+     * Track the fulfillings in which horizontal adapter resolves requests from other nodes.
+     */
+    trackHorizontalAdapterResolvedPromises(appId: string, resolved = true): void {
+        this.driver.trackHorizontalAdapterResolvedPromises(appId, resolved);
+    }
+
+    /**
+     * Handle a new horizontal adapter request sent.
+     */
+    markHorizontalAdapterRequestSent(appId: string): void {
+        this.driver.markHorizontalAdapterRequestSent(appId);
+    }
+
+     /**
+      * Handle a new horizontal adapter request that was marked as received.
+      */
+    markHorizontalAdapterRequestReceived(appId: string): void {
+        this.driver.markHorizontalAdapterRequestReceived(appId);
+    }
+
+     /**
+      * Handle a new horizontal adapter response from other node.
+      */
+    markHorizontalAdapterResponseReceived(appId: string): void {
+        this.driver.markHorizontalAdapterResponseReceived(appId);
+    }
+
+    /**
      * Get the stored metrics as plain text, if possible.
      */
     getMetricsAsPlaintext(): Promise<string> {

@@ -13,6 +13,12 @@ interface PrometheusMetrics {
     httpBytesReceived?: prom.Counter<'app_id'|'port'>;
     httpBytesTransmitted?: prom.Counter<'app_id'|'port'>;
     httpCallsReceived?: prom.Counter<'app_id'|'port'>;
+    horizontalAdapterResolveTime?: prom.Histogram<'app_id'|'port'>;
+    horizontalAdapterResolvedPromises?: prom.Counter<'app_id'|'port'>;
+    horizontalAdapterUncompletePromises?: prom.Counter<'app_id'|'port'>;
+    horizontalAdapterSentRequests?: prom.Counter<'app_id'|'port'>;
+    horizontalAdapterReceivedRequests?: prom.Counter<'app_id'|'port'>;
+    horizontalAdapterReceivedResponses?: prom.Counter<'app_id'|'port'>;
 }
 
 interface InfraMetadata {
@@ -113,6 +119,45 @@ export class PrometheusMetricsDriver implements MetricsInterface {
     }
 
     /**
+     * Track the time in which horizontal adapter resolves requests from other nodes.
+     */
+    trackHorizontalAdapterResolveTime(appId: string, time: number): void {
+        this.metrics.horizontalAdapterResolveTime.observe(this.getTags(appId), time);
+    }
+
+    /**
+     * Track the fulfillings in which horizontal adapter resolves requests from other nodes.
+     */
+    trackHorizontalAdapterResolvedPromises(appId: string, resolved = true): void {
+        if (resolved) {
+            this.metrics.horizontalAdapterResolvedPromises.inc(this.getTags(appId));
+        } else {
+            this.metrics.horizontalAdapterUncompletePromises.inc(this.getTags(appId));
+        }
+    }
+
+    /**
+     * Handle a new horizontal adapter request sent.
+     */
+    markHorizontalAdapterRequestSent(appId: string): void {
+        this.metrics.horizontalAdapterSentRequests.inc(this.getTags(appId));
+    }
+
+     /**
+      * Handle a new horizontal adapter request that was marked as received.
+      */
+    markHorizontalAdapterRequestReceived(appId: string): void {
+        this.metrics.horizontalAdapterReceivedRequests.inc(this.getTags(appId));
+    }
+
+     /**
+      * Handle a new horizontal adapter response from other node.
+      */
+    markHorizontalAdapterResponseReceived(appId: string): void {
+        this.metrics.horizontalAdapterReceivedResponses.inc(this.getTags(appId));
+    }
+
+    /**
      * Get the stored metrics as plain text, if possible.
      */
     getMetricsAsPlaintext(): Promise<string> {
@@ -192,6 +237,42 @@ export class PrometheusMetricsDriver implements MetricsInterface {
             httpCallsReceived: new prom.Counter({
                 name: `${prefix}http_calls_received_total`,
                 help: 'Total amount of received REST API calls.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            horizontalAdapterResolveTime: new prom.Histogram({
+                name: `${prefix}horizontal_adapter_resolve_time`,
+                help: 'The average resolve time for requests to other nodes.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            horizontalAdapterResolvedPromises: new prom.Counter({
+                name: `${prefix}horizontal_adapter_resolved_promises`,
+                help: 'The total amount of promises that were fulfilled by other nodes.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            horizontalAdapterUncompletePromises: new prom.Counter({
+                name: `${prefix}horizontal_adapter_uncomplete_promises`,
+                help: 'The total amount of promises that were not fulfilled entirely by other nodes.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            horizontalAdapterSentRequests: new prom.Counter({
+                name: `${prefix}horizontal_adapter_sent_requests`,
+                help: 'The total amount of sent requests to other nodes.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            horizontalAdapterReceivedRequests: new prom.Counter({
+                name: `${prefix}horizontal_adapter_received_requests`,
+                help: 'The total amount of received requests from other nodes.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            horizontalAdapterReceivedResponses: new prom.Counter({
+                name: `${prefix}horizontal_adapter_received_responses`,
+                help: 'The total amount of received responses from other nodes.',
                 labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),

@@ -45,16 +45,15 @@ export class RedisAdapter extends HorizontalAdapter {
             maxRetriesPerRequest: 2,
             retryStrategy: times => times * 2,
             ...this.server.options.database.redis,
-            ...this.server.options.adapter.redis.redisOptions,
         };
 
         this.subClient = this.server.options.adapter.redis.clusterMode
-            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions })
-            : new Redis(redisOptions);
+            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisSubOptions })
+            : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisSubOptions });
 
         this.pubClient = this.server.options.adapter.redis.clusterMode
-            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions })
-            : new Redis(redisOptions);
+            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisPubOptions })
+            : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisPubOptions });
 
         const onError = err => {
             if (err) {

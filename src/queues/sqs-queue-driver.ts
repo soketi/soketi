@@ -57,11 +57,8 @@ export class SqsQueueDriver implements QueueInterface {
      */
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
         return new Promise(resolve => {
-            let consumer = Consumer.create({
-                queueUrl: this.server.options.queue.sqs.queueUrl,
-                sqs: this.sqsClient(),
-                ...this.server.options.queue.sqs.consumerOptions,
-                handleMessage: async ({ Body }) => {
+            let handleMessage = ({ Body }: { Body: string; }) => {
+                return new Promise<void>(resolve => {
                     callback(
                         new Job(uuidv4(), JSON.parse(Body)),
                         () => {
@@ -69,10 +66,32 @@ export class SqsQueueDriver implements QueueInterface {
                                 Log.successTitle('✅ SQS message processed.');
                                 Log.success({ Body, queueName });
                             }
+
+                            resolve();
                         },
                     );
-                },
-            });
+                });
+            };
+
+            let consumerOptions = {
+                queueUrl: this.server.options.queue.sqs.queueUrl,
+                sqs: this.sqsClient(),
+                batchSize: this.server.options.queue.sqs.batchSize,
+                pollingWaitTimeMs: this.server.options.queue.sqs.pollingWaitTimeMs,
+                ...this.server.options.queue.sqs.consumerOptions,
+            };
+
+            if (this.server.options.queue.sqs.processBatch) {
+                consumerOptions.handleMessageBatch = (messages) => {
+                    return Promise.all(messages.map(({ Body }) => handleMessage({ Body }))).then(() => {
+                        //
+                    });
+            };
+            } else {
+                consumerOptions.handleMessage = handleMessage;
+            }
+
+            let consumer = Consumer.create(consumerOptions);
 
             consumer.start();
 

@@ -1,5 +1,6 @@
 import { App } from './../app';
 import { BaseAppManager } from './base-app-manager';
+import { Log } from '../log';
 import { Knex, knex } from 'knex';
 import { Server } from './../server';
 
@@ -43,9 +44,15 @@ export abstract class SqlAppManager extends BaseAppManager {
      */
     findById(id: string): Promise<App|null> {
         return this.selectById(id).then(apps => {
-            return apps.length === 0
-                ? null
-                : new App(apps[0] || apps, this.server);
+            if (apps.length === 0) {
+                if (this.server.options.debug) {
+                    Log.error(`App ID not found: ${id}`);
+                }
+
+                return null;
+            }
+
+            return new App(apps[0] || apps, this.server);
         });
     }
 
@@ -54,9 +61,15 @@ export abstract class SqlAppManager extends BaseAppManager {
      */
     findByKey(key: string): Promise<App|null> {
         return this.selectByKey(key).then(apps => {
-            return apps.length === 0
-                ? null
-                : new App(apps[0] || apps, this.server);
+            if (apps.length === 0) {
+                if (this.server.options.debug) {
+                    Log.error(`App key not found: ${key}`);
+                }
+
+                return null;
+            }
+
+            return new App(apps[0] || apps, this.server);
         });
     }
 

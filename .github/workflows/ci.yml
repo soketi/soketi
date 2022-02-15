@@ -149,6 +149,7 @@ jobs:
           TEST_RATE_LIMITER: ${{ matrix.rate_limiter }}
           TEST_MYSQL_USER: root
           TEST_MYSQL_PASSWORD: root
+          TEST_SQS_URL: http://localhost:4566/000000000000/test.fifo
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
 
