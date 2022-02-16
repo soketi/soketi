@@ -55,18 +55,18 @@ export const options = {
         soakTraffic1: {
             executor: 'per-vu-iterations',
             vus: 250,
-            iterations: 6,
+            iterations: 1,
             env: {
-                SLEEP_FOR: '310',
+                SLEEP_FOR: '110',
                 WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
         soakTraffic2: {
             executor: 'per-vu-iterations',
             vus: 250,
-            iterations: 6,
+            iterations: 1,
             env: {
-                SLEEP_FOR: '310',
+                SLEEP_FOR: '110',
                 WS_HOST: 'ws://127.0.0.1:6002/app/app-key',
             },
         },
@@ -79,7 +79,7 @@ export const options = {
             startVUs: 0,
             startTime: '5s',
             stages: [
-                { duration: '250s', target: 250 },
+                { duration: '50s', target: 250 },
                 { duration: '30s', target: 250 },
                 { duration: '10s', target: 100 },
                 { duration: '10s', target: 50 },
@@ -87,7 +87,7 @@ export const options = {
             ],
             gracefulRampDown: '5s',
             env: {
-                SLEEP_FOR: '310',
+                SLEEP_FOR: '110',
                 WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
@@ -96,7 +96,7 @@ export const options = {
             startVUs: 0,
             startTime: '5s',
             stages: [
-                { duration: '250s', target: 250 },
+                { duration: '50s', target: 250 },
                 { duration: '30s', target: 250 },
                 { duration: '10s', target: 100 },
                 { duration: '10s', target: 50 },
@@ -104,7 +104,7 @@ export const options = {
             ],
             gracefulRampDown: '5s',
             env: {
-                SLEEP_FOR: '310',
+                SLEEP_FOR: '110',
                 WS_HOST: 'ws://127.0.0.1:6002/app/app-key',
             },
         },
