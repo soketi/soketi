@@ -367,7 +367,7 @@ export class HttpHandler {
     }
 
     protected badResponse(res: HttpResponse, error: string) {
-        return this.sendJson(res, { error, code: 400 }, '400 Invalid Request');
+        return this.sendJson(res, { error, code: 400 }, '400 Bad Request');
     }
 
     protected notFoundResponse(res: HttpResponse, error: string) {
