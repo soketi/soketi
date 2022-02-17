@@ -2,7 +2,7 @@
 
 npm install -g modclean
 
-npm install
+npm ci
 npm run build
 
 # Creating a new folder to deploy minimum requirement files.
@@ -11,7 +11,7 @@ cp -r bin/ dist/ LICENSE package.json README.md production-app/
 
 # Cleaning up unnecessary files.
 cd production-app/
-npm install --only=prod --ignore-scripts
+npm ci --only=prod --ignore-scripts
 npm prune --production
 rm -rf node_modules/*/test/ node_modules/*/tests/
 modclean -n default:safe --run
