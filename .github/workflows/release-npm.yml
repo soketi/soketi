@@ -23,7 +23,7 @@ jobs:
 
       - name: Installing dependencies
         run: |
-          npm ci
+          npm install
 
       - name: Lint & Compile
         run: |
