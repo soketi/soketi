@@ -51,9 +51,9 @@ export const options = {
         soakTraffic: {
             executor: 'per-vu-iterations',
             vus: 250,
-            iterations: 6,
+            iterations: 1,
             env: {
-                SLEEP_FOR: '10',
+                SLEEP_FOR: '110',
                 WS_HOST: __ENV.WS_HOST || 'ws://127.0.0.1:6001/app/app-key',
             },
         },
@@ -66,15 +66,15 @@ export const options = {
             startVUs: 0,
             startTime: '5s',
             stages: [
+                { duration: '50s', target: 250 },
                 { duration: '30s', target: 250 },
-                { duration: '10s', target: 250 },
                 { duration: '10s', target: 100 },
                 { duration: '10s', target: 50 },
                 { duration: '10s', target: 100 },
             ],
             gracefulRampDown: '5s',
             env: {
-                SLEEP_FOR: '5',
+                SLEEP_FOR: '110',
                 WS_HOST: __ENV.WS_HOST || 'ws://127.0.0.1:6001/app/app-key',
             },
         },
