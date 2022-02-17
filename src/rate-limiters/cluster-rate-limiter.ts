@@ -19,15 +19,17 @@ export class ClusterRateLimiter extends LocalRateLimiter {
     constructor(protected server: Server) {
         super(server);
 
-        server.discover.join('rate_limiter:limiters', (rateLimiters: { [key: string]: RateLimiterAbstract }) => {
-            this.rateLimiters = Object.fromEntries(
-                Object.entries(rateLimiters).map(([key, rateLimiterObject]: [string, any]) => {
-                    return [
-                        key,
-                        this.createNewRateLimiter(key.split(':')[0], rateLimiterObject._points),
-                    ];
-                })
-            );
+        server.discover.join('rate_limiter:limiters', ({ rateLimiters, id }: { rateLimiters: { [key: string]: RateLimiterAbstract }[]; id: string; }) => {
+            if (id !== this.server.nodes.get('self').id) {
+                this.rateLimiters = Object.fromEntries(
+                    Object.entries(rateLimiters).map(([key, rateLimiterObject]: [string, any]) => {
+                        return [
+                            key,
+                            this.createNewRateLimiter(key.split(':')[0], rateLimiterObject._points),
+                        ];
+                    })
+                );
+            }
         });
 
         // All nodes need to know when other nodes consumed from the rate limiter.
@@ -84,6 +86,6 @@ export class ClusterRateLimiter extends LocalRateLimiter {
      * Send the stored rate limiters this instance currently have.
      */
     protected sendRateLimiters(): void {
-        this.server.discover.send('rate_limiter:limiters', this.rateLimiters);
+        this.server.discover.send('rate_limiter:limiters', { rateLimiters: this.rateLimiters, id: this.server.nodes.get('self').id });
     }
 }
