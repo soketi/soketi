@@ -34,6 +34,7 @@ jobs:
         run: |
           npm prune --production
           rm -rf node_modules/*/test/ node_modules/*/tests/
+          git reset --hard origin/master
 
       - name: Compute GitHub tag
         id: tag
