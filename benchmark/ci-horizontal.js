@@ -54,7 +54,7 @@ export const options = {
         // Keep connected many users users at the same time.
         soakTraffic1: {
             executor: 'per-vu-iterations',
-            vus: 250,
+            vus: 125,
             iterations: 1,
             env: {
                 SLEEP_FOR: '110',
@@ -63,7 +63,7 @@ export const options = {
         },
         soakTraffic2: {
             executor: 'per-vu-iterations',
-            vus: 250,
+            vus: 125,
             iterations: 1,
             env: {
                 SLEEP_FOR: '110',
@@ -79,11 +79,11 @@ export const options = {
             startVUs: 0,
             startTime: '5s',
             stages: [
-                { duration: '50s', target: 250 },
-                { duration: '30s', target: 250 },
-                { duration: '10s', target: 100 },
+                { duration: '50s', target: 125 },
+                { duration: '30s', target: 125 },
                 { duration: '10s', target: 50 },
-                { duration: '10s', target: 100 },
+                { duration: '10s', target: 25 },
+                { duration: '10s', target: 50 },
             ],
             gracefulRampDown: '5s',
             env: {
@@ -96,11 +96,11 @@ export const options = {
             startVUs: 0,
             startTime: '5s',
             stages: [
-                { duration: '50s', target: 250 },
-                { duration: '30s', target: 250 },
-                { duration: '10s', target: 100 },
+                { duration: '50s', target: 125 },
+                { duration: '30s', target: 125 },
                 { duration: '10s', target: 50 },
-                { duration: '10s', target: 100 },
+                { duration: '10s', target: 25 },
+                { duration: '10s', target: 50 },
             ],
             gracefulRampDown: '5s',
             env: {
