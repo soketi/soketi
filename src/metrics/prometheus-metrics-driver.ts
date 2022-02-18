@@ -10,6 +10,8 @@ interface PrometheusMetrics {
     newDisconnectionsTotal?: prom.Counter<'app_id'|'port'>;
     socketBytesReceived?: prom.Counter<'app_id'|'port'>;
     socketBytesTransmitted?: prom.Counter<'app_id'|'port'>;
+    wsMessagesReceived?: prom.Counter<'app_id'|'port'>;
+    wsMessagesSent?: prom.Counter<'app_id'|'port'>;
     httpBytesReceived?: prom.Counter<'app_id'|'port'>;
     httpBytesTransmitted?: prom.Counter<'app_id'|'port'>;
     httpCallsReceived?: prom.Counter<'app_id'|'port'>;
@@ -109,6 +111,7 @@ export class PrometheusMetricsDriver implements MetricsInterface {
      */
     markWsMessageSent(appId: string, sentMessage: any): void {
         this.metrics.socketBytesTransmitted.inc(this.getTags(appId), Utils.dataToBytes(sentMessage));
+        this.metrics.wsMessagesSent.inc(this.getTags(appId), 1);
     }
 
     /**
@@ -116,6 +119,7 @@ export class PrometheusMetricsDriver implements MetricsInterface {
      */
     markWsMessageReceived(appId: string, message: any): void {
         this.metrics.socketBytesReceived.inc(this.getTags(appId), Utils.dataToBytes(message));
+        this.metrics.wsMessagesReceived.inc(this.getTags(appId), 1);
     }
 
     /**
@@ -219,6 +223,18 @@ export class PrometheusMetricsDriver implements MetricsInterface {
             socketBytesTransmitted: new prom.Counter({
                 name: `${prefix}socket_transmitted_bytes`,
                 help: 'Total amount of bytes that soketi transmitted.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            wsMessagesReceived: new prom.Counter({
+                name: `${prefix}ws_messages_received`,
+                help: 'The total amount of WS messages received from connections by the server.',
+                labelNames: ['app_id', 'port'],
+                registers: [this.register],
+            }),
+            wsMessagesSent: new prom.Counter({
+                name: `${prefix}ws_messages_sent`,
+                help: 'The total amount of WS messages sent to the connections from the server.',
                 labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),
