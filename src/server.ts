@@ -659,7 +659,7 @@ export class Server {
             }
 
             server.any(this.url('/*'), (res, req) => {
-                return this.httpHandler.notFound(res);
+                return this.httpHandler.notFoundResponse(res, 'Path does not exist.');
             });
 
             resolve(server);

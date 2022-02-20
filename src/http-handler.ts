@@ -359,7 +359,7 @@ export class HttpHandler {
         return this.sendJson(res, { error, code: 400 }, '400 Invalid Request');
     }
 
-    protected notFoundResponse(res: HttpResponse, error: string) {
+    public notFoundResponse(res: HttpResponse, error: string) {
         return this.sendJson(res, { error, code: 404 }, '404 Not Found');
     }
 
