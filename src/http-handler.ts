@@ -162,11 +162,11 @@ export class HttpHandler {
 
                 return this.serverErrorResponse(res, 'A server error has occurred.');
             }).then(channels => {
-                let response = { channels };
+                let broadcastMessage = { channels };
 
-                this.server.metricsManager.markApiMessage(res.params.appId, {}, response);
+                this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
 
-                this.sendJson(res, response);
+                this.sendJson(res, broadcastMessage);
             });
         });
     }
@@ -236,13 +236,13 @@ export class HttpHandler {
             }
 
             this.server.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
-                let response = {
+                let broadcastMessage = {
                     users: [...members].map(([user_id, ]) => ({ id: user_id })),
                 };
 
-                this.server.metricsManager.markApiMessage(res.params.appId, {}, response);
+                this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
 
-                this.sendJson(res, response);
+                this.sendJson(res, broadcastMessage);
             });
         });
     }
