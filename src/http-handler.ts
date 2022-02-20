@@ -355,11 +355,21 @@ export class HttpHandler {
         });
     }
 
+    notFound(res: HttpResponse) {
+        res.writeStatus('404 Not Found');
+
+        this.attachMiddleware(res, [
+            this.corsMiddleware,
+        ]).then(res => {
+            this.send(res, '', '404 Not Found');
+        });
+    }
+
     protected badResponse(res: HttpResponse, error: string) {
         return this.sendJson(res, { error, code: 400 }, '400 Invalid Request');
     }
 
-    public notFoundResponse(res: HttpResponse, error: string) {
+    protected notFoundResponse(res: HttpResponse, error: string) {
         return this.sendJson(res, { error, code: 404 }, '404 Not Found');
     }
 
