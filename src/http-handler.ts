@@ -162,11 +162,11 @@ export class HttpHandler {
 
                 return this.serverErrorResponse(res, 'A server error has occurred.');
             }).then(channels => {
-                let broadcastMessage = { channels };
+                let response = { channels };
 
-                this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
+                this.server.metricsManager.markApiMessage(res.params.appId, {}, response);
 
-                this.sendJson(res, broadcastMessage);
+                this.sendJson(res, response);
             });
         });
     }
@@ -236,13 +236,13 @@ export class HttpHandler {
             }
 
             this.server.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
-                let broadcastMessage = {
+                let response = {
                     users: [...members].map(([user_id, ]) => ({ id: user_id })),
                 };
 
-                this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
+                this.server.metricsManager.markApiMessage(res.params.appId, {}, response);
 
-                this.sendJson(res, broadcastMessage);
+                this.sendJson(res, response);
             });
         });
     }
@@ -257,6 +257,7 @@ export class HttpHandler {
         ]).then(res => {
             this.checkMessageToBroadcast(res.body as PusherApiMessage, res.app as App).then(message => {
                 this.broadcastMessage(message, res.app.id);
+                this.server.metricsManager.markApiMessage(res.app.id, res.body, { ok: true });
                 this.sendJson(res, { ok: true });
             }).catch(error => {
                 if (error.code === 400) {
@@ -285,6 +286,7 @@ export class HttpHandler {
 
             Promise.all(batch.map(message => this.checkMessageToBroadcast(message, res.app as App))).then(messages => {
                 messages.forEach(message => this.broadcastMessage(message, res.app.id));
+                this.server.metricsManager.markApiMessage(res.app.id, res.body, { ok: true });
                 this.sendJson(res, { ok: true });
             }).catch((error: MessageCheckError) => {
                 if (error.code === 400) {
@@ -350,19 +352,6 @@ export class HttpHandler {
                 channel,
                 data: message.data,
             }), message.socket_id);
-        });
-
-        this.server.metricsManager.markApiMessage(appId, message, { ok: true });
-    }
-
-    notFound(res: HttpResponse) {
-        //Send status before any headers.
-        res.writeStatus('404 Not Found');
-
-        this.attachMiddleware(res, [
-            this.corsMiddleware,
-        ]).then(res => {
-            this.send(res, '', '404 Not Found');
         });
     }
 
@@ -587,8 +576,8 @@ export class HttpHandler {
     }
 
     protected sendJson(res: HttpResponse, data: any, status: RecognizedString = '200 OK') {
-        return res.writeStatus(status)
-            .writeHeader('Content-Type', 'application/json')
+        return res.writeHeader('Content-Type', 'application/json')
+            .writeStatus(status)
             .end(JSON.stringify(data), true);
     }
 
