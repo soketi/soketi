@@ -227,13 +227,13 @@ export class PrometheusMetricsDriver implements MetricsInterface {
                 registers: [this.register],
             }),
             wsMessagesReceived: new prom.Counter({
-                name: `${prefix}ws_messages_received`,
+                name: `${prefix}ws_messages_received_total`,
                 help: 'The total amount of WS messages received from connections by the server.',
                 labelNames: ['app_id', 'port'],
                 registers: [this.register],
             }),
             wsMessagesSent: new prom.Counter({
-                name: `${prefix}ws_messages_sent`,
+                name: `${prefix}ws_messages_sent_total`,
                 help: 'The total amount of WS messages sent to the connections from the server.',
                 labelNames: ['app_id', 'port'],
                 registers: [this.register],
