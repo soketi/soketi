@@ -56,6 +56,7 @@ export const options = {
                 { duration: '50s', target: 250 },
                 { duration: '110s', target: 250 },
             ],
+            gracefulRampDown: '40s',
             env: {
                 SLEEP_FOR: '160',
                 WS_HOST: __ENV.WS_HOST || 'ws://127.0.0.1:6001/app/app-key',

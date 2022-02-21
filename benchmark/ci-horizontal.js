@@ -60,6 +60,7 @@ export const options = {
                 { duration: '50s', target: 125 },
                 { duration: '110s', target: 125 },
             ],
+            gracefulRampDown: '40s',
             env: {
                 SLEEP_FOR: '160',
                 WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
@@ -73,6 +74,7 @@ export const options = {
                 { duration: '50s', target: 125 },
                 { duration: '110s', target: 125 },
             ],
+            gracefulRampDown: '40s',
             env: {
                 SLEEP_FOR: '160',
                 WS_HOST: 'ws://127.0.0.1:6002/app/app-key',
@@ -85,7 +87,7 @@ export const options = {
         highTraffic1: {
             executor: 'ramping-vus',
             startVUs: 0,
-            startTime: '5s',
+            startTime: '50s',
             stages: [
                 { duration: '50s', target: 125 },
                 { duration: '30s', target: 125 },
@@ -93,16 +95,16 @@ export const options = {
                 { duration: '10s', target: 25 },
                 { duration: '10s', target: 50 },
             ],
-            gracefulRampDown: '5s',
+            gracefulRampDown: '25s',
             env: {
-                SLEEP_FOR: '110',
+                SLEEP_FOR: '160',
                 WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
         highTraffic2: {
             executor: 'ramping-vus',
             startVUs: 0,
-            startTime: '5s',
+            startTime: '50s',
             stages: [
                 { duration: '50s', target: 125 },
                 { duration: '30s', target: 125 },
@@ -110,9 +112,9 @@ export const options = {
                 { duration: '10s', target: 25 },
                 { duration: '10s', target: 50 },
             ],
-            gracefulRampDown: '5s',
+            gracefulRampDown: '25s',
             env: {
-                SLEEP_FOR: '110',
+                SLEEP_FOR: '160',
                 WS_HOST: 'ws://127.0.0.1:6002/app/app-key',
             },
         },
