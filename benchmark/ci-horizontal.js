@@ -53,20 +53,28 @@ export const options = {
     scenarios: {
         // Keep connected many users users at the same time.
         soakTraffic1: {
-            executor: 'per-vu-iterations',
-            vus: 125,
-            iterations: 1,
+            executor: 'ramping-vus',
+            startVUs: 0,
+            startTime: '0s',
+            stages: [
+                { duration: '50s', target: 125 },
+                { duration: '110s', target: 125 },
+            ],
             env: {
-                SLEEP_FOR: '110',
+                SLEEP_FOR: '160',
                 WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
             },
         },
         soakTraffic2: {
-            executor: 'per-vu-iterations',
-            vus: 125,
-            iterations: 1,
+            executor: 'ramping-vus',
+            startVUs: 0,
+            startTime: '0s',
+            stages: [
+                { duration: '50s', target: 125 },
+                { duration: '110s', target: 125 },
+            ],
             env: {
-                SLEEP_FOR: '110',
+                SLEEP_FOR: '160',
                 WS_HOST: 'ws://127.0.0.1:6002/app/app-key',
             },
         },
