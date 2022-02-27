@@ -81,7 +81,7 @@ export interface Options {
         maxNameLength: number;
     };
     cluster: {
-        host: string;
+        hostname: string;
         helloInterval: number;
         checkInterval: number;
         nodeTimeout: number,
@@ -89,6 +89,7 @@ export interface Options {
         port: number;
         prefix: string;
         ignoreProcess: boolean;
+        broadcast: string;
     };
     cors: {
         credentials: boolean;

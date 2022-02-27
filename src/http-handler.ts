@@ -257,6 +257,7 @@ export class HttpHandler {
         ]).then(res => {
             this.checkMessageToBroadcast(res.body as PusherApiMessage, res.app as App).then(message => {
                 this.broadcastMessage(message, res.app.id);
+                this.server.metricsManager.markApiMessage(res.app.id, res.body, { ok: true });
                 this.sendJson(res, { ok: true });
             }).catch(error => {
                 if (error.code === 400) {
@@ -285,6 +286,7 @@ export class HttpHandler {
 
             Promise.all(batch.map(message => this.checkMessageToBroadcast(message, res.app as App))).then(messages => {
                 messages.forEach(message => this.broadcastMessage(message, res.app.id));
+                this.server.metricsManager.markApiMessage(res.app.id, res.body, { ok: true });
                 this.sendJson(res, { ok: true });
             }).catch((error: MessageCheckError) => {
                 if (error.code === 400) {
@@ -351,12 +353,9 @@ export class HttpHandler {
                 data: message.data,
             }), message.socket_id);
         });
-
-        this.server.metricsManager.markApiMessage(appId, message, { ok: true });
     }
 
     notFound(res: HttpResponse) {
-        //Send status before any headers.
         res.writeStatus('404 Not Found');
 
         this.attachMiddleware(res, [
