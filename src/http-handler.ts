@@ -586,8 +586,8 @@ export class HttpHandler {
     }
 
     protected sendJson(res: HttpResponse, data: any, status: RecognizedString = '200 OK') {
-        return res.writeHeader('Content-Type', 'application/json')
-            .writeStatus(status)
+        return res.writeStatus(status)
+            .writeHeader('Content-Type', 'application/json')
             .end(JSON.stringify(data), true);
     }
 
