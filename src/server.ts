@@ -90,7 +90,7 @@ export class Server {
             maxNameLength: 200,
         },
         cluster: {
-            host: '0.0.0.0',
+            hostname: '0.0.0.0',
             helloInterval: 500,
             checkInterval: 500,
             nodeTimeout: 2000,
@@ -98,6 +98,7 @@ export class Server {
             port: 11002,
             prefix: '',
             ignoreProcess: true,
+            broadcast: '255.255.255.255',
         },
         cors: {
             credentials: true,
