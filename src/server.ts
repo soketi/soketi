@@ -55,6 +55,10 @@ export class Server {
         },
         appManager: {
             driver: 'array',
+            cache: {
+                enabled: false,
+                ttl: -1,
+            },
             array: {
                 apps: [
                     {

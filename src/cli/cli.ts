@@ -29,6 +29,8 @@ export class Cli {
         ADAPTER_NATS_REQUESTS_TIMEOUT: 'adapter.nats.requestsTimeout',
         ADAPTER_NATS_NODES_NUMBER: 'adapter.nats.nodesNumber',
         APP_MANAGER_DRIVER: 'appManager.driver',
+        APP_MANAGER_CACHE_ENABLED: 'appManager.cache.enabled',
+        APP_MANAGER_CACHE_TTL: 'appManager.cache.ttl',
         APP_MANAGER_DYNAMODB_TABLE: 'appManager.dynamodb.table',
         APP_MANAGER_DYNAMODB_REGION: 'appManager.dynamodb.region',
         APP_MANAGER_DYNAMODB_ENDPOINT: 'appManager.dynamodb.endpoint',

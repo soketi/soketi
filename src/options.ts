@@ -59,6 +59,10 @@ export interface Options {
     };
     appManager: {
         driver: string;
+        cache: {
+            enabled: boolean;
+            ttl: number;
+        }
         array: {
             apps: AppInterface[];
         };
