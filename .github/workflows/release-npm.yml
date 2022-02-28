@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2.4.0
 
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v3
         name: Installing Node.js v16.x
         with:
           node-version: 16.x
