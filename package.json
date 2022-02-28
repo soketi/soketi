@@ -28,7 +28,7 @@
     "axios": "^0.24.0",
     "body-parser": "^1.19.1",
     "boolean": "^3.1.4",
-    "bullmq": "1.64.0",
+    "bullmq": "1.75.1",
     "colors": "1.4.0",
     "dot-wild": "^3.0.1",
     "dotenv": "^10.0.0",
