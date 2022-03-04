@@ -90,6 +90,8 @@ export interface Options {
         prefix: string;
         ignoreProcess: boolean;
         broadcast: string;
+        unicast: string|null;
+        multicast: string|null;
     };
     cors: {
         credentials: boolean;
