@@ -42,16 +42,6 @@ export class Server {
             cluster: {
                 requestsTimeout: 5_000,
             },
-            nats: {
-                requestsTimeout: 5_000,
-                prefix: '',
-                servers: ['127.0.0.1:4222'],
-                user: null,
-                pass: null,
-                token: null,
-                timeout: 10_000,
-                nodesNumber: null,
-            },
         },
         appManager: {
             driver: 'array',
@@ -316,7 +306,6 @@ export class Server {
     async start(callback?: CallableFunction) {
         this.configureDiscovery().then(() => {
             this.initializeDrivers().then(() => {
-
                 if (this.options.debug) {
                     console.dir(this.options, { depth: 100 });
                 }
