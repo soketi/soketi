@@ -99,6 +99,8 @@ export class Server {
             prefix: '',
             ignoreProcess: true,
             broadcast: '255.255.255.255',
+            unicast: null,
+            multicast: null,
         },
         cors: {
             credentials: true,
