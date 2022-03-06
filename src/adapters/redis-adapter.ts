@@ -86,11 +86,19 @@ export class RedisAdapter extends HorizontalAdapter {
         };
 
         if (!this.clients.includes(appId)) {
-            (this.server.options.adapter.redis.shardMode ? this.subClient.ssubscribe : this.subClient.subscribe)([
-                `${this.channel}#${appId}`,
-                `${this.requestChannel}#${appId}`,
-                `${this.responseChannel}#${appId}`
-            ], onError);
+            if (this.server.options.adapter.redis.shardMode) {
+                this.subClient.ssubscribe([
+                    `${this.channel}#${appId}`,
+                    `${this.requestChannel}#${appId}`,
+                    `${this.responseChannel}#${appId}`
+                ], onError);
+            } else {
+                this.subClient.subscribe([
+                    `${this.channel}#${appId}`,
+                    `${this.requestChannel}#${appId}`,
+                    `${this.responseChannel}#${appId}`
+                ], onError);
+            }
 
             this.clients.push(appId);
         }
@@ -101,7 +109,12 @@ export class RedisAdapter extends HorizontalAdapter {
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
         this.subscribeToApp(appId);
-        (this.server.options.adapter.redis.shardMode ? this.subClient.spublish : this.subClient.publish)(`${channel}#${appId}`, data);
+
+        if (this.server.options.adapter.redis.shardMode) {
+            this.pubClient.spublish(`${channel}#${appId}`, data);
+        } else {
+            this.pubClient.publish(`${channel}#${appId}`, data);
+        }
     }
 
     /**
