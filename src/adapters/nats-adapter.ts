@@ -26,6 +26,11 @@ export class NatsAdapter extends HorizontalAdapter {
     protected sc: any;
 
     /**
+     * The list of subscribers/publishers by appId.
+     */
+    protected clients: string[] = [];
+
+    /**
      * Initialize the adapter.
      */
     constructor(server: Server) {
@@ -70,6 +75,16 @@ export class NatsAdapter extends HorizontalAdapter {
     }
 
     /**
+     * Signal that someone is using the app. Usually,
+     * subscribe to app-specific channels in the adapter.
+     */
+    subscribeToApp(appId: string): void {
+        this.connection.subscribe(`${this.requestChannel}#${appId}`, { callback: (_err, msg) => this.onRequest(msg) });
+        this.connection.subscribe(`${this.responseChannel}#${appId}`, { callback: (_err, msg) => this.onResponse(msg) });
+        this.connection.subscribe(`${this.channel}#${appId}`, { callback: (_err, msg) => this.onMessage(msg) });
+    }
+
+    /**
      * Listen for requests coming from other nodes.
      */
     protected onRequest(msg: any): void {
@@ -103,13 +118,19 @@ export class NatsAdapter extends HorizontalAdapter {
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
+        // Make sure to subscribe to app-specific channels if not subscribed.
+        if (!this.clients.includes(appId)) {
+            this.subscribeToApp(appId);
+            this.clients.push(appId);
+        }
+
         this.connection.publish(channel, this.jc.encode(JSON.parse(data)));
     }
 
     /**
      * Get the number of Discover nodes.
      */
-    protected async getNumSub(): Promise<number> {
+    protected async getNumSub(appId: string): Promise<number> {
         let nodesNumber = this.server.options.adapter.nats.nodesNumber;
 
         if (nodesNumber && nodesNumber > 0) {

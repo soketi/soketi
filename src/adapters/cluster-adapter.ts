@@ -9,6 +9,11 @@ export class ClusterAdapter extends HorizontalAdapter {
     protected channel = 'cluster-adapter';
 
     /**
+     * The list of subscribers/publishers by appId.
+     */
+    protected clients: string[] = [];
+
+    /**
      * Initialize the adapter.
      */
     constructor(server: Server) {
@@ -29,6 +34,16 @@ export class ClusterAdapter extends HorizontalAdapter {
         this.server.discover.join(this.channel, this.onMessage.bind(this));
 
         return this;
+    }
+
+    /**
+     * Signal that someone is using the app. Usually,
+     * subscribe to app-specific channels in the adapter.
+     */
+    subscribeToApp(appId: string): void {
+        this.server.discover.join(`${this.requestChannel}#${appId}`, this.onRequest.bind(this));
+        this.server.discover.join(`${this.responseChannel}#${appId}`, this.onResponse.bind(this));
+        this.server.discover.join(`${this.channel}#${appId}`, this.onMessage.bind(this));
     }
 
     /**
@@ -77,13 +92,19 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
+        // Make sure to subscribe to app-specific channels if not subscribed.
+        if (!this.clients.includes(appId)) {
+            this.subscribeToApp(appId);
+            this.clients.push(appId);
+        }
+
         this.server.discover.send(channel, data);
     }
 
     /**
      * Get the number of Discover nodes.
      */
-    protected getNumSub(): Promise<number> {
+    protected getNumSub(appId: string): Promise<number> {
         return Promise.resolve(this.server.nodes.size);
     }
 }

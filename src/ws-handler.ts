@@ -388,6 +388,9 @@ export class WsHandler {
                 this.server.webhookSender.sendChannelOccupied(ws.app, channel);
             }
 
+            // Notify the adapter someone is using the app.
+            this.server.adapter.subscribeToApp(ws.app.id);
+
             // For non-presence channels, end with subscription succeeded.
             if (!(channelManager instanceof PresenceChannelManager)) {
                 let broadcastMessage = {

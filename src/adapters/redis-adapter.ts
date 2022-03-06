@@ -22,6 +22,11 @@ export class RedisAdapter extends HorizontalAdapter {
     protected pubClient: typeof Redis;
 
     /**
+     * The list of subscribers/publishers by appId.
+     */
+    protected clients: string[] = [];
+
+    /**
      * Initialize the adapter.
      */
     constructor(server: Server) {
@@ -55,18 +60,13 @@ export class RedisAdapter extends HorizontalAdapter {
             ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisPubOptions })
             : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisPubOptions });
 
-        const onError = err => {
+        let onError = err => {
             if (err) {
                 Log.warning(err);
             }
         };
 
-        this.subClient.psubscribe(`${this.channel}*`, onError);
-
-        this.subClient.on('pmessageBuffer', this.onMessage.bind(this));
         this.subClient.on('messageBuffer', this.processMessage.bind(this));
-
-        this.subClient.subscribe([this.requestChannel, this.responseChannel], onError);
 
         this.pubClient.on('error', onError);
         this.subClient.on('error', onError);
@@ -75,10 +75,34 @@ export class RedisAdapter extends HorizontalAdapter {
     }
 
     /**
+     * Signal that someone is using the app. Usually,
+     * subscribe to app-specific channels in the adapter.
+     */
+    subscribeToApp(appId: string): void {
+        let onError = err => {
+            if (err) {
+                Log.warning(err);
+            }
+        };
+
+        (this.server.options.adapter.redis.shardMode ? this.subClient.ssubscribe : this.subClient.subscribe)([
+            `${this.channel}#${appId}`,
+            `${this.requestChannel}#${appId}`,
+            `${this.responseChannel}#${appId}`
+        ], onError);
+    }
+
+    /**
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
-        this.pubClient.publish(channel, data);
+        // Make sure to subscribe to app-specific channels if not subscribed.
+        if (!this.clients.includes(appId)) {
+            this.subscribeToApp(appId);
+            this.clients.push(appId);
+        }
+
+        (this.server.options.adapter.redis.shardMode ? this.subClient.spublish : this.subClient.publish)(`${channel}#${appId}`, data);
     }
 
     /**
@@ -92,6 +116,8 @@ export class RedisAdapter extends HorizontalAdapter {
             this.onResponse(redisChannel, msg);
         } else if (redisChannel.startsWith(this.requestChannel)) {
             this.onRequest(redisChannel, msg);
+        } else {
+            this.onMessage(redisChannel, msg);
         }
     }
 
@@ -99,7 +125,7 @@ export class RedisAdapter extends HorizontalAdapter {
      * Listen for message coming from other nodes to broadcast
      * a specific message to the local sockets.
      */
-    protected onMessage(pattern: string, redisChannel: string, msg: Buffer|string): void {
+    protected onMessage(redisChannel: string, msg: Buffer|string): void {
         redisChannel = redisChannel.toString();
         msg = msg.toString();
 
@@ -127,8 +153,30 @@ export class RedisAdapter extends HorizontalAdapter {
     /**
      * Get the number of Redis subscribers.
      */
-    protected getNumSub(): Promise<number> {
+    protected getNumSub(appId: string): Promise<number> {
         if (this.server.options.adapter.redis.clusterMode) {
+            if (this.server.options.adapter.redis.shardMode) {
+                return new Promise((resolve, reject) => {
+                    this.pubClient.send_command(
+                        'pubsub',
+                        ['shardnumsub', `${this.requestChannel}#${appId}`],
+                        (err, numSub) => {
+                            if (err) {
+                                return reject(err);
+                            }
+
+                            let number = parseInt(numSub[1], 10);
+
+                            if (this.server.options.debug) {
+                                Log.info(`Found ${number} subscribers in the Sharded Redis cluster.`);
+                            }
+
+                            resolve(number);
+                        }
+                    );
+                });
+            }
+
             const nodes = this.pubClient.nodes();
 
             return Promise.all(

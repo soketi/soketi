@@ -38,6 +38,7 @@ export class Server {
                     //
                 },
                 clusterMode: false,
+                shardMode: false,
             },
             cluster: {
                 requestsTimeout: 5_000,

@@ -140,6 +140,14 @@ export class Adapter implements AdapterInterface {
     }
 
     /**
+     * Signal that someone is using the app. Usually,
+     * subscribe to app-specific channels in the adapter.
+     */
+    subscribeToApp(appId: string): void {
+        return this.driver.subscribeToApp(appId);
+    }
+
+    /**
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId: string|null = null): void {

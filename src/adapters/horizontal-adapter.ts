@@ -202,7 +202,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Get the number of total subscribers subscribers.
      */
-    protected abstract getNumSub(): Promise<number>;
+    protected abstract getNumSub(appId: string): Promise<number>;
 
     /**
      * Send a response through the response channel.
@@ -250,7 +250,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(localSockets);
                 }
 
-                this.getNumSub().then(numSub => {
+                this.getNumSub(appId).then(numSub => {
                     if (numSub <= 1) {
                         return resolve(localSockets);
                     }
@@ -277,7 +277,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(wsCount);
                 }
 
-                this.getNumSub().then(numSub => {
+                this.getNumSub(appId).then(numSub => {
                     if (numSub <= 1) {
                         return resolve(wsCount);
                     }
@@ -304,7 +304,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     resolve(localChannels);
                 }
 
-                this.getNumSub().then(numSub => {
+                this.getNumSub(appId).then(numSub => {
                     if (numSub <= 1) {
                         return resolve(localChannels);
                     }
@@ -331,7 +331,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(localSockets);
                 }
 
-                this.getNumSub().then(numSub => {
+                this.getNumSub(appId).then(numSub => {
                     if (numSub <= 1) {
                         return resolve(localSockets);
                     }
@@ -359,7 +359,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(wsCount);
                 }
 
-                this.getNumSub().then(numSub => {
+                this.getNumSub(appId).then(numSub => {
                     if (numSub <= 1) {
                         return resolve(wsCount);
                     }
@@ -387,7 +387,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(localMembers);
                 }
 
-                this.getNumSub().then(numSub => {
+                this.getNumSub(appId).then(numSub => {
                     if (numSub <= 1) {
                         return resolve(localMembers);
                     }
@@ -415,7 +415,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(localMembersCount);
                 }
 
-                this.getNumSub().then(numSub => {
+                this.getNumSub(appId).then(numSub => {
                     if (numSub <= 1) {
                         return resolve(localMembersCount);
                     }
@@ -443,7 +443,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(existsLocally);
                 }
 
-                this.getNumSub().then(numSub => {
+                this.getNumSub(appId).then(numSub => {
                     if (numSub <= 1) {
                         return resolve(existsLocally);
                     }
