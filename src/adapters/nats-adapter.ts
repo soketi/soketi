@@ -135,26 +135,41 @@ export class NatsAdapter extends HorizontalAdapter {
      * Get the number of Discover nodes.
      */
     protected async getNumSub(appId: string): Promise<number> {
+        let responses: Msg[] = [];
+
+        let calculateResponses = () => responses.reduce((total, response) => {
+            let { data } = JSON.parse(this.sc.decode(response.data)) as any;
+
+            return total += data.total;
+        }, 0);
+
         let nodesNumber = this.server.options.adapter.nats.nodesNumber;
 
         if (nodesNumber && nodesNumber > 0) {
-            return Promise.resolve(nodesNumber);
+            return new Promise(resolve => {
+                let timeout = setTimeout(() => {
+                    resolve(calculateResponses());
+                }, this.server.options.adapter.nats.requestsTimeout);
+
+                this.connection.request('$SYS.REQ.SERVER.PING.CONNZ', this.jc.encode({ 'filter_subject': `${this.requestChannel}#${appId}` })).then(response => {
+                    responses.push(response);
+
+                    if (responses.length === nodesNumber) {
+                        resolve(calculateResponses());
+                        clearTimeout(timeout);
+                    }
+                });
+            });
         }
 
         return new Promise(resolve => {
             let responses: Msg[] = [];
 
-            let calculateResponses = () => responses.reduce((total, response) => {
-                let { data } = JSON.parse(this.sc.decode(response.data)) as any;
-
-                return total += data.total;
-            }, 0);
-
             let waiter = timeout(1000);
 
             waiter.finally(() => resolve(calculateResponses()));
 
-            this.connection.request('$SYS.REQ.SERVER.PING.CONNZ').then(response => {
+            this.connection.request('$SYS.REQ.SERVER.PING.CONNZ', this.jc.encode({ 'filter_subject': `${this.requestChannel}#${appId}` })).then(response => {
                 responses.push(response);
                 waiter.cancel();
                 waiter = timeout(200);
