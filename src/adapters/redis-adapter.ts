@@ -66,6 +66,12 @@ export class RedisAdapter extends HorizontalAdapter {
             }
         };
 
+        this.subClient.subscribe([
+            this.channel,
+            this.requestChannel,
+            this.responseChannel,
+        ], onError);
+
         this.subClient.on('messageBuffer', this.processMessage.bind(this));
 
         this.pubClient.on('error', onError);

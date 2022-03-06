@@ -80,6 +80,12 @@ export class NatsAdapter extends HorizontalAdapter {
      */
     subscribeToApp(appId: string): void {
         if (!this.clients.includes(appId)) {
+            console.log(
+                `${this.requestChannel}#${appId}`,
+                `${this.responseChannel}#${appId}`,
+                `${this.channel}#${appId}`,
+            );
+
             this.connection.subscribe(`${this.requestChannel}#${appId}`, { callback: (_err, msg) => this.onRequest(msg) });
             this.connection.subscribe(`${this.responseChannel}#${appId}`, { callback: (_err, msg) => this.onResponse(msg) });
             this.connection.subscribe(`${this.channel}#${appId}`, { callback: (_err, msg) => this.onMessage(msg) });
@@ -122,7 +128,7 @@ export class NatsAdapter extends HorizontalAdapter {
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
         this.subscribeToApp(appId);
-        this.connection.publish(channel, this.jc.encode(JSON.parse(data)));
+        this.connection.publish(`${channel}#${appId}`, this.jc.encode(JSON.parse(data)));
     }
 
     /**
