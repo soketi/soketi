@@ -100,6 +100,8 @@ export class RedisAdapter extends HorizontalAdapter {
         };
 
         if (!this.clients.includes(appId)) {
+            this.clients.push(appId);
+
             if (this.server.options.adapter.redis.shardMode) {
                 this.subClient.ssubscribe([
                     `${this.channel}#${appId}`,
@@ -113,8 +115,6 @@ export class RedisAdapter extends HorizontalAdapter {
                     `${this.responseChannel}#${appId}`
                 ], onError);
             }
-
-            this.clients.push(appId);
         }
     }
 

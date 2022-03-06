@@ -80,16 +80,10 @@ export class NatsAdapter extends HorizontalAdapter {
      */
     subscribeToApp(appId: string): void {
         if (!this.clients.includes(appId)) {
-            console.log(
-                `${this.requestChannel}#${appId}`,
-                `${this.responseChannel}#${appId}`,
-                `${this.channel}#${appId}`,
-            );
-
+            this.clients.push(appId);
             this.connection.subscribe(`${this.requestChannel}#${appId}`, { callback: (_err, msg) => this.onRequest(msg) });
             this.connection.subscribe(`${this.responseChannel}#${appId}`, { callback: (_err, msg) => this.onResponse(msg) });
             this.connection.subscribe(`${this.channel}#${appId}`, { callback: (_err, msg) => this.onMessage(msg) });
-            this.clients.push(appId);
         }
     }
 
