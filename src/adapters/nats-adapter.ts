@@ -79,9 +79,12 @@ export class NatsAdapter extends HorizontalAdapter {
      * subscribe to app-specific channels in the adapter.
      */
     subscribeToApp(appId: string): void {
-        this.connection.subscribe(`${this.requestChannel}#${appId}`, { callback: (_err, msg) => this.onRequest(msg) });
-        this.connection.subscribe(`${this.responseChannel}#${appId}`, { callback: (_err, msg) => this.onResponse(msg) });
-        this.connection.subscribe(`${this.channel}#${appId}`, { callback: (_err, msg) => this.onMessage(msg) });
+        if (!this.clients.includes(appId)) {
+            this.connection.subscribe(`${this.requestChannel}#${appId}`, { callback: (_err, msg) => this.onRequest(msg) });
+            this.connection.subscribe(`${this.responseChannel}#${appId}`, { callback: (_err, msg) => this.onResponse(msg) });
+            this.connection.subscribe(`${this.channel}#${appId}`, { callback: (_err, msg) => this.onMessage(msg) });
+            this.clients.push(appId);
+        }
     }
 
     /**
@@ -118,12 +121,7 @@ export class NatsAdapter extends HorizontalAdapter {
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
-        // Make sure to subscribe to app-specific channels if not subscribed.
-        if (!this.clients.includes(appId)) {
-            this.subscribeToApp(appId);
-            this.clients.push(appId);
-        }
-
+        this.subscribeToApp(appId);
         this.connection.publish(channel, this.jc.encode(JSON.parse(data)));
     }
 

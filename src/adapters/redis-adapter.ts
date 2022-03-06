@@ -85,23 +85,22 @@ export class RedisAdapter extends HorizontalAdapter {
             }
         };
 
-        (this.server.options.adapter.redis.shardMode ? this.subClient.ssubscribe : this.subClient.subscribe)([
-            `${this.channel}#${appId}`,
-            `${this.requestChannel}#${appId}`,
-            `${this.responseChannel}#${appId}`
-        ], onError);
+        if (!this.clients.includes(appId)) {
+            (this.server.options.adapter.redis.shardMode ? this.subClient.ssubscribe : this.subClient.subscribe)([
+                `${this.channel}#${appId}`,
+                `${this.requestChannel}#${appId}`,
+                `${this.responseChannel}#${appId}`
+            ], onError);
+
+            this.clients.push(appId);
+        }
     }
 
     /**
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
-        // Make sure to subscribe to app-specific channels if not subscribed.
-        if (!this.clients.includes(appId)) {
-            this.subscribeToApp(appId);
-            this.clients.push(appId);
-        }
-
+        this.subscribeToApp(appId);
         (this.server.options.adapter.redis.shardMode ? this.subClient.spublish : this.subClient.publish)(`${channel}#${appId}`, data);
     }
 
