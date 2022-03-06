@@ -197,7 +197,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Broadcast data to a given channel.
      */
-    protected abstract broadcastToChannel(channel: string, data: string): void;
+    protected abstract broadcastToChannel(channel: string, data: string, appId: string): void;
 
     /**
      * Get the number of total subscribers subscribers.
@@ -207,15 +207,15 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Send a response through the response channel.
      */
-    protected sendToResponseChannel(data: string): void {
-        this.broadcastToChannel(this.responseChannel, data);
+    protected sendToResponseChannel(data: string, appId: string): void {
+        this.broadcastToChannel(this.responseChannel, data, appId);
     }
 
     /**
      * Send a request through the request channel.
      */
-    protected sendToRequestChannel(data: string): void {
-        this.broadcastToChannel(this.requestChannel, data);
+    protected sendToRequestChannel(data: string, appId: string): void {
+        this.broadcastToChannel(this.requestChannel, data, appId);
     }
 
     /**
@@ -228,7 +228,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             channel,
             data,
             exceptingId,
-        }));
+        }), appId);
 
         this.sendLocally(appId, channel, data, exceptingId);
     }
@@ -644,7 +644,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             ...requestOptions,
         });
 
-        this.sendToRequestChannel(requestToSend);
+        this.sendToRequestChannel(requestToSend, appId);
 
         if (this.server.options.debug) {
             Log.clusterTitle('✈ Sent message to other instances');
@@ -668,7 +668,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         callbackResolver().then(extra => {
             let response = JSON.stringify({ requestId, ...extra });
 
-            this.sendToResponseChannel(response);
+            this.sendToResponseChannel(response, appId);
 
             if (this.server.options.debug) {
                 Log.clusterTitle('✈ Sent response to the instance');

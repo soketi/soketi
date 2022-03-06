@@ -77,7 +77,7 @@ export class RedisAdapter extends HorizontalAdapter {
     /**
      * Broadcast data to a given channel.
      */
-    protected broadcastToChannel(channel: string, data: string): void {
+    protected broadcastToChannel(channel: string, data: string, appId: string): void {
         this.pubClient.publish(channel, data);
     }
 

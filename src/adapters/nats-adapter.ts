@@ -102,7 +102,7 @@ export class NatsAdapter extends HorizontalAdapter {
     /**
      * Broadcast data to a given channel.
      */
-    protected broadcastToChannel(channel: string, data: string): void {
+    protected broadcastToChannel(channel: string, data: string, appId: string): void {
         this.connection.publish(channel, this.jc.encode(JSON.parse(data)));
     }
 
