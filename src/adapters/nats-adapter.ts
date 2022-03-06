@@ -145,6 +145,7 @@ export class NatsAdapter extends HorizontalAdapter {
                     resolve(calculateResponses());
                 }, this.server.options.adapter.nats.requestsTimeout);
 
+                // TODO: Temporarily cache the response for this specific subject.
                 this.connection.request('$SYS.REQ.SERVER.PING.CONNZ', this.jc.encode({ 'filter_subject': `${this.requestChannel}#${appId}` })).then(response => {
                     responses.push(response);
 
