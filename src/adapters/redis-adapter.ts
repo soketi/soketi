@@ -207,7 +207,7 @@ export class RedisAdapter extends HorizontalAdapter {
 
             return Promise.all(
                 nodes.map((node) =>
-                    node.send_command('pubsub', ['numsub', this.requestChannel])
+                    node.send_command('pubsub', ['numsub', `${this.requestChannel}#${appId}`])
                 )
             ).then((values: any[]) => {
                 let number = values.reduce((numSub, value) => {
@@ -225,7 +225,7 @@ export class RedisAdapter extends HorizontalAdapter {
             return new Promise((resolve, reject) => {
                 this.pubClient.send_command(
                     'pubsub',
-                    ['numsub', this.requestChannel],
+                    ['numsub', `${this.requestChannel}#${appId}`],
                     (err, numSub) => {
                         if (err) {
                             return reject(err);
