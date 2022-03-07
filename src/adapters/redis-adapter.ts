@@ -111,13 +111,11 @@ export class RedisAdapter extends HorizontalAdapter {
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
-        this.subscribeToApp(appId).then(() => {
-            if (this.server.options.adapter.redis.shardMode) {
-                this.pubClient.spublish(`${channel}#${appId}`, data);
-            } else {
-                this.pubClient.publish(`${channel}#${appId}`, data);
-            }
-        });
+        if (this.server.options.adapter.redis.shardMode) {
+            this.pubClient.spublish(`${channel}#${appId}`, data);
+        } else {
+            this.pubClient.publish(`${channel}#${appId}`, data);
+        }
     }
 
     /**
