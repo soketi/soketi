@@ -141,8 +141,8 @@ export class LocalAdapter implements AdapterInterface {
      * Signal that someone is using the app. Usually,
      * subscribe to app-specific channels in the adapter.
      */
-    subscribeToApp(appId: string): void {
-        //
+    subscribeToApp(appId: string): Promise<void> {
+        return Promise.resolve();
     }
 
     /**

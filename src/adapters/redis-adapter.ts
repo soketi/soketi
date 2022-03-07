@@ -77,43 +77,49 @@ export class RedisAdapter extends HorizontalAdapter {
      * Signal that someone is using the app. Usually,
      * subscribe to app-specific channels in the adapter.
      */
-    subscribeToApp(appId: string): void {
+    subscribeToApp(appId: string): Promise<void> {
         let onError = err => {
             if (err) {
                 Log.warning(err);
             }
         };
 
-        if (!this.clients.includes(appId)) {
-            this.clients.push(appId);
+        return new Promise(resolve => {
+            if (!this.clients.includes(appId)) {
+                this.clients.push(appId);
 
-            if (this.server.options.adapter.redis.shardMode) {
-                this.subClient.ssubscribe([
-                    `${this.channel}#${appId}`,
-                    `${this.requestChannel}#${appId}`,
-                    `${this.responseChannel}#${appId}`
-                ], onError);
+                if (this.server.options.adapter.redis.shardMode) {
+                    this.subClient.ssubscribe([
+                        `${this.channel}#${appId}`,
+                        `${this.requestChannel}#${appId}`,
+                        `${this.responseChannel}#${appId}`
+                    ], onError);
+                } else {
+                    this.subClient.subscribe([
+                        `${this.channel}#${appId}`,
+                        `${this.requestChannel}#${appId}`,
+                        `${this.responseChannel}#${appId}`
+                    ], onError);
+                }
+
+                setTimeout(resolve, 50);
             } else {
-                this.subClient.subscribe([
-                    `${this.channel}#${appId}`,
-                    `${this.requestChannel}#${appId}`,
-                    `${this.responseChannel}#${appId}`
-                ], onError);
+                resolve();
             }
-        }
+        });
     }
 
     /**
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
-        this.subscribeToApp(appId);
-
-        if (this.server.options.adapter.redis.shardMode) {
-            this.pubClient.spublish(`${channel}#${appId}`, data);
-        } else {
-            this.pubClient.publish(`${channel}#${appId}`, data);
-        }
+        this.subscribeToApp(appId).then(() => {
+            if (this.server.options.adapter.redis.shardMode) {
+                this.pubClient.spublish(`${channel}#${appId}`, data);
+            } else {
+                this.pubClient.publish(`${channel}#${appId}`, data);
+            }
+        });
     }
 
     /**
