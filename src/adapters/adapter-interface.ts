@@ -56,7 +56,7 @@ export interface AdapterInterface {
      * Signal that someone is using the app. Usually,
      * subscribe to app-specific channels in the adapter.
      */
-    subscribeToApp(appId: string): void;
+    subscribeToApp(appId: string): Promise<void>;
 
     /**
      * Send a message to a namespace and channel.

@@ -36,13 +36,18 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Signal that someone is using the app. Usually,
      * subscribe to app-specific channels in the adapter.
      */
-    subscribeToApp(appId: string): void {
-        if (!this.clients.includes(appId)) {
-            this.clients.push(appId);
-            this.server.discover.join(`${this.requestChannel}#${appId}`, this.onRequest.bind(this));
-            this.server.discover.join(`${this.responseChannel}#${appId}`, this.onResponse.bind(this));
-            this.server.discover.join(`${this.channel}#${appId}`, this.onMessage.bind(this));
-        }
+    subscribeToApp(appId: string): Promise<void> {
+        return new Promise(resolve => {
+            if (!this.clients.includes(appId)) {
+                this.clients.push(appId);
+                this.server.discover.join(`${this.requestChannel}#${appId}`, this.onRequest.bind(this));
+                this.server.discover.join(`${this.responseChannel}#${appId}`, this.onResponse.bind(this));
+                this.server.discover.join(`${this.channel}#${appId}`, this.onMessage.bind(this));
+                setTimeout(resolve, 50);
+            } else {
+                resolve();
+            }
+        });
     }
 
     /**
@@ -91,8 +96,9 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
-        this.subscribeToApp(appId);
-        this.server.discover.send(`${channel}#${appId}`, data);
+        this.subscribeToApp(appId).then(() => {
+            this.server.discover.send(`${channel}#${appId}`, data);
+        });
     }
 
     /**

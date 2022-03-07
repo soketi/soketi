@@ -143,7 +143,7 @@ export class Adapter implements AdapterInterface {
      * Signal that someone is using the app. Usually,
      * subscribe to app-specific channels in the adapter.
      */
-    subscribeToApp(appId: string): void {
+    subscribeToApp(appId: string): Promise<void> {
         return this.driver.subscribeToApp(appId);
     }
 
