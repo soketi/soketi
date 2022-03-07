@@ -162,7 +162,7 @@ export class Cli {
                 this.server.setOptions(settingObject);
             }
         } catch (e) {
-            Log.error('There was an error while parsing the JSON in your config file. It has not been loaded.');
+            Log.errorTitle('There was an error while parsing the JSON in your config file. It has not been loaded.');
         }
     }
 
