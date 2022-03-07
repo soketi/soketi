@@ -51,6 +51,7 @@ export class Utils {
             'cluster.ignoreProcess': false,
             'webhooks.batching.enabled': false, // TODO: Find out why batching works but fails tests
             'webhooks.batching.duration': 1,
+            'database.redis.enableOfflineQueue': false,
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
