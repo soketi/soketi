@@ -45,36 +45,30 @@ export class RedisAdapter extends HorizontalAdapter {
      * Initialize the adapter.
      */
     async init(): Promise<AdapterInterface> {
-        return new Promise(resolveInit => {
-            let redisOptions = {
-                maxRetriesPerRequest: 2,
-                retryStrategy: times => times * 2,
-                ...this.server.options.database.redis,
-            };
+        let redisOptions = {
+            maxRetriesPerRequest: 2,
+            retryStrategy: times => times * 2,
+            ...this.server.options.database.redis,
+        };
 
-            this.subClient = this.server.options.adapter.redis.clusterMode
-                ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisSubOptions })
-                : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisSubOptions });
+        this.subClient = this.server.options.adapter.redis.clusterMode
+            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisSubOptions })
+            : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisSubOptions });
 
-            this.subClient.on('ready', () => {
-                this.pubClient = this.server.options.adapter.redis.clusterMode
-                    ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisPubOptions })
-                    : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisPubOptions });
+        this.pubClient = this.server.options.adapter.redis.clusterMode
+            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisPubOptions })
+            : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisPubOptions });
 
-                this.pubClient.on('ready', () => {
-                    let onError = err => {
-                        if (err) {
-                            Log.warning(err);
-                        }
-                    };
+        let onError = err => {
+            if (err) {
+                Log.warning(err);
+            }
+        };
 
-                    this.pubClient.on('error', onError);
-                    this.subClient.on('error', onError);
+        this.pubClient.on('error', onError);
+        this.subClient.on('error', onError);
 
-                    resolveInit(this);
-                });
-            });
-        });
+        return this;
     }
 
     /**
