@@ -75,18 +75,13 @@ export class NatsAdapter extends HorizontalAdapter {
      * Signal that someone is using the app. Usually,
      * subscribe to app-specific channels in the adapter.
      */
-    subscribeToApp(appId: string): Promise<void> {
-        return new Promise(resolve => {
-            if (!this.clients.includes(appId)) {
-                this.clients.push(appId);
-                this.connection.subscribe(`${this.requestChannel}#${appId}`, { callback: (_err, msg) => this.onRequest(msg, appId), queue: appId });
-                this.connection.subscribe(`${this.responseChannel}#${appId}`, { callback: (_err, msg) => this.onResponse(msg, appId), queue: appId });
-                this.connection.subscribe(`${this.channel}#${appId}`, { callback: (_err, msg) => this.onMessage(msg), queue: appId });
-                setTimeout(resolve, 50);
-            } else {
-                resolve();
-            }
-        });
+    subscribeToApp(appId: string): void {
+        if (!this.clients.includes(appId)) {
+            this.clients.push(appId);
+            this.connection.subscribe(`${this.requestChannel}#${appId}`, { callback: (_err, msg) => this.onRequest(msg, appId), queue: appId });
+            this.connection.subscribe(`${this.responseChannel}#${appId}`, { callback: (_err, msg) => this.onResponse(msg, appId), queue: appId });
+            this.connection.subscribe(`${this.channel}#${appId}`, { callback: (_err, msg) => this.onMessage(msg), queue: appId });
+        }
     }
 
     /**
@@ -123,9 +118,8 @@ export class NatsAdapter extends HorizontalAdapter {
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
-        this.subscribeToApp(appId).then(() => {
-            this.connection.publish(`${channel}#${appId}`, this.jc.encode(JSON.parse(data)));
-        });
+        this.subscribeToApp(appId);
+        this.connection.publish(`${channel}#${appId}`, this.jc.encode(JSON.parse(data)));
     }
 
     /**

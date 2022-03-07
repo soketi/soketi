@@ -389,69 +389,69 @@ export class WsHandler {
             }
 
             // Notify the adapter someone is using the app.
-            this.server.adapter.subscribeToApp(ws.app.id).then(() => {
-                // For non-presence channels, end with subscription succeeded.
-                if (!(channelManager instanceof PresenceChannelManager)) {
-                    let broadcastMessage = {
-                        event: 'pusher_internal:subscription_succeeded',
-                        channel,
-                    };
+            this.server.adapter.subscribeToApp(ws.app.id);
 
-                    ws.sendJson(broadcastMessage);
+            // For non-presence channels, end with subscription succeeded.
+            if (!(channelManager instanceof PresenceChannelManager)) {
+                let broadcastMessage = {
+                    event: 'pusher_internal:subscription_succeeded',
+                    channel,
+                };
 
-                    return;
-                }
+                ws.sendJson(broadcastMessage);
 
-                // Otherwise, prepare a response for the presence channel.
-                this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
-                    let { user_id, user_info } = response.member;
+                return;
+            }
 
-                    ws.presence.set(channel, response.member);
+            // Otherwise, prepare a response for the presence channel.
+            this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
+                let { user_id, user_info } = response.member;
 
-                    // Make sure to update the socket after new data was pushed in.
-                    this.server.adapter.addSocket(ws.app.id, ws);
+                ws.presence.set(channel, response.member);
 
-                    // If the member already exists in the channel, don't resend the member_added event.
-                    if (!members.has(user_id as string)) {
-                        this.server.webhookSender.sendMemberAdded(ws.app, channel, user_id as string);
+                // Make sure to update the socket after new data was pushed in.
+                this.server.adapter.addSocket(ws.app.id, ws);
 
-                        this.server.adapter.send(ws.app.id, channel, JSON.stringify({
-                            event: 'pusher_internal:member_added',
-                            channel,
-                            data: JSON.stringify({
-                                user_id: user_id,
-                                user_info: user_info,
-                            }),
-                        }), ws.id);
+                // If the member already exists in the channel, don't resend the member_added event.
+                if (!members.has(user_id as string)) {
+                    this.server.webhookSender.sendMemberAdded(ws.app, channel, user_id as string);
 
-                        members.set(user_id as string, user_info);
-                    }
-
-                    let broadcastMessage = {
-                        event: 'pusher_internal:subscription_succeeded',
+                    this.server.adapter.send(ws.app.id, channel, JSON.stringify({
+                        event: 'pusher_internal:member_added',
                         channel,
                         data: JSON.stringify({
-                            presence: {
-                                ids: Array.from(members.keys()),
-                                hash: Object.fromEntries(members),
-                                count: members.size,
-                            },
+                            user_id: user_id,
+                            user_info: user_info,
                         }),
-                    };
+                    }), ws.id);
 
-                    ws.sendJson(broadcastMessage);
-                }).catch(err => {
-                    Log.error(err);
+                    members.set(user_id as string, user_info);
+                }
 
-                    ws.sendJson({
-                        event: 'pusher:error',
-                        channel,
-                        data: {
-                            type: 'ServerError',
-                            error: 'A server error has occured.',
-                            code: 4302,
+                let broadcastMessage = {
+                    event: 'pusher_internal:subscription_succeeded',
+                    channel,
+                    data: JSON.stringify({
+                        presence: {
+                            ids: Array.from(members.keys()),
+                            hash: Object.fromEntries(members),
+                            count: members.size,
                         },
-                    });
+                    }),
+                };
+
+                ws.sendJson(broadcastMessage);
+            }).catch(err => {
+                Log.error(err);
+
+                ws.sendJson({
+                    event: 'pusher:error',
+                    channel,
+                    data: {
+                        type: 'ServerError',
+                        error: 'A server error has occured.',
+                        code: 4302,
+                    },
                 });
             });
         });
