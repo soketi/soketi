@@ -1,6 +1,7 @@
 import { AdapterInterface } from './adapter-interface';
 import { connect, JSONCodec, Msg, NatsConnection, StringCodec } from 'nats';
 import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
+import { Log } from '../log';
 import { Server } from '../server';
 import { timeout } from 'nats/lib/nats-base-client/util';
 
@@ -65,10 +66,6 @@ export class NatsAdapter extends HorizontalAdapter {
             }).then((connection) => {
                 this.connection = connection;
 
-                this.connection.subscribe(this.requestChannel, { callback: (_err, msg) => this.onRequest(msg) });
-                this.connection.subscribe(this.responseChannel, { callback: (_err, msg) => this.onResponse(msg) });
-                this.connection.subscribe(this.channel, { callback: (_err, msg) => this.onMessage(msg) });
-
                 resolve(this);
             });
         });
@@ -81,24 +78,24 @@ export class NatsAdapter extends HorizontalAdapter {
     subscribeToApp(appId: string): void {
         if (!this.clients.includes(appId)) {
             this.clients.push(appId);
-            this.connection.subscribe(`${this.requestChannel}#${appId}`, { callback: (_err, msg) => this.onRequest(msg) });
-            this.connection.subscribe(`${this.responseChannel}#${appId}`, { callback: (_err, msg) => this.onResponse(msg) });
-            this.connection.subscribe(`${this.channel}#${appId}`, { callback: (_err, msg) => this.onMessage(msg) });
+            this.connection.subscribe(`${this.requestChannel}#${appId}`, { callback: (_err, msg) => this.onRequest(msg, appId), queue: appId });
+            this.connection.subscribe(`${this.responseChannel}#${appId}`, { callback: (_err, msg) => this.onResponse(msg, appId), queue: appId });
+            this.connection.subscribe(`${this.channel}#${appId}`, { callback: (_err, msg) => this.onMessage(msg), queue: appId });
         }
     }
 
     /**
      * Listen for requests coming from other nodes.
      */
-    protected onRequest(msg: any): void {
-        super.onRequest(this.requestChannel, JSON.stringify(this.jc.decode(msg.data)));
+    protected onRequest(msg: any, appId: string): void {
+        super.onRequest(`${this.requestChannel}#${appId}`, JSON.stringify(this.jc.decode(msg.data)));
     }
 
     /**
      * Handle a response from another node.
      */
-    protected onResponse(msg: any): void {
-        super.onResponse(this.responseChannel, JSON.stringify(this.jc.decode(msg.data)));
+    protected onResponse(msg: any, appId: string): void {
+        super.onResponse(`${this.responseChannel}#${appId}`, JSON.stringify(this.jc.decode(msg.data)));
     }
 
     /**
@@ -131,11 +128,19 @@ export class NatsAdapter extends HorizontalAdapter {
     protected async getNumSub(appId: string): Promise<number> {
         let responses: Msg[] = [];
 
-        let calculateResponses = () => responses.reduce((total, response) => {
-            let { data } = JSON.parse(this.sc.decode(response.data)) as any;
+        let calculateResponses: () => number = () => {
+            let number = responses.reduce((total, response) => {
+                let { data } = JSON.parse(this.sc.decode(response.data)) as any;
 
-            return total += data.total;
-        }, 0);
+                return total += data.num_connections;
+            }, 0);
+
+            if (this.server.options.debug) {
+                Log.info(`Found ${number} subscribers in the NATS cluster.`);
+            }
+
+            return number;
+        };
 
         let nodesNumber = this.server.options.adapter.nats.nodesNumber;
 

@@ -29,10 +29,6 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Initialize the adapter.
      */
     async init(): Promise<AdapterInterface> {
-        this.server.discover.join(this.requestChannel, this.onRequest.bind(this));
-        this.server.discover.join(this.responseChannel, this.onResponse.bind(this));
-        this.server.discover.join(this.channel, this.onMessage.bind(this));
-
         return this;
     }
 

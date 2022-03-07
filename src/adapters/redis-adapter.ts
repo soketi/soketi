@@ -38,7 +38,6 @@ export class RedisAdapter extends HorizontalAdapter {
 
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
-
         this.requestsTimeout = server.options.adapter.redis.requestsTimeout;
     }
 
@@ -65,20 +64,6 @@ export class RedisAdapter extends HorizontalAdapter {
                 Log.warning(err);
             }
         };
-
-        if (this.server.options.adapter.redis.shardMode) {
-            this.subClient.ssubscribe([
-                this.channel,
-                this.requestChannel,
-                this.responseChannel,
-            ], onError);
-        } else {
-            this.subClient.subscribe([
-                this.channel,
-                this.requestChannel,
-                this.responseChannel,
-            ], onError);
-        }
 
         this.subClient.on('messageBuffer', this.processMessage.bind(this));
 
