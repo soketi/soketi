@@ -65,8 +65,6 @@ export class RedisAdapter extends HorizontalAdapter {
             }
         };
 
-        this.subClient.on('messageBuffer', this.processMessage.bind(this));
-
         this.pubClient.on('error', onError);
         this.subClient.on('error', onError);
 
@@ -84,29 +82,29 @@ export class RedisAdapter extends HorizontalAdapter {
             }
         };
 
-        return new Promise(resolve => {
-            if (!this.clients.includes(appId)) {
+        if (this.clients.includes(appId)) {
+            return Promise.resolve();
+        }
+
+        if (this.server.options.adapter.redis.shardMode) {
+            return this.subClient.ssubscribe([
+                `${this.channel}#${appId}`,
+                `${this.requestChannel}#${appId}`,
+                `${this.responseChannel}#${appId}`
+            ], onError).then(() => {
+                this.subClient.on('messageBuffer', this.processMessage.bind(this));
                 this.clients.push(appId);
-
-                if (this.server.options.adapter.redis.shardMode) {
-                    this.subClient.ssubscribe([
-                        `${this.channel}#${appId}`,
-                        `${this.requestChannel}#${appId}`,
-                        `${this.responseChannel}#${appId}`
-                    ], onError);
-                } else {
-                    this.subClient.subscribe([
-                        `${this.channel}#${appId}`,
-                        `${this.requestChannel}#${appId}`,
-                        `${this.responseChannel}#${appId}`
-                    ], onError);
-                }
-
-                setTimeout(resolve, 50);
-            } else {
-                resolve();
-            }
-        });
+            });
+        } else {
+            return this.subClient.subscribe([
+                `${this.channel}#${appId}`,
+                `${this.requestChannel}#${appId}`,
+                `${this.responseChannel}#${appId}`
+            ], onError).then(() => {
+                this.subClient.on('messageBuffer', this.processMessage.bind(this));
+                this.clients.push(appId);
+            });
+        }
     }
 
     /**

@@ -37,16 +37,16 @@ export class ClusterAdapter extends HorizontalAdapter {
      * subscribe to app-specific channels in the adapter.
      */
     subscribeToApp(appId: string): Promise<void> {
+        if (this.clients.includes(appId)) {
+            return Promise.resolve();
+        }
+
         return new Promise(resolve => {
-            if (!this.clients.includes(appId)) {
-                this.clients.push(appId);
-                this.server.discover.join(`${this.requestChannel}#${appId}`, this.onRequest.bind(this));
-                this.server.discover.join(`${this.responseChannel}#${appId}`, this.onResponse.bind(this));
-                this.server.discover.join(`${this.channel}#${appId}`, this.onMessage.bind(this));
-                setTimeout(resolve, 50);
-            } else {
-                resolve();
-            }
+            this.server.discover.join(`${this.requestChannel}#${appId}`, this.onRequest.bind(this));
+            this.server.discover.join(`${this.responseChannel}#${appId}`, this.onResponse.bind(this));
+            this.server.discover.join(`${this.channel}#${appId}`, this.onMessage.bind(this));
+            this.clients.push(appId);
+            resolve();
         });
     }
 
