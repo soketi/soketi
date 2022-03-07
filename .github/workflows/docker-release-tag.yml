@@ -19,7 +19,7 @@ jobs:
     name: Tag Release (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3
 
       - name: Docker meta
         id: docker_meta
