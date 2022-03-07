@@ -71,7 +71,7 @@ jobs:
           npm run build
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@2.16.0
+        uses: shivammathur/setup-php@2.17.1
         with:
           php-version: "8.0"
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, yaml
