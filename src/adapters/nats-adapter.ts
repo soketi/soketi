@@ -76,7 +76,7 @@ export class NatsAdapter extends HorizontalAdapter {
      * subscribe to app-specific channels in the adapter.
      */
     subscribeToApp(appId: string): Promise<void> {
-        if (this.clients.includes(appId)) {
+        if (this.subscribedApps.includes(appId)) {
             return Promise.resolve();
         }
 
@@ -84,9 +84,19 @@ export class NatsAdapter extends HorizontalAdapter {
             this.connection.subscribe(`${this.requestChannel}#${appId}`, { callback: (_err, msg) => this.onRequest(msg, appId), queue: appId });
             this.connection.subscribe(`${this.responseChannel}#${appId}`, { callback: (_err, msg) => this.onResponse(msg, appId), queue: appId });
             this.connection.subscribe(`${this.channel}#${appId}`, { callback: (_err, msg) => this.onMessage(msg), queue: appId });
-            this.clients.push(appId);
-            resolve();
+
+            super.subscribeToApp(appId).then(() => resolve());
         });
+    }
+
+    /**
+     * Unsubscribe from the app in case no sockets are connected to it.
+     */
+    protected unsubscribeFromApp(appId: string): void {
+        super.unsubscribeFromApp(appId);
+        this.connection.subscribe(`${this.requestChannel}#${appId}`).unsubscribe();
+        this.connection.subscribe(`${this.responseChannel}#${appId}`).unsubscribe();
+        this.connection.subscribe(`${this.channel}#${appId}`).unsubscribe();
     }
 
     /**

@@ -1,6 +1,7 @@
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { PresenceMemberInfo } from '../channels/presence-channel-manager';
+import { Server } from '../server';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'uWebSockets.js';
 
@@ -99,6 +100,11 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * The UUID assigned for the current instance.
      */
     protected uuid: string = uuidv4();
+
+    /**
+     * The list of subscribers/publishers by appId.
+     */
+    protected subscribedApps: string[] = [];
 
     /**
      * The list of resolvers for each response type.
@@ -203,6 +209,44 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * Get the number of total subscribers subscribers.
      */
     protected abstract getNumSub(appId: string): Promise<number>;
+
+    /**
+     * Signal that someone is using the app. Usually,
+     * subscribe to app-specific channels in the adapter.
+     */
+    subscribeToApp(appId: string): Promise<void> {
+        if (!this.subscribedApps.includes(appId)) {
+            this.subscribedApps.push(appId);
+        }
+
+        return Promise.resolve();
+    }
+
+    /**
+     * Unsubscribe from the app in case no sockets are connected to it.
+     */
+    protected unsubscribeFromApp(appId: string): void {
+        if (this.subscribedApps.includes(appId)) {
+            this.subscribedApps.splice(this.subscribedApps.indexOf(appId), 1);
+        }
+    }
+
+    /**
+     * Initialize the adapter.
+     */
+    constructor(protected server: Server) {
+        super(server);
+
+        setInterval(() => {
+            this.subscribedApps.forEach((appId) => {
+                super.getSocketsCount(appId).then(number => {
+                    if (number === 0) {
+                        this.unsubscribeFromApp(appId);
+                    }
+                });
+            });
+        }, 60_000);
+    }
 
     /**
      * Send a response through the response channel.

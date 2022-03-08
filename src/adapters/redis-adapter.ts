@@ -22,11 +22,6 @@ export class RedisAdapter extends HorizontalAdapter {
     protected pubClient: typeof Redis;
 
     /**
-     * The list of subscribers/publishers by appId.
-     */
-    protected clients: string[] = [];
-
-    /**
      * Initialize the adapter.
      */
     constructor(server: Server) {
@@ -82,7 +77,7 @@ export class RedisAdapter extends HorizontalAdapter {
             }
         };
 
-        if (this.clients.includes(appId)) {
+        if (this.subscribedApps.includes(appId)) {
             return Promise.resolve();
         }
 
@@ -93,7 +88,7 @@ export class RedisAdapter extends HorizontalAdapter {
                 `${this.responseChannel}#${appId}`
             ], onError).then(() => {
                 this.subClient.on('messageBuffer', this.processMessage.bind(this));
-                this.clients.push(appId);
+                super.subscribeToApp(appId);
             });
         } else {
             return this.subClient.subscribe([
@@ -102,7 +97,7 @@ export class RedisAdapter extends HorizontalAdapter {
                 `${this.responseChannel}#${appId}`
             ], onError).then(() => {
                 this.subClient.on('messageBuffer', this.processMessage.bind(this));
-                this.clients.push(appId);
+                super.subscribeToApp(appId);
             });
         }
     }
