@@ -9,11 +9,6 @@ export class ClusterAdapter extends HorizontalAdapter {
     protected channel = 'cluster-adapter';
 
     /**
-     * The list of subscribers/publishers by appId.
-     */
-    protected clients: string[] = [];
-
-    /**
      * Initialize the adapter.
      */
     constructor(server: Server) {
@@ -29,25 +24,11 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Initialize the adapter.
      */
     async init(): Promise<AdapterInterface> {
+        this.server.discover.join(this.requestChannel, this.onRequest.bind(this));
+        this.server.discover.join(this.responseChannel, this.onResponse.bind(this));
+        this.server.discover.join(this.channel, this.onMessage.bind(this));
+
         return this;
-    }
-
-    /**
-     * Signal that someone is using the app. Usually,
-     * subscribe to app-specific channels in the adapter.
-     */
-    subscribeToApp(appId: string): Promise<void> {
-        if (this.clients.includes(appId)) {
-            return Promise.resolve();
-        }
-
-        return new Promise(resolve => {
-            this.server.discover.join(`${this.requestChannel}#${appId}`, this.onRequest.bind(this));
-            this.server.discover.join(`${this.responseChannel}#${appId}`, this.onResponse.bind(this));
-            this.server.discover.join(`${this.channel}#${appId}`, this.onMessage.bind(this));
-            this.clients.push(appId);
-            resolve();
-        });
     }
 
     /**
@@ -96,7 +77,7 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
-        this.server.discover.send(`${channel}#${appId}`, data);
+        this.server.discover.send(channel, data);
     }
 
     /**
