@@ -27,11 +27,6 @@ export class NatsAdapter extends HorizontalAdapter {
     protected sc: any;
 
     /**
-     * The list of subscribers/publishers by appId.
-     */
-    protected clients: string[] = [];
-
-    /**
      * Initialize the adapter.
      */
     constructor(server: Server) {
