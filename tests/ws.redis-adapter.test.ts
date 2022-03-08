@@ -178,7 +178,7 @@ describe('ws test for redis adapter', () => {
                 let client1 = Utils.newClient({}, 6001, 'app-key', false);
 
                 client1.connection.bind('connected', () => {
-                    Utils.wait(500).then(() => {
+                    Utils.wait(3000).then(() => {
                         let client2 = Utils.newClient({}, 6002, 'app-key', false);
 
                         client2.connection.bind('state_change', ({ current }) => {
@@ -252,7 +252,7 @@ describe('ws test for redis adapter', () => {
                         let client2 = Utils.newClient({}, 6002);
 
                         client2.connection.bind('connected', () => {
-                            Utils.wait(500).then(() => {
+                            Utils.wait(3000).then(() => {
                                 server1.adapter.getSockets('app-id').then(sockets => {
                                     expect(sockets.size).toBe(2);
                                     client1.disconnect();

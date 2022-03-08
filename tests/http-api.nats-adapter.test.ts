@@ -36,7 +36,7 @@ describe('http api test for nats adapter', () => {
                                 let channel = client2.subscribe(channelName);
 
                                 channel.bind('pusher:subscription_succeeded', () => {
-                                    Utils.wait(500).then(() => {
+                                    Utils.wait(3000).then(() => {
                                         backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
                                             expect(body.channels[channelName]).toBeDefined();
                                             expect(body.channels[channelName].subscription_count).toBe(2);
@@ -87,7 +87,7 @@ describe('http api test for nats adapter', () => {
                                 let channel = client2.subscribe(channelName);
 
                                 channel.bind('pusher:subscription_succeeded', () => {
-                                    Utils.wait(500).then(() => {
+                                    Utils.wait(3000).then(() => {
                                         backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
                                             expect(body.subscription_count).toBe(2);
                                             expect(body.occupied).toBe(true);
@@ -153,7 +153,7 @@ describe('http api test for nats adapter', () => {
                                 let channel = client2.subscribe(channelName);
 
                                 channel.bind('pusher:subscription_succeeded', () => {
-                                    Utils.wait(500).then(() => {
+                                    Utils.wait(3000).then(() => {
                                         backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
                                             expect(body.subscription_count).toBe(2);
                                             expect(body.user_count).toBe(2);
@@ -220,7 +220,7 @@ describe('http api test for nats adapter', () => {
                                 let channel = client2.subscribe(channelName);
 
                                 channel.bind('pusher:subscription_succeeded', () => {
-                                    Utils.wait(500).then(() => {
+                                    Utils.wait(3000).then(() => {
                                         backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
                                             expect(body.users.length).toBe(2);
 
