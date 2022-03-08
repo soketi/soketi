@@ -89,9 +89,14 @@ export class NatsAdapter extends HorizontalAdapter {
      */
     protected unsubscribeFromApp(appId: string): void {
         super.unsubscribeFromApp(appId);
-        this.connection.subscribe(`${this.requestChannel}#${appId}`).unsubscribe();
-        this.connection.subscribe(`${this.responseChannel}#${appId}`).unsubscribe();
-        this.connection.subscribe(`${this.channel}#${appId}`).unsubscribe();
+
+        try {
+            this.connection.subscribe(`${this.requestChannel}#${appId}`).unsubscribe();
+            this.connection.subscribe(`${this.responseChannel}#${appId}`).unsubscribe();
+            this.connection.subscribe(`${this.channel}#${appId}`).unsubscribe();
+        } catch (error) {
+            Log.warning(error);
+        }
     }
 
     /**

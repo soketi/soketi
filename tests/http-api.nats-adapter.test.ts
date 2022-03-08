@@ -36,24 +36,26 @@ describe('http api test for nats adapter', () => {
                                 let channel = client2.subscribe(channelName);
 
                                 channel.bind('pusher:subscription_succeeded', () => {
-                                    backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
-                                        expect(body.channels[channelName]).toBeDefined();
-                                        expect(body.channels[channelName].subscription_count).toBe(2);
-                                        expect(body.channels[channelName].occupied).toBe(true);
+                                    Utils.wait(500).then(() => {
+                                        backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
+                                            expect(body.channels[channelName]).toBeDefined();
+                                            expect(body.channels[channelName].subscription_count).toBe(2);
+                                            expect(body.channels[channelName].occupied).toBe(true);
 
-                                        client1.connection.bind('disconnected', () => {
-                                            client2.disconnect();
-                                        });
-
-                                        client2.connection.bind('disconnected', () => {
-                                            backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
-                                                // TODO: Expect
-                                                // expect(body.channels[channelName]).toBeUndefined();
-                                                done();
+                                            client1.connection.bind('disconnected', () => {
+                                                client2.disconnect();
                                             });
-                                        });
 
-                                        client1.disconnect();
+                                            client2.connection.bind('disconnected', () => {
+                                                backend.get({ path: '/channels' }).then(res => res.json()).then(body => {
+                                                    // TODO: Expect
+                                                    // expect(body.channels[channelName]).toBeUndefined();
+                                                    done();
+                                                });
+                                            });
+
+                                            client1.disconnect();
+                                        });
                                     });
                                 });
                             });
@@ -85,23 +87,25 @@ describe('http api test for nats adapter', () => {
                                 let channel = client2.subscribe(channelName);
 
                                 channel.bind('pusher:subscription_succeeded', () => {
-                                    backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
-                                        expect(body.subscription_count).toBe(2);
-                                        expect(body.occupied).toBe(true);
+                                    Utils.wait(500).then(() => {
+                                        backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
+                                            expect(body.subscription_count).toBe(2);
+                                            expect(body.occupied).toBe(true);
 
-                                        client1.connection.bind('disconnected', () => {
-                                            client2.disconnect();
-                                        });
-
-                                        client2.connection.bind('disconnected', () => {
-                                            backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
-                                                expect(body.subscription_count).toBe(0);
-                                                expect(body.occupied).toBe(false);
-                                                done();
+                                            client1.connection.bind('disconnected', () => {
+                                                client2.disconnect();
                                             });
-                                        });
 
-                                        client1.disconnect();
+                                            client2.connection.bind('disconnected', () => {
+                                                backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
+                                                    expect(body.subscription_count).toBe(0);
+                                                    expect(body.occupied).toBe(false);
+                                                    done();
+                                                });
+                                            });
+
+                                            client1.disconnect();
+                                        });
                                     });
                                 });
                             });
@@ -149,25 +153,27 @@ describe('http api test for nats adapter', () => {
                                 let channel = client2.subscribe(channelName);
 
                                 channel.bind('pusher:subscription_succeeded', () => {
-                                    backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
-                                        expect(body.subscription_count).toBe(2);
-                                        expect(body.user_count).toBe(2);
-                                        expect(body.occupied).toBe(true);
+                                    Utils.wait(500).then(() => {
+                                        backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
+                                            expect(body.subscription_count).toBe(2);
+                                            expect(body.user_count).toBe(2);
+                                            expect(body.occupied).toBe(true);
 
-                                        client1.connection.bind('disconnected', () => {
-                                            client2.disconnect();
-                                        });
-
-                                        client2.connection.bind('disconnected', () => {
-                                            backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
-                                                expect(body.subscription_count).toBe(0);
-                                                expect(body.user_count).toBe(0);
-                                                expect(body.occupied).toBe(false);
-                                                done();
+                                            client1.connection.bind('disconnected', () => {
+                                                client2.disconnect();
                                             });
-                                        });
 
-                                        client1.disconnect();
+                                            client2.connection.bind('disconnected', () => {
+                                                backend.get({ path: '/channels/' + channelName }).then(res => res.json()).then(body => {
+                                                    expect(body.subscription_count).toBe(0);
+                                                    expect(body.user_count).toBe(0);
+                                                    expect(body.occupied).toBe(false);
+                                                    done();
+                                                });
+                                            });
+
+                                            client1.disconnect();
+                                        });
                                     });
                                 });
                             });
@@ -214,21 +220,23 @@ describe('http api test for nats adapter', () => {
                                 let channel = client2.subscribe(channelName);
 
                                 channel.bind('pusher:subscription_succeeded', () => {
-                                    backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
-                                        expect(body.users.length).toBe(2);
+                                    Utils.wait(500).then(() => {
+                                        backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
+                                            expect(body.users.length).toBe(2);
 
-                                        client1.connection.bind('disconnected', () => {
-                                            client2.disconnect();
-                                        });
-
-                                        client2.connection.bind('disconnected', () => {
-                                            backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
-                                                expect(body.users.length).toBe(0);
-                                                done();
+                                            client1.connection.bind('disconnected', () => {
+                                                client2.disconnect();
                                             });
-                                        });
 
-                                        client1.disconnect();
+                                            client2.connection.bind('disconnected', () => {
+                                                backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
+                                                    expect(body.users.length).toBe(0);
+                                                    done();
+                                                });
+                                            });
+
+                                            client1.disconnect();
+                                        });
                                     });
                                 });
                             });

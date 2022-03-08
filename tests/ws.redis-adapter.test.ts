@@ -178,15 +178,17 @@ describe('ws test for redis adapter', () => {
                 let client1 = Utils.newClient({}, 6001, 'app-key', false);
 
                 client1.connection.bind('connected', () => {
-                    let client2 = Utils.newClient({}, 6002, 'app-key', false);
+                    Utils.wait(500).then(() => {
+                        let client2 = Utils.newClient({}, 6002, 'app-key', false);
 
-                    client2.connection.bind('state_change', ({ current }) => {
-                        if (current === 'failed') {
-                            client1.disconnect();
-                            done();
-                        } else {
-                            throw new Error(`${current} is not an expected state.`);
-                        }
+                        client2.connection.bind('state_change', ({ current }) => {
+                            if (current === 'failed') {
+                                client1.disconnect();
+                                done();
+                            } else {
+                                throw new Error(`${current} is not an expected state.`);
+                            }
+                        });
                     });
                 });
             });
