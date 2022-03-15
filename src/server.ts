@@ -314,6 +314,8 @@ export class Server {
      * Start the server.
      */
     async start(callback?: CallableFunction) {
+        Log.br();
+
         this.configureDiscovery().then(() => {
             this.initializeDrivers().then(() => {
 
@@ -325,8 +327,8 @@ export class Server {
                 this.httpHandler = new HttpHandler(this);
 
                 if (this.options.debug) {
-                    Log.info('\n📡 soketi initialization....\n');
-                    Log.info('⚡ Initializing the HTTP API & Websockets Server...\n');
+                    Log.info('📡 soketi initialization....');
+                    Log.info('⚡ Initializing the HTTP API & Websockets Server...');
                 }
 
                 let server: TemplatedApp = this.shouldConfigureSsl()
@@ -341,12 +343,12 @@ export class Server {
                 let metricsServer: TemplatedApp = uWS.App();
 
                 if (this.options.debug) {
-                    Log.info('⚡ Initializing the Websocket listeners and channels...\n');
+                    Log.info('⚡ Initializing the Websocket listeners and channels...');
                 }
 
                 this.configureWebsockets(server).then(server => {
                     if (this.options.debug) {
-                        Log.info('⚡ Initializing the HTTP webserver...\n');
+                        Log.info('⚡ Initializing the HTTP webserver...');
                     }
 
                     this.configureHttp(server).then(server => {
@@ -357,14 +359,16 @@ export class Server {
                                 server.listen('0.0.0.0', this.options.port, serverProcess => {
                                     this.serverProcess = serverProcess;
 
-                                    Log.successTitle('🎉 Server is up and running!\n');
-                                    Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}\n`);
-                                    Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}\n`);
-                                    Log.successTitle(`🎊 The /usage endpoint is available on port ${this.options.metrics.port}.\n`);
+                                    Log.successTitle('🎉 Server is up and running!');
+                                    Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}`);
+                                    Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}`);
+                                    Log.successTitle(`🎊 The /usage endpoint is available on port ${this.options.metrics.port}.`);
 
                                     if (this.options.metrics.enabled) {
-                                        Log.successTitle(`🌠 Prometheus /metrics endpoint is available on port ${this.options.metrics.port}.\n`);
+                                        Log.successTitle(`🌠 Prometheus /metrics endpoint is available on port ${this.options.metrics.port}.`);
                                     }
+
+                                    Log.br();
 
                                     if (callback) {
                                         callback(this);
@@ -384,8 +388,10 @@ export class Server {
     stop(): Promise<void> {
         this.closing = true;
 
-        Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...\n');
-        Log.warning('⚡ The server is closing and signaling the existing connections to terminate.\n');
+        Log.br();
+        Log.warning('🚫 New users cannot connect to this instance anymore. Preparing for signaling...');
+        Log.warning('⚡ The server is closing and signaling the existing connections to terminate.');
+        Log.br();
 
         return this.wsHandler.closeAllLocalSockets().then(() => {
             return new Promise(resolve => {
@@ -674,7 +680,8 @@ export class Server {
      */
     protected configureMetricsServer(metricsServer: TemplatedApp): Promise<TemplatedApp> {
         return new Promise(resolve => {
-            Log.info('🕵️‍♂️ Initiating metrics endpoints...\n');
+            Log.info('🕵️‍♂️ Initiating metrics endpoints...');
+            Log.br();
 
             metricsServer.get(this.url('/'), (res, req) => this.httpHandler.healthCheck(res));
             metricsServer.get(this.url('/ready'), (res, req) => this.httpHandler.ready(res));
