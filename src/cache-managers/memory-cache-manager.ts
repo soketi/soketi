@@ -37,7 +37,7 @@ export class MemoryCacheManager implements CacheManagerInterface {
      * Check if the given key exists in cache.
      */
     has(key: string): Promise<boolean> {
-        return Promise.resolve(Boolean(this.memory[key] || false));
+        return Promise.resolve(typeof this.memory[key] !== 'undefined' ? Boolean(this.memory[key]) : false);
     }
 
     /**
@@ -45,7 +45,7 @@ export class MemoryCacheManager implements CacheManagerInterface {
      * Returns false-returning value if cache does not exist.
      */
     get(key: string): Promise<any> {
-        return Promise.resolve(this.memory[key] || null);
+        return Promise.resolve(typeof this.memory[key] !== 'undefined' ? this.memory[key] : null);
     }
 
     /**

@@ -37,42 +37,42 @@ export class AppManager implements AppManagerInterface {
      * Find an app by given ID.
      */
     findById(id: string): Promise<App|null> {
-        if (this.server.options.appManager.cache.enabled) {
-            return this.server.cacheManager.get(`app:id:${id}`).then(appFromCache => {
-                if (appFromCache) {
-                    return appFromCache;
-                }
-
-                return this.driver.findById(id).then(app => {
-                    this.server.cacheManager.set(`app:id:${id}`, app, this.server.options.appManager.cache.ttl);
-
-                    return app;
-                });
-            });
-        } else {
+        if (!this.server.options.appManager.cache.enabled) {
             return this.driver.findById(id);
         }
+
+        return this.server.cacheManager.get(`app:id:${id}`).then(appFromCache => {
+            if (appFromCache) {
+                return appFromCache;
+            }
+
+            return this.driver.findById(id).then(app => {
+                this.server.cacheManager.set(`app:id:${id}`, app, this.server.options.appManager.cache.ttl);
+
+                return app;
+            });
+        });
     }
 
     /**
      * Find an app by given key.
      */
     findByKey(key: string): Promise<App|null> {
-        if (this.server.options.appManager.cache.enabled) {
-            return this.server.cacheManager.get(`app:key:${key}`).then(appFromCache => {
-                if (appFromCache) {
-                    return appFromCache;
-                }
-
-                return this.driver.findByKey(key).then(app => {
-                    this.server.cacheManager.set(`app:key:${key}`, app, this.server.options.appManager.cache.ttl);
-
-                    return app;
-                });
-            });
-        } else {
+        if (!this.server.options.appManager.cache.enabled) {
             return this.driver.findByKey(key);
         }
+
+        return this.server.cacheManager.get(`app:key:${key}`).then(appFromCache => {
+            if (appFromCache) {
+                return appFromCache;
+            }
+
+            return this.driver.findByKey(key).then(app => {
+                this.server.cacheManager.set(`app:key:${key}`, app, this.server.options.appManager.cache.ttl);
+
+                return app;
+            });
+        });
     }
 
     /**

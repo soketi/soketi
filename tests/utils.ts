@@ -52,7 +52,7 @@ export class Utils {
             'webhooks.batching.enabled': false, // TODO: Find out why batching works but fails tests
             'webhooks.batching.duration': 1,
             'appManager.cache.enabled': true,
-            'appManager.cache.ttl': 60,
+            'appManager.cache.ttl': -1,
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
