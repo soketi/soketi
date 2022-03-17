@@ -43,7 +43,7 @@ export class AppManager implements AppManagerInterface {
 
         return this.server.cacheManager.get(`app:id:${id}`).then(appFromCache => {
             if (appFromCache) {
-                return appFromCache;
+                return appFromCache as App;
             }
 
             return this.driver.findById(id).then(app => {
@@ -64,7 +64,7 @@ export class AppManager implements AppManagerInterface {
 
         return this.server.cacheManager.get(`app:key:${key}`).then(appFromCache => {
             if (appFromCache) {
-                return appFromCache;
+                return appFromCache as App;
             }
 
             return this.driver.findByKey(key).then(app => {

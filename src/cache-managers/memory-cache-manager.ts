@@ -45,7 +45,7 @@ export class MemoryCacheManager implements CacheManagerInterface {
      * Returns false-returning value if cache does not exist.
      */
     get(key: string): Promise<any> {
-        return Promise.resolve(typeof this.memory[key] !== 'undefined' ? this.memory[key] : null);
+        return Promise.resolve(typeof this.memory[key] !== 'undefined' ? this.memory[key].value : null);
     }
 
     /**
