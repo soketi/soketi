@@ -34,7 +34,7 @@ Soketi is capable to hold thousands of active connections with high traffic on l
 
 ### Easy to use 👶
 
-Whether you run your infrastructure in containers or monoliths, soketi got your back. There are multiple ways to [install](getting-started/installation/) and [configure](getting-started/environment-variables.md) soketi, from single instances for development, to tens of active instances at scale with hundreds or thousands of active users.
+Whether you run your infrastructure in containers or monoliths, soketi got your back. There are multiple ways to [install](https://docs.soketi.app/getting-started/installation) and [configure](https://docs.soketi.app/getting-started/environment-variables) soketi, from single instances for development, to tens of active instances at scale with hundreds or thousands of active users.
 
 ### Pusher Protocol v7 📡
 
@@ -42,7 +42,7 @@ soketi implements the [Pusher Protocol v7](https://pusher.com/docs/channels/libr
 
 ### App-based access 🔐
 
-You and your users can access the API and WebSockets through [Pusher-like apps](app-management/introduction.md) which serve keys and secrets to connect or authenticate requests for broadcasting events or checking channels statuses. soketi also comes built-in with support for DynamoDB and SQL-based servers like Postgres.
+You and your users can access the API and WebSockets through [Pusher-like apps](https://docs.soketi.app/app-management/introduction) which serve keys and secrets to connect or authenticate requests for broadcasting events or checking channels statuses. soketi also comes built-in with support for DynamoDB and SQL-based servers like Postgres.
 
 ### Production-ready! 🤖
 
