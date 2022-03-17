@@ -59,12 +59,12 @@ export interface Options {
     };
     appManager: {
         driver: string;
+        array: {
+            apps: AppInterface[];
+        };
         cache: {
             enabled: boolean;
             ttl: number;
-        }
-        array: {
-            apps: AppInterface[];
         };
         dynamodb: {
             table: string;
@@ -80,6 +80,9 @@ export interface Options {
             table: string;
             version: string|number;
         };
+    };
+    cache: {
+        driver: string;
     };
     channelLimits: {
         maxNameLength: number;

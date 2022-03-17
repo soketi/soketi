@@ -1,6 +1,8 @@
 import * as dot from 'dot-wild';
 import { Adapter, AdapterInterface } from './adapters';
 import { AppManager, AppManagerInterface } from './app-managers';
+import { CacheManager } from './cache-managers/cache-manager';
+import { CacheManagerInterface } from './cache-managers/cache-manager-interface';
 import { HttpHandler } from './http-handler';
 import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js';
 import { Log } from './log';
@@ -89,6 +91,9 @@ export class Server {
                 table: 'apps',
                 version: '13.3',
             },
+        },
+        cache: {
+            driver: 'memory',
         },
         channelLimits: {
             maxNameLength: 200,
@@ -278,6 +283,11 @@ export class Server {
     public queueManager: QueueInterface;
 
     /**
+     * The cache manager.
+     */
+    public cacheManager: CacheManagerInterface;
+
+    /**
      * The sender for webhooks.
      */
     public webhookSender: WebhookSender;
@@ -407,6 +417,7 @@ export class Server {
                         this.metricsManager.clear(),
                         this.queueManager.disconnect(),
                         this.rateLimiter.disconnect(),
+                        this.cacheManager.disconnect(),
                     ]).then(() => {
                         this.adapter.disconnect().then(() => resolve());
                     });
@@ -442,6 +453,7 @@ export class Server {
             this.setMetricsManager(new Metrics(this)),
             this.setRateLimiter(new RateLimiter(this)),
             this.setQueueManager(new Queue(this)),
+            this.setCacheManager(new CacheManager(this)),
             this.setWebhookSender(),
         ]);
     }
@@ -491,6 +503,16 @@ export class Server {
     setQueueManager(instance: QueueInterface): Promise<void> {
         return new Promise(resolve => {
             this.queueManager = instance;
+            resolve();
+        });
+    }
+
+    /**
+     * Set the cache manager.
+     */
+    setCacheManager(instance: CacheManagerInterface): Promise<void> {
+        return new Promise(resolve => {
+            this.cacheManager = instance;
             resolve();
         });
     }

@@ -40,6 +40,7 @@ export class Cli {
         APP_MANAGER_POSTGRES_VERSION: 'appManager.postgres.version',
         APP_MANAGER_MYSQL_USE_V2: 'appManager.mysql.useMysql2',
         CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength',
+        CACHE_DRIVER: 'cache.driver',
         CLUSTER_CHECK_INTERVAL: 'cluster.checkInterval',
         CLUSTER_HOST: 'cluster.host',
         CLUSTER_IGNORE_PROCESS: 'cluster.ignoreProcess',

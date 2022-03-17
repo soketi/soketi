@@ -1,7 +1,6 @@
 import { App } from './../app';
 import { AppManagerInterface } from './app-manager-interface';
 import { ArrayAppManager } from './array-app-manager';
-import { Cache } from './../cache';
 import { DynamoDbAppManager } from './dynamodb-app-manager';
 import { Log } from '../log';
 import { MysqlAppManager } from './mysql-app-manager';
@@ -18,21 +17,6 @@ export class AppManager implements AppManagerInterface {
     public driver: AppManagerInterface;
 
     /**
-     * Whether cache is enabled.
-     */
-     protected cacheEnabled: boolean;
-
-    /**
-     * Cache store for applications.
-     */
-     protected cache: Cache;
-
-    /**
-     * TTL for application cache.
-     */
-     protected cacheTtl: number;
-
-    /**
      * Create a new database instance.
      */
     constructor(protected server: Server) {
@@ -47,46 +31,48 @@ export class AppManager implements AppManagerInterface {
         } else {
             Log.error('Clients driver not set.');
         }
-
-        if (server.options.appManager.cache.enabled === true) {
-            this.cacheEnabled = true;
-            this.cache = new Cache();
-            this.cacheTtl = server.options.appManager.cache.ttl;
-        } else {
-            this.cacheEnabled = false;
-        }
     }
 
     /**
      * Find an app by given ID.
      */
     findById(id: string): Promise<App|null> {
-        return new Promise((resolve) => {
-            let app;
+        if (this.server.options.appManager.cache.enabled) {
+            return this.server.cacheManager.get(`app:id:${id}`).then(appFromCache => {
+                if (appFromCache) {
+                    return appFromCache;
+                }
 
-            if (this.cacheEnabled && (app = this.cache.get('id::' + id)) !== null) resolve(app);
+                return this.driver.findById(id).then(app => {
+                    this.server.cacheManager.set(`app:id:${id}`, app, this.server.options.appManager.cache.ttl);
 
-            this.driver.findById(id).then(app => {
-                if (this.cacheEnabled) this.cache.set('id::' + id, app, this.cacheTtl);
-                resolve(app);
+                    return app;
+                });
             });
-        });
+        } else {
+            return this.driver.findById(id);
+        }
     }
 
     /**
      * Find an app by given key.
      */
     findByKey(key: string): Promise<App|null> {
-        return new Promise((resolve) => {
-            let app;
+        if (this.server.options.appManager.cache.enabled) {
+            return this.server.cacheManager.get(`app:key:${key}`).then(appFromCache => {
+                if (appFromCache) {
+                    return appFromCache;
+                }
 
-            if (this.cacheEnabled && (app = this.cache.get('key::' + key)) !== null) resolve(app);
+                return this.driver.findByKey(key).then(app => {
+                    this.server.cacheManager.set(`app:key:${key}`, app, this.server.options.appManager.cache.ttl);
 
-            this.driver.findByKey(key).then(app => {
-                if (this.cacheEnabled) this.cache.set('key::' + key, app, this.cacheTtl);
-                resolve(app);
+                    return app;
+                });
             });
-        });
+        } else {
+            return this.driver.findByKey(key);
+        }
     }
 
     /**
