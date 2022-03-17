@@ -41,13 +41,13 @@ export class AppManager implements AppManagerInterface {
             return this.driver.findById(id);
         }
 
-        return this.server.cacheManager.get(`app:id:${id}`).then(appFromCache => {
+        return this.server.cacheManager.get(`app:${id}`).then(appFromCache => {
             if (appFromCache) {
                 return appFromCache as App;
             }
 
             return this.driver.findById(id).then(app => {
-                this.server.cacheManager.set(`app:id:${id}`, app, this.server.options.appManager.cache.ttl);
+                this.server.cacheManager.set(`app:${id}`, app, this.server.options.appManager.cache.ttl);
 
                 return app;
             });
@@ -62,13 +62,13 @@ export class AppManager implements AppManagerInterface {
             return this.driver.findByKey(key);
         }
 
-        return this.server.cacheManager.get(`app:key:${key}`).then(appFromCache => {
+        return this.server.cacheManager.get(`app:${key}`).then(appFromCache => {
             if (appFromCache) {
                 return appFromCache as App;
             }
 
             return this.driver.findByKey(key).then(app => {
-                this.server.cacheManager.set(`app:key:${key}`, app, this.server.options.appManager.cache.ttl);
+                this.server.cacheManager.set(`app:${key}`, app, this.server.options.appManager.cache.ttl);
 
                 return app;
             });
