@@ -41,7 +41,7 @@ export class MemoryCacheManager implements CacheManagerInterface {
     }
 
     /**
-     * Check if the given key exists in cache.
+     * Get a key from the cache.
      * Returns false-returning value if cache does not exist.
      */
     get(key: string): Promise<any> {
