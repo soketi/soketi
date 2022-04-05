@@ -7,6 +7,7 @@ import { WebSocket } from 'uWebSockets.js';
 export class LocalAdapter implements AdapterInterface {
     // TODO: Force disconnect a specific socket
     // TODO: Force disconnect all sockets from an app.
+    // TODO: Add a getChannelsWithSocketsCount to fetch fewer data from other nodes
 
     /**
      * The app connections storage class to manage connections.
@@ -73,9 +74,13 @@ export class LocalAdapter implements AdapterInterface {
      * Remove a socket ID from the channel identifier.
      * Return the total number of connections remaining to the channel.
      */
-    async removeFromChannel(appId: string, channel: string, wsId: string): Promise<number> {
-        return this.getNamespace(appId).removeFromChannel(wsId, channel).then(() => {
-            return this.getChannelSocketsCount(appId, channel);
+    async removeFromChannel(appId: string, channel: string|string[], wsId: string): Promise<number|void> {
+        return this.getNamespace(appId).removeFromChannel(wsId, channel).then((remainingConnections) => {
+            if (!Array.isArray(channel)) {
+                return this.getChannelSocketsCount(appId, channel);
+            }
+
+            return;
         });
     }
 
