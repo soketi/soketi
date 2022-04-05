@@ -103,6 +103,13 @@ export class LocalAdapter implements AdapterInterface {
     }
 
     /**
+     * Get channels with total sockets count.
+     */
+    async getChannelsWithSocketsCount(appId: string, onlyLocal?: boolean): Promise<Map<string, number>> {
+        return this.getNamespace(appId).getChannelsWithSocketsCount();
+    }
+
+    /**
      * Get all the channel sockets associated with a namespace.
      */
     async getChannelSockets(appId: string, channel: string, onlyLocal = false): Promise<Map<string, WebSocket>> {

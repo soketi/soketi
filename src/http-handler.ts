@@ -142,14 +142,14 @@ export class HttpHandler {
             this.authMiddleware,
             this.readRateLimitingMiddleware,
         ]).then(res => {
-            this.server.adapter.getChannels(res.params.appId).then(channels => {
+            this.server.adapter.getChannelsWithSocketsCount(res.params.appId).then(channels => {
                 let response: { [channel: string]: ChannelResponse } = [...channels].reduce((channels, [channel, connections]) => {
-                    if (connections.size === 0) {
+                    if (connections === 0) {
                         return channels;
                     }
 
                     channels[channel] = {
-                        subscription_count: connections.size,
+                        subscription_count: connections,
                         occupied: true,
                     };
 
