@@ -237,7 +237,7 @@ export class HttpHandler {
 
             this.server.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
                 let broadcastMessage = {
-                    users: [...members].map(([user_id, ]) => ({ id: user_id })),
+                    users: [...members].map(([user_id, ...user_info]) => ({ id: user_id, user_info })),
                 };
 
                 this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
