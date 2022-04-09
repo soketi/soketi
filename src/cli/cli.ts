@@ -136,7 +136,7 @@ export class Cli {
         require('dotenv').config();
 
         for (let envVar in this.envVariables) {
-            let value = process.env[envVar] || process.env[`SOKETI_${envVar}`] || null;
+            let value = process.env[`SOKETI_${envVar}`] || process.env[envVar] || null;
             let optionKey = this.envVariables[envVar.replace('SOKETI_', '')];
 
             if (value !== null) {
