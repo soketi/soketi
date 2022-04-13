@@ -26,7 +26,6 @@ export interface JobData {
         time_ms: number;
         events: ClientEventData[];
     },
-    pusherSignature: string;
 }
 
 /**
