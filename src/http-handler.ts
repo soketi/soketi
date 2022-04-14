@@ -237,8 +237,8 @@ export class HttpHandler {
 
             this.server.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
                 let broadcastMessage = {
-                    users: [...members].map(([user_id, user_info]) => (res.query.with_user_info === '1' 
-                       ? { id: user_id, user_info } 
+                    users: [...members].map(([user_id, user_info]) => (res.query.with_user_info === '1'
+                       ? { id: user_id, user_info }
                        : { id: user_id })),
                 };
 
@@ -349,11 +349,21 @@ export class HttpHandler {
 
     protected broadcastMessage(message: PusherApiMessage, appId: string): void {
         message.channels.forEach(channel => {
-            this.server.adapter.send(appId, channel, JSON.stringify({
+            let msg = {
                 event: message.name,
                 channel,
                 data: message.data,
-            }), message.socket_id);
+            };
+
+            this.server.adapter.send(appId, channel, JSON.stringify(msg), message.socket_id);
+
+            if (Utils.isCachingChannel(channel)) {
+                this.server.cacheManager.set(
+                    `app:${appId}_channel_${channel}_cache_miss`,
+                    JSON.stringify({ event: msg.event, data: msg.data }),
+                    this.server.options.channelLimits.cacheTtl,
+                );
+            }
         });
     }
 

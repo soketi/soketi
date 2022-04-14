@@ -86,6 +86,7 @@ export interface Options {
     };
     channelLimits: {
         maxNameLength: number;
+        cacheTtl: number;
     };
     cluster: {
         hostname: string;

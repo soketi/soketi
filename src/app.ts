@@ -159,11 +159,17 @@ export class App implements AppInterface {
      */
     public hasMemberRemovedWebhooks = false;
 
+    /**
+     * @type {boolean}
+     */
+    public hasCacheMissedWebhooks = false;
+
     static readonly CLIENT_EVENT_WEBHOOK = 'client_event';
     static readonly CHANNEL_OCCUPIED_WEBHOOK = 'channel_occupied';
     static readonly CHANNEL_VACATED_WEBHOOK = 'channel_vacated';
     static readonly MEMBER_ADDED_WEBHOOK = 'member_added';
     static readonly MEMBER_REMOVED_WEBHOOK = 'member_removed';
+    static readonly CACHE_MISSED_WEBHOOK = 'cache_miss';
 
     /**
      * Create a new app from object.
@@ -192,6 +198,7 @@ export class App implements AppInterface {
         this.hasChannelVacatedWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.CHANNEL_VACATED_WEBHOOK)).length > 0;
         this.hasMemberAddedWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.MEMBER_ADDED_WEBHOOK)).length > 0;
         this.hasMemberRemovedWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.MEMBER_REMOVED_WEBHOOK)).length > 0;
+        this.hasCacheMissedWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.CACHE_MISSED_WEBHOOK)).length > 0;
     }
 
     /**

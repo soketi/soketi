@@ -97,6 +97,7 @@ export class Server {
         },
         channelLimits: {
             maxNameLength: 200,
+            cacheTtl: 3600,
         },
         cluster: {
             hostname: '0.0.0.0',
