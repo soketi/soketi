@@ -110,6 +110,6 @@ export class Log {
             return spaces + message + spaces;
         }
 
-        console.log(applyMargins(withColor(applyPadding(message))));
+        console.dir(applyMargins(withColor(applyPadding(message))));
     }
 }
