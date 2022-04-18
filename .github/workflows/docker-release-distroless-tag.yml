@@ -19,7 +19,7 @@ jobs:
     name: Tag Distroless Release (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.0
+      - uses: actions/checkout@v3.0.1
 
       - name: Docker meta
         id: docker_meta
