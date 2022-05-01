@@ -2,6 +2,15 @@
 
 > Open-source is not about political views, but rather humanitar views. It's code by the people for the people. Unprovoked, unjustifiable and despicable action that is killing civilians is not tolerated. The [Renoki Co.](https://github.com/renoki-co) subsidiaries (including Soketi) has taken action to move away from Russian software and dependencies and block any access from Russia within their projects.
 
+## Soketi can be now deployed on Cloudflare's infrastructure. 📣 
+
+Ever dreamed about Serverless WebSockets? Soketi can be deployed to Cloudflare Workers. All around the world, closer to your users. Same Pusher protocol. 
+Powered by Cloudflare's [Durable Objects](https://developers.cloudflare.com/workers/runtime-apis/durable-objects/) and [KV](https://developers.cloudflare.com/workers/runtime-apis/kv/), you can achieve great speeds at edge for your users.
+
+Deploy fast Workers, use one of the fastest database available from Cloudflare and scale to infinity and beyond. 🚀
+
+**[Start deploying Workers ➡️](https://dash.soketi.app/register)**
+
 soketi
 ======
 
