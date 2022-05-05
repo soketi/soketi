@@ -56,7 +56,11 @@ export class RedisCacheManager implements CacheManagerInterface {
      * Set or overwrite the value in the cache.
      */
     set(key: string, value: any, ttlSeconds = -1): Promise<any> {
-        this.redisConnection.set(key, value, 'EX', ttlSeconds);
+        if (ttlSeconds > 0) {
+            this.redisConnection.set(key, value, 'EX', ttlSeconds);
+        } else {
+            this.redisConnection.set(key, value);
+        }
 
         return Promise.resolve(true);
     }
