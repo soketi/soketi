@@ -83,6 +83,10 @@ export interface Options {
     };
     cache: {
         driver: string;
+        redis: {
+            redisOptions: any;
+            clusterMode: boolean;
+        };
     };
     channelLimits: {
         maxNameLength: number;

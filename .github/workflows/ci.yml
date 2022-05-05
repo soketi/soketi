@@ -43,18 +43,23 @@ jobs:
           - adapter: local
             rate_limiter: local
             queue_driver: sync
+            cache_driver: memory
           - adapter: local
             rate_limiter: local
             queue_driver: sqs
+            cache_driver: memory
           - adapter: cluster
             rate_limiter: cluster
             queue_driver: sync
+            cache_driver: redis
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis
+            cache_driver: redis
           - adapter: nats
             rate_limiter: redis
             queue_driver: sync
+            cache_driver: redis
 
     name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
@@ -145,6 +150,7 @@ jobs:
           RETRY_TIMES: 2
           TEST_ADAPTER: ${{ matrix.adapter }}
           TEST_APP_MANAGER: ${{ matrix.app_manager }}
+          TEST_CACHE_DRIVER: ${{ matrix.cache_driver }}
           TEST_QUEUE_DRIVER: ${{ matrix.queue_driver }}
           TEST_RATE_LIMITER: ${{ matrix.rate_limiter }}
           TEST_MYSQL_USER: root

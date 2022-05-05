@@ -1,6 +1,7 @@
 import { CacheManagerInterface } from './cache-manager-interface';
 import { Log } from '../log';
 import { MemoryCacheManager } from './memory-cache-manager';
+import { RedisCacheManager } from './redis-cache-manager';
 import { Server } from '../server';
 
 export class CacheManager implements CacheManagerInterface {
@@ -15,6 +16,8 @@ export class CacheManager implements CacheManagerInterface {
     constructor(protected server: Server) {
         if (server.options.cache.driver === 'memory') {
             this.driver = new MemoryCacheManager(server);
+        } else if (server.options.cache.driver === 'redis') {
+            this.driver = new RedisCacheManager(server);
         } else {
             Log.error('Cache driver not set.');
         }
