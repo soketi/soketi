@@ -456,4 +456,44 @@ describe('webhooks test', () => {
             });
         });
     }, 60 * 1000);
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from cache_miss', done => {
+        let webhooks = [{
+            event_types: ['cache_miss'],
+            url: 'http://127.0.0.1:3001/webhook',
+        }];
+
+        let channelName = `private-cache-${Utils.randomChannelName()}`;
+        let client = Utils.newClientForPrivateChannel();
+
+        Utils.newServer({
+            'appManager.array.apps.0.webhooks': webhooks,
+            'database.redis.keyPrefix': 'client-event-cache-miss',
+        }, (server: Server) => {
+            Utils.newWebhookServer((req, res) => {
+                let app = new App(server.options.appManager.array.apps[0], server);
+                let rightSignature = createWebhookHmac(JSON.stringify(req.body), app.secret);
+
+                expect(req.headers['x-pusher-key']).toBe('app-key');
+                expect(req.headers['x-pusher-signature']).toBe(rightSignature);
+                expect(req.body.time_ms).toBeDefined();
+                expect(req.body.events).toBeDefined();
+                expect(req.body.events.length).toBe(1);
+
+                const webhookEvent = req.body.events[0];
+
+                if (webhookEvent.name === 'cache_miss') {
+                    expect(webhookEvent.channel).toBe(channelName);
+                    client.disconnect();
+                    done();
+                }
+
+                res.json({ ok: true });
+            }, (activeHttpServer) => {
+                client.connection.bind('connected', () => {
+                    client.subscribe(channelName);
+                });
+            });
+        });
+    }, 20_000);
 });
