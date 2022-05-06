@@ -202,6 +202,38 @@ export class App implements AppInterface {
     }
 
     /**
+     * Get the app represented as object.
+     */
+    toObject(): AppInterface {
+        return {
+            id: this.id,
+            key: this.key,
+            secret: this.secret,
+            maxConnections: this.maxConnections,
+            enableClientMessages: this.enableClientMessages,
+            enabled: this.enabled,
+            maxBackendEventsPerSecond: this.maxBackendEventsPerSecond,
+            maxClientEventsPerSecond: this.maxClientEventsPerSecond,
+            maxReadRequestsPerSecond: this.maxReadRequestsPerSecond,
+            webhooks: this.webhooks,
+            maxPresenceMembersPerChannel: this.maxPresenceMembersPerChannel,
+            maxPresenceMemberSizeInKb: this.maxPresenceMemberSizeInKb,
+            maxChannelNameLength: this.maxChannelNameLength,
+            maxEventChannelsAtOnce: this.maxEventChannelsAtOnce,
+            maxEventNameLength: this.maxEventNameLength,
+            maxEventPayloadInKb: this.maxEventPayloadInKb,
+            maxEventBatchSize: this.maxEventBatchSize,
+        }
+    }
+
+    /**
+     * Get the app represented as JSON.
+     */
+    toJson(): string {
+        return JSON.stringify(this.toObject());
+    }
+
+    /**
      * Strip data off the app, usually the one that's not needed from the WS's perspective.
      * Usually used when attached to WS connections, as they don't need these details.
      */

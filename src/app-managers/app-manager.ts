@@ -43,15 +43,11 @@ export class AppManager implements AppManagerInterface {
 
         return this.server.cacheManager.get(`app:${id}`).then(appFromCache => {
             if (appFromCache) {
-                if (typeof appFromCache === 'string') {
-                    appFromCache = JSON.parse(appFromCache);
-                }
-
-                return appFromCache as App;
+                return new App(JSON.parse(appFromCache), this.server);
             }
 
             return this.driver.findById(id).then(app => {
-                this.server.cacheManager.set(`app:${id}`, app, this.server.options.appManager.cache.ttl);
+                this.server.cacheManager.set(`app:${id}`, app.toJson(), this.server.options.appManager.cache.ttl);
 
                 return app;
             });
@@ -68,15 +64,11 @@ export class AppManager implements AppManagerInterface {
 
         return this.server.cacheManager.get(`app:${key}`).then(appFromCache => {
             if (appFromCache) {
-                if (typeof appFromCache === 'string') {
-                    appFromCache = JSON.parse(appFromCache);
-                }
-
-                return appFromCache as App;
+                return new App(JSON.parse(appFromCache), this.server);
             }
 
             return this.driver.findByKey(key).then(app => {
-                this.server.cacheManager.set(`app:${key}`, app, this.server.options.appManager.cache.ttl);
+                this.server.cacheManager.set(`app:${key}`, app.toJson(), this.server.options.appManager.cache.ttl);
 
                 return app;
             });
