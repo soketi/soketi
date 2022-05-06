@@ -1,6 +1,5 @@
 import { CacheManagerInterface } from './cache-manager-interface';
 import { Server } from '../server';
-import { resolve } from 'path/posix';
 
 const Redis = require('ioredis');
 
@@ -8,7 +7,7 @@ export class RedisCacheManager implements CacheManagerInterface {
     /**
      * The Redis connection.
      */
-    protected redisConnection: typeof Redis;
+    public redisConnection: typeof Redis;
 
     /**
      * Create a new Redis cache instance.

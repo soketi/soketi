@@ -1,4 +1,16 @@
+const Redis = require('ioredis');
+
 export interface CacheManagerInterface {
+    /**
+     * The cache interface manager driver.
+     */
+    driver?: CacheManagerInterface;
+
+    /**
+     * The Redis connection.
+     */
+    redisConnection?: typeof Redis;
+
     /**
      * Check if the given key exists in cache.
      */
