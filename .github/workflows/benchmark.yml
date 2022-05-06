@@ -39,18 +39,23 @@ jobs:
           - adapter: local
             rate_limiter: local
             queue_driver: sync
+            cache_driver: memory
           - adapter: local
             rate_limiter: local
             queue_driver: sqs
+            cache_driver: memory
           - adapter: cluster
             rate_limiter: cluster
             queue_driver: sync
+            cache_driver: redis
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis
+            cache_driver: redis
           - adapter: nats
             rate_limiter: redis
             queue_driver: sync
+            cache_driver: redis
 
     name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
@@ -167,6 +172,7 @@ jobs:
         env:
           PORT: 6001
           ADAPTER_DRIVER: ${{ matrix.adapter }}
+          CACHE_DRIVER: ${{ matrix.cache_driver }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
           APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
           APP_MANAGER_MYSQL_USE_V2: true
@@ -187,6 +193,7 @@ jobs:
         env:
           PORT: 6002
           ADAPTER_DRIVER: ${{ matrix.adapter }}
+          CACHE_DRIVER: ${{ matrix.cache_driver }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
           APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
           APP_MANAGER_MYSQL_USE_V2: true
@@ -211,6 +218,7 @@ jobs:
         run: k6 run benchmark/ci-local.js
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}
+          CACHE_DRIVER: ${{ matrix.cache_driver }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
           QUEUE_DRIVER: ${{ matrix.queue_driver }}
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
@@ -220,6 +228,7 @@ jobs:
         run: k6 run benchmark/ci-horizontal.js
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}
+          CACHE_DRIVER: ${{ matrix.cache_driver }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
           QUEUE_DRIVER: ${{ matrix.queue_driver }}
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}

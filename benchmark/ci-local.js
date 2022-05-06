@@ -38,6 +38,11 @@ if (['redis', 'cluster', 'nats'].includes(__ENV.ADAPTER_DRIVER)) {
     maxAvg += 100;
 }
 
+if (['redis'].includes(__ENV.CACHE_DRIVER)) {
+    maxP95 += 20;
+    maxAvg += 20;
+}
+
 export const options = {
     thresholds: {
         message_delay_ms: [

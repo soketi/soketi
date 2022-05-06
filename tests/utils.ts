@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const Pusher = require('pusher');
 const PusherJS = require('pusher-js');
+const Redis = require('ioredis');
 const tcpPortUsed = require('tcp-port-used');
 
 export class Utils {
@@ -55,6 +56,7 @@ export class Utils {
             'appManager.cache.ttl': -1,
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
+            'cache.driver': process.env.TEST_CACHE_DRIVER || 'memory',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
             'queue.driver': process.env.TEST_QUEUE_DRIVER || 'sync',
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
@@ -70,7 +72,13 @@ export class Utils {
         return (new Server(options)).start((server: Server) => {
             this.wsServers.push(server);
 
-            callback(server);
+            if (server.options.cache.driver === 'redis') {
+                server.cacheManager.driver.redisConnection.flushdb().then(() => {
+                    callback(server);
+                });
+            } else {
+                callback(server);
+            }
         });
     }
 
