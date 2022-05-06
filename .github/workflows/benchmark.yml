@@ -170,20 +170,20 @@ jobs:
           node bin/server.js start &
           timeout 30 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://127.0.0.1:6001/ready)" != "200" ]]; do echo "Waiting for server to be ready..."; sleep 5; done' || false
         env:
-          PORT: 6001
-          ADAPTER_DRIVER: ${{ matrix.adapter }}
-          CACHE_DRIVER: ${{ matrix.cache_driver }}
-          APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
-          APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
-          APP_MANAGER_MYSQL_USE_V2: true
-          METRICS_ENABLED: true
-          QUEUE_DRIVER: ${{ matrix.queue_driver }}
-          QUEUE_SQS_URL: http://localhost:4566/000000000000/test.fifo
-          RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
+          SOKETI_PORT: 6001
+          SOKETI_ADAPTER_DRIVER: ${{ matrix.adapter }}
+          SOKETI_CACHE_DRIVER: ${{ matrix.cache_driver }}
+          SOKETI_APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
+          SOKETI_APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
+          SOKETI_APP_MANAGER_MYSQL_USE_V2: true
+          SOKETI_METRICS_ENABLED: true
+          SOKETI_QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          SOKETI_QUEUE_SQS_URL: http://localhost:4566/000000000000/test.fifo
+          SOKETI_RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
-          DB_MYSQL_USERNAME: root
-          DB_MYSQL_PASSWORD: root
+          SOKETI_DB_MYSQL_USERNAME: root
+          SOKETI_DB_MYSQL_PASSWORD: root
 
       - name: Run Soketi (port 6002)
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats'"
@@ -191,20 +191,20 @@ jobs:
           node bin/server.js start &
           timeout 30 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://127.0.0.1:6002/ready)" != "200" ]]; do echo "Waiting for server to be ready..."; sleep 5; done' || false
         env:
-          PORT: 6002
-          ADAPTER_DRIVER: ${{ matrix.adapter }}
-          CACHE_DRIVER: ${{ matrix.cache_driver }}
-          APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
-          APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
-          APP_MANAGER_MYSQL_USE_V2: true
-          METRICS_ENABLED: true
-          QUEUE_DRIVER: ${{ matrix.queue_driver }}
-          QUEUE_SQS_URL: http://localhost:4566/000000000000/test.fifo
-          RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
+          SOKETI_PORT: 6002
+          SOKETI_ADAPTER_DRIVER: ${{ matrix.adapter }}
+          SOKETI_CACHE_DRIVER: ${{ matrix.cache_driver }}
+          SOKETI_APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
+          SOKETI_APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
+          SOKETI_APP_MANAGER_MYSQL_USE_V2: true
+          SOKETI_METRICS_ENABLED: true
+          SOKETI_QUEUE_DRIVER: ${{ matrix.queue_driver }}
+          SOKETI_QUEUE_SQS_URL: http://localhost:4566/000000000000/test.fifo
+          SOKETI_RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
           AWS_ACCESS_KEY_ID: fake-id
           AWS_SECRET_ACCESS_KEY: fake-secret
-          DB_MYSQL_USERNAME: root
-          DB_MYSQL_PASSWORD: root
+          SOKETI_DB_MYSQL_USERNAME: root
+          SOKETI_DB_MYSQL_PASSWORD: root
 
       - name: Run message sender (port 6001)
         run: ./benchmark/send --interval 1 --port 6001 &
