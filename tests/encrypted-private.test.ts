@@ -3,7 +3,7 @@ import { Utils } from './utils';
 
 jest.retryTimes(parseInt(process.env.RETRY_TIMES || '1'));
 
-describe('private channel test', () => {
+describe('private-encrypted channel test', () => {
     beforeEach(() => {
         jest.resetModules();
 
@@ -14,11 +14,11 @@ describe('private channel test', () => {
         return Utils.flushServers();
     });
 
-    test('connects to private channel', done => {
+    test('connects to private-encrypted channel', done => {
         Utils.newServer({}, (server: Server) => {
-            let client = Utils.newClientForPrivateChannel();
+            let client = Utils.newClientForEncryptedPrivateChannel();
             let backend = Utils.newBackend();
-            let channelName = `private-${Utils.randomChannelName()}`;
+            let channelName = `private-encrypted-${Utils.randomChannelName()}`;
 
             client.connection.bind('connected', () => {
                 let channel = client.subscribe(channelName);
@@ -39,20 +39,21 @@ describe('private channel test', () => {
         });
     });
 
-    test('cannot connect to private channel with wrong authentication', done => {
+    test('cannot connect to private-encrypted channel with wrong authentication', done => {
         Utils.newServer({}, (server: Server) => {
-            let client = Utils.newClientForPrivateChannel({
+            let client = Utils.newClientForEncryptedPrivateChannel({
                 authorizer: (channel, options) => ({
                     authorize: (socketId, callback) => {
                         callback(false, {
                             auth: 'incorrect_token',
                             channel_data: null,
+                            shared_secret: Utils.newBackend().channelSharedSecret(channel.name).toString('base64'),
                         });
                     },
                 }),
             });
 
-            let channelName = `private-${Utils.randomChannelName()}`;
+            let channelName = `private-encrypted-${Utils.randomChannelName()}`;
 
             client.connection.bind('message', ({ event, channel, data }) => {
                 if (event === 'pusher:subscription_error' && channel === channelName) {
@@ -69,11 +70,11 @@ describe('private channel test', () => {
         });
     });
 
-    test('connects and disconnects to private channel and does not leak memory', done => {
+    test('connects and disconnects to private-encrypted channel and does not leak memory', done => {
         Utils.newServer({}, (server: Server) => {
-            let client = Utils.newClientForPrivateChannel();
+            let client = Utils.newClientForEncryptedPrivateChannel();
             let backend = Utils.newBackend();
-            let channelName = `private-${Utils.randomChannelName()}`;
+            let channelName = `private-encrypted-${Utils.randomChannelName()}`;
 
             client.connection.bind('disconnected', () => {
                 Utils.wait(3000).then(() => {
@@ -113,11 +114,11 @@ describe('private channel test', () => {
         });
     });
 
-    test('sudden close connection in private channel and does not leak memory', done => {
+    test('sudden close connection in private-encrypted channel and does not leak memory', done => {
         Utils.newServer({}, (server: Server) => {
-            let client = Utils.newClientForPrivateChannel();
+            let client = Utils.newClientForEncryptedPrivateChannel();
             let backend = Utils.newBackend();
-            let channelName = `private-${Utils.randomChannelName()}`;
+            let channelName = `private-encrypted-${Utils.randomChannelName()}`;
 
             client.connection.bind('disconnected', () => {
                 Utils.wait(3000).then(() => {
@@ -144,11 +145,11 @@ describe('private channel test', () => {
         });
     });
 
-    test('cached private channels work', done => {
+    test('cached private-encrypted channels work', done => {
         Utils.newServer({}, (server: Server) => {
-            let client1 = Utils.newClientForPrivateChannel();
+            let client1 = Utils.newClientForEncryptedPrivateChannel();
             let backend = Utils.newBackend();
-            let channelName = `private-cache-${Utils.randomChannelName()}`;
+            let channelName = `private-encrypted-cache-${Utils.randomChannelName()}`;
 
             client1.connection.bind('connected', () => {
                 let channel = client1.subscribe(channelName);
@@ -157,14 +158,17 @@ describe('private channel test', () => {
                     channel.bind('greeting', e => {
                         expect(e.message).toBe('hello');
 
-                        let client2 = Utils.newClientForPrivateChannel();
+                        let client2 = Utils.newClientForEncryptedPrivateChannel();
 
                         client2.connection.bind('connected', () => {
                             let channel = client2.subscribe(channelName);
 
                             channel.bind('pusher:cache_miss', ({ event, data }) => {
+                                let objectData = JSON.parse(data);
+
                                 expect(event).toBe('greeting');
-                                expect(data).toBe(JSON.stringify({ message: 'hello'}));
+                                expect(objectData.nonce).toBeDefined();
+                                expect(objectData.ciphertext).toBeDefined();
 
                                 client1.disconnect();
                                 client2.disconnect();

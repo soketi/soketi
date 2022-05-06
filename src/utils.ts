@@ -20,6 +20,18 @@ export class Utils {
     ];
 
     /**
+     * Channels with patters for caching channels.
+     *
+     * @type {string[]}
+     */
+    protected static _cachingChannelPatterns: string[] = [
+        'cache-*',
+        'private-cache-*',
+        'private-encrypted-cache-*',
+        'presence-cache-*',
+    ];
+
+    /**
      * Get the amount of bytes from given parameters.
      */
     static dataToBytes(...data: any): number {
@@ -77,6 +89,23 @@ export class Utils {
      */
     static isEncryptedPrivateChannel(channel: string): boolean {
         return channel.lastIndexOf('private-encrypted-', 0) === 0;
+    }
+
+    /**
+     * Check if the given channel accepts caching.
+     */
+    static isCachingChannel(channel: string): boolean {
+        let isCachingChannel = false;
+
+        this._cachingChannelPatterns.forEach(pattern => {
+            let regex = new RegExp(pattern.replace('*', '.*'));
+
+            if (regex.test(channel)) {
+                isCachingChannel = true;
+            }
+        });
+
+        return isCachingChannel;
     }
 
     /**

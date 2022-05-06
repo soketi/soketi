@@ -39,25 +39,30 @@ jobs:
           - adapter: local
             rate_limiter: local
             queue_driver: sync
+            cache_driver: memory
           - adapter: local
             rate_limiter: local
             queue_driver: sqs
+            cache_driver: memory
           - adapter: cluster
             rate_limiter: cluster
             queue_driver: sync
+            cache_driver: redis
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis
+            cache_driver: redis
           - adapter: nats
             rate_limiter: redis
             queue_driver: sync
+            cache_driver: redis
 
     name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3.0.0
 
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v3.1.0
         name: Installing Node.js v${{ matrix.node }}
         with:
           node-version: ${{ matrix.node }}
@@ -71,13 +76,13 @@ jobs:
           npm run build
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@2.16.0
+        uses: shivammathur/setup-php@2.18.1
         with:
           php-version: "8.0"
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, yaml
           coverage: pcov
 
-      - uses: actions/cache@v2.1.7
+      - uses: actions/cache@v3.0.2
         name: Cache Composer dependencies
         with:
           path: ~/.composer/cache/files
@@ -167,6 +172,7 @@ jobs:
         env:
           SOKETI_PORT: 6001
           SOKETI_ADAPTER_DRIVER: ${{ matrix.adapter }}
+          SOKETI_CACHE_DRIVER: ${{ matrix.cache_driver }}
           SOKETI_APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
           SOKETI_APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
           SOKETI_APP_MANAGER_MYSQL_USE_V2: true
@@ -187,6 +193,7 @@ jobs:
         env:
           SOKETI_PORT: 6002
           SOKETI_ADAPTER_DRIVER: ${{ matrix.adapter }}
+          SOKETI_CACHE_DRIVER: ${{ matrix.cache_driver }}
           SOKETI_APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
           SOKETI_APP_MANAGER_DYNAMODB_ENDPOINT: http://127.0.0.1:8000
           SOKETI_APP_MANAGER_MYSQL_USE_V2: true
@@ -211,6 +218,7 @@ jobs:
         run: k6 run benchmark/ci-local.js
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}
+          CACHE_DRIVER: ${{ matrix.cache_driver }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
           QUEUE_DRIVER: ${{ matrix.queue_driver }}
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
@@ -220,6 +228,7 @@ jobs:
         run: k6 run benchmark/ci-horizontal.js
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}
+          CACHE_DRIVER: ${{ matrix.cache_driver }}
           APP_MANAGER_DRIVER: ${{ matrix.app_manager }}
           QUEUE_DRIVER: ${{ matrix.queue_driver }}
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}

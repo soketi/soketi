@@ -397,6 +397,10 @@ export class WsHandler {
 
                 ws.sendJson(broadcastMessage);
 
+                if (Utils.isCachingChannel(channel)) {
+                    this.sendMissedCacheIfExists(ws, channel);
+                }
+
                 return;
             }
 
@@ -438,6 +442,10 @@ export class WsHandler {
                 };
 
                 ws.sendJson(broadcastMessage);
+
+                if (Utils.isCachingChannel(channel)) {
+                    this.sendMissedCacheIfExists(ws, channel);
+                }
             }).catch(err => {
                 Log.error(err);
 
@@ -603,6 +611,19 @@ export class WsHandler {
                     },
                 });
             });
+        });
+    }
+
+    /**
+     * Send the first event as cache_missed, if it exists, to catch up.
+     */
+    sendMissedCacheIfExists(ws: WebSocket, channel: string) {
+        this.server.cacheManager.get(`app:${ws.app.id}:channel:${channel}:cache_miss`).then(cachedEvent => {
+            if (cachedEvent) {
+                ws.sendJson({ event: 'pusher:cache_miss', channel, data: cachedEvent });
+            } else {
+                this.server.webhookSender.sendCacheMissed(ws.app, channel);
+            }
         });
     }
 

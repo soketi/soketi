@@ -85,8 +85,12 @@ export class Log {
         return message;
     }
 
-    protected static log(message: string, ...styles: string[]): void {
+    protected static log(message: any, ...styles: string[]): void {
         let withColor = colors;
+
+        if (typeof message !== 'string') {
+            return console.log(message);
+        }
 
         styles
             .filter(style => ! /^[m|p]x-/.test(style))

@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import { Log } from '..';
 import { Server } from './../server';
 
 export class Cli {
@@ -40,7 +41,10 @@ export class Cli {
         APP_MANAGER_POSTGRES_VERSION: 'appManager.postgres.version',
         APP_MANAGER_MYSQL_USE_V2: 'appManager.mysql.useMysql2',
         CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength',
+        CHANNEL_CACHE_TTL: 'channelLimits.cacheTtl',
         CACHE_DRIVER: 'cache.driver',
+        CACHE_REDIS_CLUSTER_MODE: 'cache.redis.clusterMode',
+        CACHE_REDIS_OPTIONS: 'cache.redis.redisOptions',
         CLUSTER_CHECK_INTERVAL: 'cluster.checkInterval',
         CLUSTER_HOST: 'cluster.hostname',
         CLUSTER_IGNORE_PROCESS: 'cluster.ignoreProcess',
@@ -102,6 +106,7 @@ export class Cli {
         PRESENCE_MAX_MEMBERS: 'presence.maxMembersPerChannel',
         QUEUE_DRIVER: 'queue.driver',
         QUEUE_REDIS_CONCURRENCY: 'queue.redis.concurrency',
+        QUEUE_REDIS_OPTIONS: 'queue.redis.redisOptions',
         QUEUE_REDIS_CLUSTER_MODE: 'queue.redis.clusterMode',
         QUEUE_SQS_REGION: 'queue.sqs.region',
         QUEUE_SQS_CLIENT_OPTIONS: 'queue.sqs.clientOptions',
@@ -111,6 +116,7 @@ export class Cli {
         QUEUE_SQS_BATCH_SIZE: 'queue.sqs.batchSize',
         QUEUE_SQS_POLLING_WAIT_TIME_MS: 'queue.sqs.pollingWaitTimeMs',
         RATE_LIMITER_DRIVER: 'rateLimiter.driver',
+        RATE_LIMITER_REDIS_OPTIONS: 'rateLimiter.redis.redisOptions',
         RATE_LIMITER_REDIS_CLUSTER_MODE: 'rateLimiter.redis.clusterMode',
         SHUTDOWN_GRACE_PERIOD: 'shutdownGracePeriod',
         SSL_CERT: 'ssl.certPath',
@@ -182,7 +188,7 @@ export class Cli {
                 this.server.setOptions(settingObject);
             }
         } catch (e) {
-            //
+            Log.errorTitle('There was an error while parsing the JSON in your config file. It has not been loaded.');
         }
     }
 
