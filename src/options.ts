@@ -63,6 +63,10 @@ export interface Options {
         array: {
             apps: AppInterface[];
         };
+        cache: {
+            enabled: boolean;
+            ttl: number;
+        };
         dynamodb: {
             table: string;
             region: string;
@@ -78,8 +82,16 @@ export interface Options {
             version: string|number;
         };
     };
+    cache: {
+        driver: string;
+        redis: {
+            redisOptions: any;
+            clusterMode: boolean;
+        };
+    };
     channelLimits: {
         maxNameLength: number;
+        cacheTtl: number;
     };
     cluster: {
         hostname: string;

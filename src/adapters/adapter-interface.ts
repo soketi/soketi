@@ -50,7 +50,7 @@ export interface AdapterInterface {
      * Remove a socket ID from the channel identifier.
      * Return the total number of connections remaining to the channel.
      */
-    removeFromChannel(appId: string, channel: string, wsId: string): Promise<number>;
+    removeFromChannel(appId: string, channel: string|string[], wsId: string): Promise<number|void>;
 
     /**
      * Signal that someone is using the app. Usually,

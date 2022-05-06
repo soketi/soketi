@@ -1,3 +1,16 @@
+> The 🇷🇺 Russian invasion of 🇺🇦 Ukraine breaches any law, including the UN Charter. [#StandWithUkraine](https://github.com/vshymanskyy/StandWithUkraine)
+
+> Open-source is not about political views, but rather humanitar views. It's code by the people for the people. Unprovoked, unjustifiable and despicable action that is killing civilians is not tolerated. The [Renoki Co.](https://github.com/renoki-co) subsidiaries (including Soketi) has taken action to move away from Russian software and dependencies and block any access from Russia within their projects.
+
+## Soketi can be now deployed on Cloudflare's infrastructure. 📣 
+
+Ever dreamed about Serverless WebSockets? Soketi can be deployed to Cloudflare Workers. All around the world, closer to your users. Same Pusher protocol. 
+Powered by Cloudflare's [Durable Objects](https://developers.cloudflare.com/workers/runtime-apis/durable-objects/) and [KV](https://developers.cloudflare.com/workers/runtime-apis/kv/), you can achieve great speeds at edge for your users.
+
+Deploy fast Workers, use one of the fastest database available from Cloudflare and scale to infinity and beyond. 🚀
+
+**[Start deploying Workers ➡️](https://dash.soketi.app/register)**
+
 soketi
 ======
 
@@ -10,6 +23,9 @@ soketi
 [![License](https://img.shields.io/npm/l/@soketi/soketi)](https://www.npmjs.com/package/@soketi/soketi)
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/soketi)](https://artifacthub.io/packages/search?repo=soketi)
+[![StandWithUkraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://github.com/vshymanskyy/StandWithUkraine/blob/main/docs/README.md)
+
+[![Discord](https://img.shields.io/discord/957380329985958038?color=%235865F2&label=Discord&logo=discord&logoColor=%23fff)](https://discord.gg/VgfKCQydjb)
 
 soketi is your simple, fast, and resilient open-source WebSockets server. 📣
 
@@ -29,7 +45,7 @@ Soketi is capable to hold thousands of active connections with high traffic on l
 
 ### Easy to use 👶
 
-Whether you run your infrastructure in containers or monoliths, soketi got your back. There are multiple ways to [install](getting-started/installation/) and [configure](getting-started/environment-variables.md) soketi, from single instances for development, to tens of active instances at scale with hundreds or thousands of active users.
+Whether you run your infrastructure in containers or monoliths, soketi got your back. There are multiple ways to [install](https://docs.soketi.app/getting-started/installation) and [configure](https://docs.soketi.app/getting-started/environment-variables) soketi, from single instances for development, to tens of active instances at scale with hundreds or thousands of active users.
 
 ### Pusher Protocol v7 📡
 
@@ -37,7 +53,7 @@ soketi implements the [Pusher Protocol v7](https://pusher.com/docs/channels/libr
 
 ### App-based access 🔐
 
-You and your users can access the API and WebSockets through [Pusher-like apps](app-management/introduction.md) which serve keys and secrets to connect or authenticate requests for broadcasting events or checking channels statuses. soketi also comes built-in with support for DynamoDB and SQL-based servers like Postgres.
+You and your users can access the API and WebSockets through [Pusher-like apps](https://docs.soketi.app/app-management/introduction) which serve keys and secrets to connect or authenticate requests for broadcasting events or checking channels statuses. soketi also comes built-in with support for DynamoDB and SQL-based servers like Postgres.
 
 ### Production-ready! 🤖
 
@@ -57,13 +73,19 @@ soketi just exposes the metrics to you, you just have to scrape them, whether it
 
 [The entire documentation is available on Gitbook 🌍](https://rennokki.gitbook.io/soketi-docs/)
 
+## 🌟 Stargazers
+
+We really appreciate how this project turned to be such a great success. It will always remain open-source, free, and maintained. This is the real-time as it should be.
+
+[![Stargazers over time](https://starchart.cc/soketi/soketi.svg)](https://starchart.cc/soketi/soketi)
+
 ## 🤝 Contributing
 
 Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## ⁉ Ideas or Discussions?
 
-Have any ideas that can make into the project? Perhaps you have questions? [Jump into the discussions board](https://github.com/soketi/soketi/discussions)
+Have any ideas that can make into the project? Perhaps you have questions? [Jump into the discussions board](https://github.com/soketi/soketi/discussions) or [join the Discord channel](https://discord.gg/VgfKCQydjb)
 
 ## 🔒  Security
 

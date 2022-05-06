@@ -79,7 +79,7 @@ export class Adapter implements AdapterInterface {
      * Remove a socket ID from the channel identifier.
      * Return the total number of connections remaining to the channel.
      */
-    async removeFromChannel(appId: string, channel: string, wsId: string): Promise<number> {
+    async removeFromChannel(appId: string, channel: string|string[], wsId: string): Promise<number|void> {
         return this.driver.removeFromChannel(appId, channel, wsId);
     }
 
