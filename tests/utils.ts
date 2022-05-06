@@ -52,7 +52,7 @@ export class Utils {
             'cluster.ignoreProcess': false,
             'webhooks.batching.enabled': false, // TODO: Find out why batching works but fails tests
             'webhooks.batching.duration': 1,
-            'database.redis.enableOfflineQueue': false,
+            'database.redis.enableOfflineQueue': true,
             'appManager.cache.enabled': true,
             'appManager.cache.ttl': -1,
             ...options,
