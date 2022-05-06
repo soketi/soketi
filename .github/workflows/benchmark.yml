@@ -180,8 +180,8 @@ jobs:
           SOKETI_QUEUE_DRIVER: ${{ matrix.queue_driver }}
           SOKETI_QUEUE_SQS_URL: http://localhost:4566/000000000000/test.fifo
           SOKETI_RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
-          SOKETI_AWS_ACCESS_KEY_ID: fake-id
-          SOKETI_AWS_SECRET_ACCESS_KEY: fake-secret
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
           SOKETI_DB_MYSQL_USERNAME: root
           SOKETI_DB_MYSQL_PASSWORD: root
 
@@ -201,8 +201,8 @@ jobs:
           SOKETI_QUEUE_DRIVER: ${{ matrix.queue_driver }}
           SOKETI_QUEUE_SQS_URL: http://localhost:4566/000000000000/test.fifo
           SOKETI_RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
-          SOKETI_AWS_ACCESS_KEY_ID: fake-id
-          SOKETI_AWS_SECRET_ACCESS_KEY: fake-secret
+          AWS_ACCESS_KEY_ID: fake-id
+          AWS_SECRET_ACCESS_KEY: fake-secret
           SOKETI_DB_MYSQL_USERNAME: root
           SOKETI_DB_MYSQL_PASSWORD: root
 
