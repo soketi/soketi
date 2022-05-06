@@ -107,6 +107,12 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     protected subscribedApps: string[] = [];
 
     /**
+     * The list of app Id mapped to an interval for that specific app
+     * to handle unsubscription.
+     */
+    protected subscribedAppsIntervals: { [appId: string]: any; } = {};
+
+    /**
      * The list of resolvers for each response type.
      */
     protected resolvers = {
@@ -217,6 +223,14 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     subscribeToApp(appId: string): Promise<void> {
         if (!this.subscribedApps.includes(appId)) {
             this.subscribedApps.push(appId);
+
+            this.subscribedAppsIntervals[appId] = setInterval(() => {
+                super.getSocketsCount(appId).then(number => {
+                    if (number === 0) {
+                        this.unsubscribeFromApp(appId);
+                    }
+                });
+            }, 3_000); // TODO: Customizable unsubscriptions interval
         }
 
         return Promise.resolve();
@@ -228,6 +242,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     protected unsubscribeFromApp(appId: string): void {
         if (this.subscribedApps.includes(appId)) {
             this.subscribedApps.splice(this.subscribedApps.indexOf(appId), 1);
+            clearInterval(this.subscribedAppsIntervals[appId]);
+            delete this.subscribedAppsIntervals[appId];
         }
     }
 
@@ -236,16 +252,6 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      */
     constructor(protected server: Server) {
         super(server);
-
-        setInterval(() => {
-            this.subscribedApps.forEach((appId) => {
-                super.getSocketsCount(appId).then(number => {
-                    if (number === 0) {
-                        this.unsubscribeFromApp(appId);
-                    }
-                });
-            });
-        }, 60_000);
     }
 
     /**
