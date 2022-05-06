@@ -43,6 +43,10 @@ export class AppManager implements AppManagerInterface {
 
         return this.server.cacheManager.get(`app:${id}`).then(appFromCache => {
             if (appFromCache) {
+                if (typeof appFromCache === 'string') {
+                    appFromCache = JSON.parse(appFromCache);
+                }
+
                 return appFromCache as App;
             }
 
@@ -64,6 +68,10 @@ export class AppManager implements AppManagerInterface {
 
         return this.server.cacheManager.get(`app:${key}`).then(appFromCache => {
             if (appFromCache) {
+                if (typeof appFromCache === 'string') {
+                    appFromCache = JSON.parse(appFromCache);
+                }
+
                 return appFromCache as App;
             }
 
