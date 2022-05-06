@@ -73,6 +73,12 @@ soketi just exposes the metrics to you, you just have to scrape them, whether it
 
 [The entire documentation is available on Gitbook 🌍](https://rennokki.gitbook.io/soketi-docs/)
 
+## 🌟 Stargazers
+
+We really appreciate how this project turned to be such a great success. It will always remain open-source, free, and maintained. This is the real-time as it should be.
+
+[![Stargazers over time](https://starchart.cc/soketi/soketi.svg)](https://starchart.cc/soketi/soketi)
+
 ## 🤝 Contributing
 
 Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
