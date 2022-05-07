@@ -230,7 +230,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         this.unsubscribeFromApp(appId);
                     }
                 });
-            }, 3_000); // TODO: Customizable unsubscriptions interval
+            }, 60_000); // TODO: Customizable unsubscriptions interval
         }
 
         return Promise.resolve();
