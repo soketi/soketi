@@ -1,9 +1,15 @@
 import { AdapterInterface } from './adapter-interface';
+import async from 'async';
 import { connect, JSONCodec, Msg, NatsConnection, StringCodec } from 'nats';
 import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
 import { Log } from '../log';
 import { Server } from '../server';
 import { timeout } from 'nats/lib/nats-base-client/util';
+
+interface QueueWithCallback {
+    name: string;
+    callback: any;
+}
 
 export class NatsAdapter extends HorizontalAdapter {
     /**
@@ -76,11 +82,30 @@ export class NatsAdapter extends HorizontalAdapter {
         }
 
         return new Promise(resolve => {
-            this.connection.subscribe(`${this.requestChannel}#${appId}`, { callback: (_err, msg) => this.onRequest(msg, appId), queue: appId });
-            this.connection.subscribe(`${this.responseChannel}#${appId}`, { callback: (_err, msg) => this.onResponse(msg, appId), queue: appId });
-            this.connection.subscribe(`${this.channel}#${appId}`, { callback: (_err, msg) => this.onMessage(msg), queue: appId });
+            let queuesWithCallbacks: QueueWithCallback[] = [
+                {
+                    name: `${this.requestChannel}#${appId}`,
+                    callback: (_err, msg) => this.onRequest(msg, appId),
+                },
+                {
+                    name: `${this.responseChannel}#${appId}`,
+                    callback: (_err, msg) => this.onResponse(msg, appId),
+                },
+                {
+                    name: `${this.channel}#${appId}`,
+                    callback: (_err, msg) => this.onMessage(msg),
+                },
+            ];
 
-            super.subscribeToApp(appId).then(() => resolve());
+            async.each(queuesWithCallbacks, (queue: QueueWithCallback, callback) => {
+                let sub = this.connection.subscribe(queue.name, { callback: queue.callback });
+
+                if (sub) {
+                    callback();
+                }
+            }).then(() => {
+                super.subscribeToApp(appId).then(() => resolve());
+            });
         });
     }
 
