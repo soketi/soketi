@@ -364,6 +364,8 @@ export class HttpHandler {
     }
 
     notFound(res: HttpResponse) {
+        res.writeStatus('404 Not Found');
+
         this.attachMiddleware(res, [
             this.corkMiddleware,
             this.corsMiddleware,
