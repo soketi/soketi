@@ -10,7 +10,8 @@ COPY . /tmp/build
 
 WORKDIR /tmp/build
 
-RUN apt-get install -y git python3 gcc wget && \
+RUN apt-get update -y && \
+    apt-get install -y git python3 gcc wget && \
     bash ./build-minimal-production && \
     mkdir -p /app && \
     cd /tmp/build && \
