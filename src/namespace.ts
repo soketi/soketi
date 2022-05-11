@@ -110,6 +110,21 @@ export class Namespace {
     }
 
     /**
+     * Get the list of channels with the websocket IDs.
+     */
+    getChannelsWithSocketsCount(): Promise<Map<string, number>> {
+        return this.getChannels().then((channels) => {
+            let list = new Map<string, number>();
+
+            for (let [channel, connections] of [...channels]) {
+                list.set(channel, connections.size);
+            }
+
+            return list;
+        });
+    }
+
+    /**
      * Get all the channel sockets associated with this namespace.
      */
     getChannelSockets(channel: string): Promise<Map<string, WebSocket>> {
