@@ -126,7 +126,7 @@ export class WsHandler {
                         ws.sendJson({
                             event: 'pusher:error',
                             data: {
-                                code: 4100,
+                                code: 4004,
                                 message: 'The current concurrent connections quota has been reached.',
                             },
                         });

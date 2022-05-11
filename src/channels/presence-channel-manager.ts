@@ -25,7 +25,7 @@ export class PresenceChannelManager extends PrivateChannelManager {
                 return {
                     success: false,
                     ws,
-                    errorCode: 4100,
+                    errorCode: 4004,
                     errorMessage: 'The maximum members per presence channel limit was reached',
                     type: 'LimitReached',
                 };
