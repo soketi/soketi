@@ -1,8 +1,10 @@
 import { AdapterInterface } from './adapter-interface';
+import { ClusterAdapter } from './cluster-adapter';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { Namespace } from '../namespace';
-import { PresenceMember } from '../presence-member';
+import { NatsAdapter } from './nats-adapter';
+import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { RedisAdapter } from './redis-adapter';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
@@ -11,7 +13,7 @@ export class Adapter implements AdapterInterface {
     /**
      * The adapter driver.
      */
-    protected driver: AdapterInterface;
+    public driver: AdapterInterface;
 
     /**
      * Initialize adapter scaling.
@@ -21,9 +23,20 @@ export class Adapter implements AdapterInterface {
             this.driver = new LocalAdapter(server);
         } else if (server.options.adapter.driver === 'redis') {
             this.driver = new RedisAdapter(server);
+        } else if (server.options.adapter.driver === 'nats') {
+            this.driver = new NatsAdapter(server);
+        } else if (server.options.adapter.driver === 'cluster') {
+            this.driver = new ClusterAdapter(server);
         } else {
             Log.error('Adapter driver not set.');
         }
+    }
+
+    /**
+     * Initialize the adapter.
+     */
+    async init(): Promise<AdapterInterface> {
+        return await this.driver.init();
     }
 
     /**
@@ -38,6 +51,36 @@ export class Adapter implements AdapterInterface {
      */
     getNamespaces(): Map<string, Namespace> {
         return this.driver.getNamespaces();
+    }
+
+    /**
+     * Add a new socket to the namespace.
+     */
+    async addSocket(appId: string, ws: WebSocket): Promise<boolean> {
+        return this.driver.addSocket(appId, ws);
+    }
+
+    /**
+     * Remove a socket from the namespace.
+     */
+    async removeSocket(appId: string, wsId: string): Promise<boolean> {
+        return this.driver.removeSocket(appId, wsId);
+    }
+
+    /**
+     * Add a socket ID to the channel identifier.
+     * Return the total number of connections after the connection.
+     */
+    async addToChannel(appId: string, channel: string, ws: WebSocket): Promise<number> {
+        return this.driver.addToChannel(appId, channel, ws);
+    }
+
+    /**
+     * Remove a socket ID from the channel identifier.
+     * Return the total number of connections remaining to the channel.
+     */
+    async removeFromChannel(appId: string, channel: string|string[], wsId: string): Promise<number|void> {
+        return this.driver.removeFromChannel(appId, channel, wsId);
     }
 
     /**
@@ -62,6 +105,13 @@ export class Adapter implements AdapterInterface {
     }
 
     /**
+     * Get the list of channels with the websockets count.
+     */
+    async getChannelsWithSocketsCount(appId: string, onlyLocal = false): Promise<Map<string, number>> {
+        return this.driver.getChannelsWithSocketsCount(appId, onlyLocal);
+    }
+
+    /**
      * Get all the channel sockets associated with a namespace.
      */
     async getChannelSockets(appId: string, channel: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
@@ -78,7 +128,7 @@ export class Adapter implements AdapterInterface {
     /**
      * Get a given presence channel's members.
      */
-    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
+    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMemberInfo>> {
         return this.driver.getChannelMembers(appId, channel, onlyLocal);
     }
 
@@ -104,9 +154,23 @@ export class Adapter implements AdapterInterface {
     }
 
     /**
-     * Clear the local namespaces.
+     * Clear the namespace from the local adapter.
      */
-    clear(namespaceId?: string): void {
-        this.driver.clear(namespaceId);
+    clearNamespace(namespaceId: string): Promise<void> {
+        return this.driver.clearNamespace(namespaceId);
+    }
+
+    /**
+     * Clear all namespaces from the local adapter.
+     */
+    clearNamespaces(): Promise<void> {
+        return this.driver.clearNamespaces();
+    }
+
+    /**
+     * Clear the connections.
+     */
+    disconnect(): Promise<void> {
+        return this.driver.disconnect();
     }
 }

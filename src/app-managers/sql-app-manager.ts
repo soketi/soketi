@@ -1,5 +1,6 @@
 import { App } from './../app';
 import { BaseAppManager } from './base-app-manager';
+import { Log } from '../log';
 import { Knex, knex } from 'knex';
 import { Server } from './../server';
 
@@ -43,9 +44,15 @@ export abstract class SqlAppManager extends BaseAppManager {
      */
     findById(id: string): Promise<App|null> {
         return this.selectById(id).then(apps => {
-            return apps.length === 0
-                ? null
-                : new App(apps[0] || apps);
+            if (apps.length === 0) {
+                if (this.server.options.debug) {
+                    Log.error(`App ID not found: ${id}`);
+                }
+
+                return null;
+            }
+
+            return new App(apps[0] || apps, this.server);
         });
     }
 
@@ -54,9 +61,15 @@ export abstract class SqlAppManager extends BaseAppManager {
      */
     findByKey(key: string): Promise<App|null> {
         return this.selectByKey(key).then(apps => {
-            return apps.length === 0
-                ? null
-                : new App(apps[0] || apps);
+            if (apps.length === 0) {
+                if (this.server.options.debug) {
+                    Log.error(`App key not found: ${key}`);
+                }
+
+                return null;
+            }
+
+            return new App(apps[0] || apps, this.server);
         });
     }
 
@@ -81,27 +94,27 @@ export abstract class SqlAppManager extends BaseAppManager {
     /**
      * Get the client name to be used by Knex.
      */
-     protected abstract knexClientName(): string;
+    protected abstract knexClientName(): string;
 
-     /**
-      * Get the object connection details for Knex.
-      */
+    /**
+     * Get the object connection details for Knex.
+     */
     protected abstract knexConnectionDetails(): { [key: string]: any; };
 
-     /**
-      * Get the connection version for Knex.
-      * For MySQL can be 5.7 or 8.0, etc.
-      */
+    /**
+     * Get the connection version for Knex.
+     * For MySQL can be 5.7 or 8.0, etc.
+     */
     protected abstract knexVersion(): string;
 
-     /**
-      * Wether the manager supports pooling. This introduces
-      * additional settings for connection pooling.
-      */
+    /**
+     * Wether the manager supports pooling. This introduces
+     * additional settings for connection pooling.
+     */
     protected abstract supportsPooling(): boolean;
 
-     /**
-      * Get the table name where the apps are stored.
-      */
+    /**
+     * Get the table name where the apps are stored.
+     */
     protected abstract appsTableName(): string;
 }

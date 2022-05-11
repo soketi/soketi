@@ -5,9 +5,10 @@ import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 import { Log } from './log';
 import { Namespace } from './namespace';
 import { PresenceChannelManager } from './channels';
-import { PresenceMember } from './presence-member';
+import { PresenceMemberInfo } from './channels/presence-channel-manager';
 import { PrivateChannelManager } from './channels';
 import { PublicChannelManager } from './channels';
+import { PusherMessage, uWebSocketMessage } from './message';
 import { Server } from './server';
 import { Utils } from './utils';
 import { WebSocket } from 'uWebSockets.js';
@@ -50,12 +51,14 @@ export class WsHandler {
      */
     onOpen(ws: WebSocket): any {
         if (this.server.options.debug) {
-            Log.successTitle('👨‍🔬 New connection:');
-            Log.success({ ws });
+            Log.websocketTitle('👨‍🔬 New connection:');
+            Log.websocket({ ws });
         }
 
         ws.sendJson = (data) => {
-            if (ws.send(JSON.stringify(data))) {
+            try {
+                ws.send(JSON.stringify(data));
+
                 this.updateTimeout(ws);
 
                 if (ws.app) {
@@ -63,11 +66,17 @@ export class WsHandler {
                 }
 
                 if (this.server.options.debug) {
-                    Log.successTitle('✈ Sent message to client:');
-                    Log.success({ ws, data });
+                    Log.websocketTitle('✈ Sent message to client:');
+                    Log.websocket({ ws, data });
                 }
+            } catch (e) {
+                //
             }
         }
+
+        ws.id = this.generateSocketId();
+        ws.subscribedChannels = new Set();
+        ws.presence = new Map<string, PresenceMemberInfo>();
 
         if (this.server.closing) {
             ws.sendJson({
@@ -81,10 +90,6 @@ export class WsHandler {
             // See: https://www.iana.org/assignments/websocket/websocket.xhtml
             return ws.end(1012);
         }
-
-        ws.id = this.generateSocketId();
-        ws.subscribedChannels = new Set();
-        ws.presence = new Map<string, PresenceMember>();
 
         this.checkForValidApp(ws).then(validApp => {
             if (!validApp) {
@@ -129,7 +134,8 @@ export class WsHandler {
                         // See: https://www.iana.org/assignments/websocket/websocket.xhtml
                         ws.end(1013);
                     } else {
-                        this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+                        // Make sure to update the socket after new data was pushed in.
+                        this.server.adapter.addSocket(ws.app.id, ws);
 
                         let broadcastMessage = {
                             event: 'pusher:connection_established',
@@ -151,21 +157,18 @@ export class WsHandler {
     /**
      * Handle a received message from the client.
      */
-    onMessage(ws: WebSocket, message: any, isBinary: boolean): any {
+    onMessage(ws: WebSocket, message: uWebSocketMessage, isBinary: boolean): any {
         if (message instanceof ArrayBuffer) {
             try {
-                message = JSON.parse(ab2str(message));
+                message = JSON.parse(ab2str(message)) as PusherMessage;
             } catch (err) {
                 return;
             }
         }
 
         if (this.server.options.debug) {
-            Log.infoTitle('⚡ New message received:');
-            Log.info({
-                message,
-                isBinary,
-            });
+            Log.websocketTitle('⚡ New message received:');
+            Log.websocket({ message, isBinary });
         }
 
         if (message) {
@@ -178,7 +181,7 @@ export class WsHandler {
             } else if (Utils.isClientEvent(message.event)) {
                 this.handleClientEvent(ws, message);
             } else {
-                Log.info({
+                Log.warning({
                     info: 'Message event handler not implemented.',
                     message,
                 });
@@ -193,15 +196,25 @@ export class WsHandler {
     /**
      * Handle the event of the client closing the connection.
      */
-    onClose(ws: WebSocket, code: number, message: any): any {
+    onClose(ws: WebSocket, code: number, message: uWebSocketMessage): any {
         if (this.server.options.debug) {
-            Log.warningTitle('❌ Connection closed:');
-            Log.warning({ ws, code, message });
+            Log.websocketTitle('❌ Connection closed:');
+            Log.websocket({ ws, code, message });
         }
 
-        this.unsubscribeFromAllChannels(ws).then(() => {
+        // If code 1012 (reconnect immediately) is called, it means the `closeAllLocalSockets()` was called.
+        if (code !== 1012) {
+            this.evictSocketFromMemory(ws);
+        }
+    }
+
+    /**
+     * Evict the local socket.
+     */
+    evictSocketFromMemory(ws: WebSocket): Promise<void> {
+        return this.unsubscribeFromAllChannels(ws).then(() => {
             if (ws.app) {
-                this.server.adapter.getNamespace(ws.app.id).removeSocket(ws.id);
+                this.server.adapter.removeSocket(ws.app.id, ws.id);
                 this.server.metricsManager.markDisconnection(ws);
             }
 
@@ -237,15 +250,18 @@ export class WsHandler {
                         //
                     }
 
-                    wsCallback();
+                    this.evictSocketFromMemory(ws).then(() => {
+                        wsCallback();
+                    });
                 }).then(() => {
-                    this.server.adapter.clear(namespaceId);
-                    nsCallback();
+                    this.server.adapter.clearNamespace(namespaceId).then(() => {
+                        nsCallback();
+                    });
                 });
             });
         }).then(() => {
             // One last clear to make sure everything went away.
-            return this.server.adapter.clear();
+            return this.server.adapter.clearNamespaces();
         });
     }
 
@@ -285,14 +301,16 @@ export class WsHandler {
             });
 
             // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-            return ws.end(1012);
+            ws.end(1012);
+
+            this.evictSocketFromMemory(ws);
         }
     }
 
     /**
      * Instruct the server to subscribe the connection to the channel.
      */
-    subscribeToChannel(ws: WebSocket, message: any): any {
+    subscribeToChannel(ws: WebSocket, message: PusherMessage): any {
         if (this.server.closing) {
             ws.sendJson({
                 event: 'pusher:error',
@@ -303,19 +321,23 @@ export class WsHandler {
             });
 
             // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-            return ws.end(1012);
+            ws.end(1012);
+
+            this.evictSocketFromMemory(ws);
+
+            return;
         }
 
         let channel = message.data.channel;
         let channelManager = this.getChannelManagerFor(channel);
 
-        if (channel.length > this.server.options.channelLimits.maxNameLength) {
+        if (channel.length > ws.app.maxChannelNameLength) {
             let broadcastMessage = {
                 event: 'pusher:subscription_error',
                 channel,
                 data: {
                     type: 'LimitReached',
-                    error: `The channel name is longer than the allowed ${this.server.options.channelLimits.maxNameLength} characters.`,
+                    error: `The channel name is longer than the allowed ${ws.app.maxChannelNameLength} characters.`,
                     status: 4009,
                 },
             };
@@ -358,7 +380,8 @@ export class WsHandler {
                 ws.subscribedChannels.add(channel);
             }
 
-            this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+            // Make sure to update the socket after new data was pushed in.
+            this.server.adapter.addSocket(ws.app.id, ws);
 
             // If the connection freshly joined, send the webhook:
             if (response.channelConnections === 1) {
@@ -378,26 +401,24 @@ export class WsHandler {
             }
 
             // Otherwise, prepare a response for the presence channel.
-            let { user_id, user_info } = response.member;
-
             this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
-                let member = { user_id, user_info };
+                let { user_id, user_info } = response.member;
 
-                ws.presence.set(channel, member);
+                ws.presence.set(channel, response.member);
 
                 // Make sure to update the socket after new data was pushed in.
-                this.server.adapter.getNamespace(ws.app.id).addSocket(ws);
+                this.server.adapter.addSocket(ws.app.id, ws);
 
                 // If the member already exists in the channel, don't resend the member_added event.
                 if (!members.has(user_id as string)) {
-                    this.server.webhookSender.sendMemberAdded(ws.app, channel, member.user_id as string);
+                    this.server.webhookSender.sendMemberAdded(ws.app, channel, user_id as string);
 
                     this.server.adapter.send(ws.app.id, channel, JSON.stringify({
                         event: 'pusher_internal:member_added',
                         channel,
                         data: JSON.stringify({
-                            user_id: member.user_id,
-                            user_info: member.user_info,
+                            user_id: user_id,
+                            user_info: user_info,
                         }),
                     }), ws.id);
 
@@ -436,7 +457,7 @@ export class WsHandler {
     /**
      * Instruct the server to unsubscribe the connection from the channel.
      */
-    unsubscribeFromChannel(ws: WebSocket, channel: string): Promise<void> {
+    unsubscribeFromChannel(ws: WebSocket, channel: string, closing = false): Promise<void> {
         let channelManager = this.getChannelManagerFor(channel);
 
         return channelManager.leave(ws, channel).then(response => {
@@ -447,6 +468,9 @@ export class WsHandler {
                 // This can happen only if the user is connected to the presence channel.
                 if (channelManager instanceof PresenceChannelManager && ws.presence.has(channel)) {
                     ws.presence.delete(channel);
+
+                    // Make sure to update the socket after new data was pushed in.
+                    this.server.adapter.addSocket(ws.app.id, ws);
 
                     this.server.adapter.getChannelMembers(ws.app.id, channel, false).then(members => {
                         if (!members.has(member.user_id as string)) {
@@ -465,11 +489,15 @@ export class WsHandler {
 
                 ws.subscribedChannels.delete(channel);
 
+                // Make sure to update the socket after new data was pushed in,
+                // but only if the user is not closing the connection.
+                if (!closing) {
+                    this.server.adapter.addSocket(ws.app.id, ws);
+                }
+
                 if (response.remainingConnections === 0) {
                     this.server.webhookSender.sendChannelVacated(ws.app, channel);
                 }
-
-
             }
 
             // ws.send(JSON.stringify({
@@ -490,14 +518,14 @@ export class WsHandler {
         }
 
         return async.each(ws.subscribedChannels, (channel, callback) => {
-            this.unsubscribeFromChannel(ws, channel).then(() => callback());
+            this.unsubscribeFromChannel(ws, channel, true).then(() => callback());
         });
     }
 
     /**
      * Handle the events coming from the client.
      */
-    handleClientEvent(ws: WebSocket, message: any): any {
+    handleClientEvent(ws: WebSocket, message: PusherMessage): any {
         let { event, data, channel } = message;
 
         if (!ws.app.enableClientMessages) {
@@ -512,13 +540,13 @@ export class WsHandler {
         }
 
         // Make sure the event name length is not too big.
-        if (event.length > this.server.options.eventLimits.maxNameLength) {
+        if (event.length > ws.app.maxEventNameLength) {
             let broadcastMessage = {
                 event: 'pusher:error',
                 channel,
                 data: {
                     code: 4301,
-                    message: `Event name is too long. Maximum allowed size is ${this.server.options.eventLimits.maxNameLength}.`,
+                    message: `Event name is too long. Maximum allowed size is ${ws.app.maxEventNameLength}.`,
                 },
             };
 
@@ -530,13 +558,13 @@ export class WsHandler {
         let payloadSizeInKb = Utils.dataToKilobytes(message.data);
 
         // Make sure the total payload of the message body is not too big.
-        if (payloadSizeInKb > parseFloat(this.server.options.eventLimits.maxPayloadInKb as string)) {
+        if (payloadSizeInKb > parseFloat(ws.app.maxEventPayloadInKb as string)) {
             let broadcastMessage = {
                 event: 'pusher:error',
                 channel,
                 data: {
                     code: 4301,
-                    message: `The event data should be less than ${this.server.options.eventLimits.maxPayloadInKb} KB.`,
+                    message: `The event data should be less than ${ws.app.maxEventPayloadInKb} KB.`,
                 },
             };
 
@@ -642,8 +670,8 @@ export class WsHandler {
     /**
      * Clear WebSocket timeout.
      */
-    protected clearTimeout(ws: WebSocket) {
-        if(ws.timeout) {
+    protected clearTimeout(ws: WebSocket): void {
+        if (ws.timeout) {
             clearTimeout(ws.timeout);
         }
     }
@@ -651,7 +679,7 @@ export class WsHandler {
     /**
      * Update WebSocket timeout.
      */
-    protected updateTimeout(ws: WebSocket) {
+    protected updateTimeout(ws: WebSocket): void {
         this.clearTimeout(ws);
 
         ws.timeout = setTimeout(() => {

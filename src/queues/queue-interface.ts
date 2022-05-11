@@ -1,8 +1,15 @@
+import { JobData } from '../webhook-sender';
+
 export interface QueueInterface {
+    /**
+     * The Queue driver.
+     */
+    driver?: QueueInterface;
+
     /**
      * Add a new event with data to queue.
      */
-    addToQueue(queueName: string, data?: any): Promise<void>;
+    addToQueue(queueName: string, data?: JobData): Promise<void>;
 
     /**
      * Register the code to run when handing the queue.
@@ -12,5 +19,5 @@ export interface QueueInterface {
     /**
      * Clear the queues for a graceful shutdown.
      */
-    clear(): Promise<void>;
+    disconnect(): Promise<void>;
 }

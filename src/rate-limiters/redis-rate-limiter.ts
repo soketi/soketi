@@ -16,7 +16,17 @@ export class RedisRateLimiter extends LocalRateLimiter {
     constructor(protected server: Server) {
         super(server);
 
-        this.redisConnection = new Redis(server.options.database.redis);
+        let redisOptions = {
+            ...server.options.database.redis,
+            ...server.options.rateLimiter.redis.redisOptions,
+        };
+
+        this.redisConnection = server.options.rateLimiter.redis.clusterMode
+            ? new Redis.Cluster(server.options.database.redis.clusterNodes, {
+                scaleReads: 'slave',
+                redisOptions,
+            })
+            : new Redis(redisOptions);
     }
 
     /**
@@ -28,6 +38,17 @@ export class RedisRateLimiter extends LocalRateLimiter {
             duration: 1,
             storeClient: this.redisConnection,
             keyPrefix: `app:${appId}`,
+            // TODO: Insurance limiter?
+            // insuranceLimiter: super.createNewRateLimiter(appId, maxPoints),
         }));
+    }
+
+    /**
+     * Clear the rate limiter or active connections.
+     */
+    disconnect(): Promise<void> {
+        this.redisConnection.disconnect();
+
+        return Promise.resolve();
     }
 }

@@ -1,6 +1,6 @@
 import { AdapterInterface } from './adapter-interface';
 import { Namespace } from '../namespace';
-import { PresenceMember } from '../presence-member';
+import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { Server } from '../server';
 import { WebSocket } from 'uWebSockets.js';
 
@@ -21,6 +21,13 @@ export class LocalAdapter implements AdapterInterface {
     }
 
     /**
+     * Initialize the adapter.
+     */
+    async init(): Promise<AdapterInterface> {
+        return Promise.resolve(this);
+    }
+
+    /**
      * Get the app namespace.
      */
     getNamespace(appId: string): Namespace {
@@ -36,6 +43,44 @@ export class LocalAdapter implements AdapterInterface {
      */
     getNamespaces(): Map<string, Namespace> {
         return this.namespaces;
+    }
+
+    /**
+     * Add a new socket to the namespace.
+     */
+    async addSocket(appId: string, ws: WebSocket): Promise<boolean> {
+        return this.getNamespace(appId).addSocket(ws);
+    }
+
+    /**
+     * Remove a socket from the namespace.
+     */
+    async removeSocket(appId: string, wsId: string): Promise<boolean> {
+        return this.getNamespace(appId).removeSocket(wsId);
+    }
+
+    /**
+     * Add a socket ID to the channel identifier.
+     * Return the total number of connections after the connection.
+     */
+    async addToChannel(appId: string, channel: string, ws: WebSocket): Promise<number> {
+        return this.getNamespace(appId).addToChannel(ws, channel).then(() => {
+            return this.getChannelSocketsCount(appId, channel);
+        });
+    }
+
+    /**
+     * Remove a socket ID from the channel identifier.
+     * Return the total number of connections remaining to the channel.
+     */
+    async removeFromChannel(appId: string, channel: string|string[], wsId: string): Promise<number|void> {
+        return this.getNamespace(appId).removeFromChannel(wsId, channel).then((remainingConnections) => {
+            if (!Array.isArray(channel)) {
+                return this.getChannelSocketsCount(appId, channel);
+            }
+
+            return;
+        });
     }
 
     /**
@@ -62,6 +107,13 @@ export class LocalAdapter implements AdapterInterface {
     }
 
     /**
+     * Get channels with total sockets count.
+     */
+    async getChannelsWithSocketsCount(appId: string, onlyLocal?: boolean): Promise<Map<string, number>> {
+        return this.getNamespace(appId).getChannelsWithSocketsCount();
+    }
+
+    /**
      * Get all the channel sockets associated with a namespace.
      */
     async getChannelSockets(appId: string, channel: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
@@ -80,7 +132,7 @@ export class LocalAdapter implements AdapterInterface {
     /**
      * Get a given presence channel's members.
      */
-    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMember>> {
+    async getChannelMembers(appId: string, channel: string, onlyLocal = false): Promise<Map<string, PresenceMemberInfo>> {
         return this.getNamespace(appId).getChannelMembers(channel);
     }
 
@@ -104,31 +156,42 @@ export class LocalAdapter implements AdapterInterface {
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId: string|null = null): any {
-        let nsp = this.namespaces.get(appId);
-
-        if (!nsp) {
-            return;
-        }
-
-        nsp.getChannelSockets(channel).then(sockets => {
+        this.getNamespace(appId).getChannelSockets(channel).then(sockets => {
             sockets.forEach((ws) => {
                 if (exceptingId && exceptingId === ws.id) {
                     return;
                 }
 
-                ws.sendJson(JSON.parse(data));
+                // Fix race conditions.
+                if (ws.sendJson) {
+                    ws.sendJson(JSON.parse(data));
+                }
             });
         });
     }
 
     /**
-     * Clear the local namespaces.
+     * Clear the connections.
      */
-    clear(namespaceId?: string): void {
-        if (namespaceId) {
-            this.namespaces.set(namespaceId, new Namespace(namespaceId));
-        } else {
-            this.namespaces = new Map<string, Namespace>();
-        }
+    disconnect(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    /**
+     * Clear the namespace from the local adapter.
+     */
+    clearNamespace(namespaceId: string): Promise<void> {
+        this.namespaces.set(namespaceId, new Namespace(namespaceId));
+
+        return Promise.resolve();
+    }
+
+     /**
+      * Clear all namespaces from the local adapter.
+      */
+    clearNamespaces(): Promise<void> {
+        this.namespaces = new Map<string, Namespace>();
+
+        return Promise.resolve();
     }
 }

@@ -14,7 +14,7 @@ export class AppManager implements AppManagerInterface {
     /**
      * The application manager driver.
      */
-    protected driver: AppManagerInterface;
+    public driver: AppManagerInterface;
 
     /**
      * Create a new database instance.
@@ -37,14 +37,42 @@ export class AppManager implements AppManagerInterface {
      * Find an app by given ID.
      */
     findById(id: string): Promise<App|null> {
-        return this.driver.findById(id);
+        if (!this.server.options.appManager.cache.enabled) {
+            return this.driver.findById(id);
+        }
+
+        return this.server.cacheManager.get(`app:${id}`).then(appFromCache => {
+            if (appFromCache) {
+                return appFromCache as App;
+            }
+
+            return this.driver.findById(id).then(app => {
+                this.server.cacheManager.set(`app:${id}`, app, this.server.options.appManager.cache.ttl);
+
+                return app;
+            });
+        });
     }
 
     /**
      * Find an app by given key.
      */
     findByKey(key: string): Promise<App|null> {
-        return this.driver.findByKey(key);
+        if (!this.server.options.appManager.cache.enabled) {
+            return this.driver.findByKey(key);
+        }
+
+        return this.server.cacheManager.get(`app:${key}`).then(appFromCache => {
+            if (appFromCache) {
+                return appFromCache as App;
+            }
+
+            return this.driver.findByKey(key).then(app => {
+                this.server.cacheManager.set(`app:${key}`, app, this.server.options.appManager.cache.ttl);
+
+                return app;
+            });
+        });
     }
 
     /**

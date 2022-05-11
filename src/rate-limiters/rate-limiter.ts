@@ -1,4 +1,5 @@
 import { App } from './../app';
+import { ClusterRateLimiter } from './cluster-rate-limiter';
 import { ConsumptionResponse, RateLimiterInterface } from './rate-limiter-interface';
 import { LocalRateLimiter } from './local-rate-limiter';
 import { Log } from './../log';
@@ -10,10 +11,8 @@ import { WebSocket } from 'uWebSockets.js';
 export class RateLimiter implements RateLimiterInterface {
     /**
      * Rate Limiter driver.
-     *
-     * @type {RateLimiterInterface}
      */
-    protected driver: RateLimiterInterface;
+    public driver: RateLimiterInterface;
 
     /**
      * Initialize the rate limiter driver.
@@ -23,6 +22,8 @@ export class RateLimiter implements RateLimiterInterface {
             this.driver = new LocalRateLimiter(server);
         } else if (server.options.rateLimiter.driver === 'redis') {
             this.driver = new RedisRateLimiter(server);
+        } else if (server.options.rateLimiter.driver === 'cluster') {
+            this.driver = new ClusterRateLimiter(server);
         } else {
             Log.error('No stats driver specified.');
         }
@@ -42,9 +43,9 @@ export class RateLimiter implements RateLimiterInterface {
         return this.driver.consumeFrontendEventPoints(points, app, ws);
     }
 
-     /**
-      * Consume the points for HTTP read requests.
-      */
+    /**
+     * Consume the points for HTTP read requests.
+     */
     consumeReadRequestsPoints(points: number, app?: App, ws?: WebSocket): Promise<ConsumptionResponse> {
         return this.driver.consumeReadRequestsPoints(points, app, ws);
     }
@@ -54,5 +55,12 @@ export class RateLimiter implements RateLimiterInterface {
      */
     createNewRateLimiter(appId: string, maxPoints: number): RateLimiterAbstract {
         return this.driver.createNewRateLimiter(appId, maxPoints);
+    }
+
+    /**
+     * Clear the rate limiter or active connections.
+     */
+     disconnect(): Promise<void> {
+        return this.driver.disconnect();
     }
 }

@@ -1,7 +1,7 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
-jest.retryTimes(2);
+jest.retryTimes(parseInt(process.env.RETRY_TIMES || '1'));
 
 describe('ws test for redis adapter', () => {
     beforeEach(() => {
@@ -18,12 +18,15 @@ describe('ws test for redis adapter', () => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'appManager.array.apps.0.enableClientMessages': true, port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel();
+                let client2;
                 let channelName = `private-${Utils.randomChannelName()}`;
 
                 client1.connection.bind('connected', () => {
                     client1.connection.bind('message', ({ event, channel, data }) => {
                         if (event === 'client-greeting' && channel === channelName) {
                             expect(data.message).toBe('hello');
+                            client1.disconnect();
+                            client2.disconnect();
                             done();
                         }
                     });
@@ -31,7 +34,7 @@ describe('ws test for redis adapter', () => {
                     let channel = client1.subscribe(channelName);
 
                     channel.bind('pusher:subscription_succeeded', () => {
-                        let client2 = Utils.newClientForPrivateChannel({}, 6002);
+                        client2 = Utils.newClientForPrivateChannel({}, 6002);
 
                         client2.connection.bind('connected', () => {
                             let channel = client2.subscribe(channelName);
@@ -72,6 +75,8 @@ describe('ws test for redis adapter', () => {
                             channel.bind('pusher:subscription_succeeded', () => {
                                 channel.bind('pusher:error', (error) => {
                                     expect(error.code).toBe(4301);
+                                    client1.disconnect();
+                                    client2.disconnect();
                                     done();
                                 });
 
@@ -111,6 +116,8 @@ describe('ws test for redis adapter', () => {
                             channel.bind('pusher:subscription_succeeded', () => {
                                 channel.bind('pusher:error', (error) => {
                                     expect(error.code).toBe(4301);
+                                    client1.disconnect();
+                                    client2.disconnect();
                                     done();
                                 });
 
@@ -149,6 +156,8 @@ describe('ws test for redis adapter', () => {
                             channel.bind('pusher:subscription_succeeded', () => {
                                 channel.bind('pusher:error', (error) => {
                                     expect(error.code).toBe(4301);
+                                    client1.disconnect();
+                                    client2.disconnect();
                                     done();
                                 });
 
@@ -173,6 +182,7 @@ describe('ws test for redis adapter', () => {
 
                     client2.connection.bind('state_change', ({ current }) => {
                         if (current === 'failed') {
+                            client1.disconnect();
                             done();
                         } else {
                             throw new Error(`${current} is not an expected state.`);
@@ -203,19 +213,20 @@ describe('ws test for redis adapter', () => {
                 };
 
                 let client1 = Utils.newClientForPresenceUser(user1);
+                let client2 = Utils.newClientForPresenceUser(user2, {}, 6002);
                 let channelName = `presence-${Utils.randomChannelName()}`;
 
                 client1.connection.bind('connected', () => {
                     let channel1 = client1.subscribe(channelName);
 
                     channel1.bind('pusher:subscription_succeeded', () => {
-                        let client2 = Utils.newClientForPresenceUser(user2, {}, 6002);
-
                         client2.connection.bind('message', ({ event, channel, data }) => {
                             if (event === 'pusher:subscription_error' && channel === channelName) {
                                 expect(data.type).toBe('LimitReached');
                                 expect(data.status).toBe(4100);
                                 expect(data.error).toBeDefined();
+                                client1.disconnect();
+                                client2.disconnect();
                                 done();
                             }
                         });
@@ -241,6 +252,8 @@ describe('ws test for redis adapter', () => {
                         client2.connection.bind('connected', () => {
                             server1.adapter.getSockets('app-id').then(sockets => {
                                 expect(sockets.size).toBe(2);
+                                client1.disconnect();
+                                client2.disconnect();
                                 done();
                             });
                         });
@@ -280,6 +293,8 @@ describe('ws test for redis adapter', () => {
                                             Utils.wait(3000).then(() => {
                                                 server1.adapter.getChannelSockets('app-id', channelName).then(sockets => {
                                                     expect(sockets.size).toBe(1);
+                                                    client1.disconnect();
+                                                    client2.disconnect();
                                                     done();
                                                 });
                                             });

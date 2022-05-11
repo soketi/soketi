@@ -1,5 +1,6 @@
 import async from 'async';
 import { Log } from '../src/log';
+import { PusherApiMessage } from '../src/message';
 import { Server } from './../src/server';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -21,32 +22,52 @@ export class Utils {
         return (process.env.TEST_ADAPTER || 'local') === adapter;
     }
 
+    static queueDriverIs(queueDriver: string) {
+        return (process.env.TEST_QUEUE_DRIVER || 'sync') === queueDriver;
+    }
+
     static waitForPortsToFreeUp(): Promise<any> {
         return Promise.all([
             tcpPortUsed.waitUntilFree(6001, 500, 5 * 1000),
             tcpPortUsed.waitUntilFree(6002, 500, 5 * 1000),
             tcpPortUsed.waitUntilFree(3001, 500, 5 * 1000),
             tcpPortUsed.waitUntilFree(9601, 500, 5 * 1000),
+            tcpPortUsed.waitUntilFree(11002, 500, 5 * 1000),
         ]);
     }
 
     static newServer(options = {}, callback): any {
         options = {
+            'cluster.prefix': uuidv4(),
             'adapter.redis.prefix': uuidv4(),
+            'adapter.nats.prefix': uuidv4(),
             'appManager.array.apps.0.maxBackendEventsPerSecond': 200,
             'appManager.array.apps.0.maxClientEventsPerSecond': 200,
             'appManager.array.apps.0.maxReadRequestsPerSecond': 200,
+            'metrics.enabled': true,
+            'appManager.mysql.useMysql2': true,
+            'cluster.port': parseInt((Math.random() * (20000 - 10000) + 10000).toString()), // random: 10000-20000
+            'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
+            'cluster.ignoreProcess': false,
+            'webhooks.batching.enabled': false, // TODO: Find out why batching works but fails tests
+            'webhooks.batching.duration': 1,
+            'appManager.cache.enabled': true,
+            'appManager.cache.ttl': -1,
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
             'queue.driver': process.env.TEST_QUEUE_DRIVER || 'sync',
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
-            'appManager.dynamodb.endpoint': 'http://127.0.0.1:8000',
-            'metrics.enabled': true,
-            'appManager.mysql.useMysql2': true,
+            'database.mysql.user': process.env.TEST_MYSQL_USER || 'testing',
+            'database.mysql.password': process.env.TEST_MYSQL_PASSWORD || 'testing',
+            'database.mysql.database': process.env.TEST_MYSQL_DATABASE || 'testing',
+            'database.postgres.user': process.env.TEST_POSTGRES_USER || 'testing',
+            'database.postgres.password': process.env.TEST_POSTGRES_PASSWORD || 'testing',
+            'database.postgres.database': process.env.TEST_POSTGRES_DATABASE || 'testing',
+            'queue.sqs.queueUrl': process.env.TEST_SQS_URL || 'http://localhost:4566/000000000000/test.fifo',
         };
 
-        return Server.start(options, (server: Server) => {
+        return (new Server(options)).start((server: Server) => {
             this.wsServers.push(server);
 
             callback(server);
@@ -57,6 +78,9 @@ export class Utils {
         return this.newServer({
             // Make sure the same prefixes exists so that they can communicate
             'adapter.redis.prefix': server.options.adapter.redis.prefix,
+            'adapter.nats.prefix': server.options.adapter.nats.prefix,
+            'cluster.prefix': server.options.cluster.prefix,
+            'cluster.port': server.options.cluster.port,
             ...options,
         }, callback);
     }
@@ -203,10 +227,6 @@ export class Utils {
             }),
             ...clientOptions,
         }, port, key);
-    }
-
-    static sendEventToChannel(pusher, channel: string|string[], event: string, body: any): any {
-        return pusher.trigger(channel, event, body);
     }
 
     static signTokenForPrivateChannel(

@@ -7,4 +7,10 @@ module.exports = {
     collectCoverage: true,
     maxWorkers: 1,
     testRunner: 'jest-circus/runner',
+    globals: {
+        'ts-jest': {
+            isolatedModules: true,
+        },
+        Uint8Array: Uint8Array,
+    },
 };

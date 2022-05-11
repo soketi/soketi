@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
-jest.retryTimes(2);
+jest.retryTimes(parseInt(process.env.RETRY_TIMES || '1'));
 
 describe('http api test', () => {
     beforeEach(() => {
@@ -302,6 +302,41 @@ describe('http api test', () => {
         });
     });
 
+    test('sends batch events', done => {
+        Utils.newServer({}, (server: Server) => {
+            let client = Utils.newClient();
+            let backend = Utils.newBackend();
+            let channelName = Utils.randomChannelName();
+
+            client.connection.bind('connected', () => {
+                let channel = client.subscribe(channelName);
+                let receivedMessages = 0;
+
+                channel.bind('greeting', e => {
+                    expect(e.message).toBe('hello');
+                    expect(e.weirdVariable).toBe('abc/d');
+
+                    receivedMessages++;
+
+                    if (receivedMessages === 3) {
+                        client.disconnect();
+                        done();
+                    }
+                });
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    backend.triggerBatch([
+                        { name: 'greeting', channel: channelName, data: { message: 'hello', weirdVariable: 'abc/d' } },
+                        { name: 'greeting', channel: channelName, data: { message: 'hello', weirdVariable: 'abc/d' } },
+                        { name: 'greeting', channel: channelName, data: { message: 'hello', weirdVariable: 'abc/d' } },
+                    ]).catch(error => {
+                        throw new Error(error);
+                    });
+                });
+            });
+        });
+    });
+
     test('passing an inexistent app id will return 404', done => {
         Utils.newServer({}, (server: Server) => {
             let backend = Utils.newBackend('inexistent-app-id');
@@ -327,6 +362,7 @@ describe('http api test', () => {
                     backend.get({ path: '/channels/' + channelName + '/users' }).then(res => res.json()).then(body => {
                         expect(body.error).toBeDefined();
                         expect(body.code).toBe(400);
+                        client.disconnect();
                         done();
                     });
                 });
@@ -357,7 +393,7 @@ describe('http api test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendEventToChannel(badBackend, channelName, 'greeting-from-bad', {
+                    badBackend.trigger(channelName, 'greeting-from-bad', {
                         message: 'hello',
                         array: ['we', 'support', 'array'],
                         objects: { works: true },
@@ -365,7 +401,7 @@ describe('http api test', () => {
                         throw new Error(error);
                     });
 
-                    Utils.sendEventToChannel(goodBackend, channelName, 'greeting-from-good', {
+                    goodBackend.trigger(channelName, 'greeting-from-good', {
                         message: 'hello',
                         array: ['we', 'support', 'array'],
                         objects: { works: true },
@@ -381,7 +417,7 @@ describe('http api test', () => {
         Utils.newServer({ 'eventLimits.maxChannelsAtOnce': 1 }, (server: Server) => {
             let backend = Utils.newBackend();
 
-            Utils.sendEventToChannel(backend, ['ch1', 'ch2'], 'greeting', { message: 'hello' })
+            backend.trigger(['ch1', 'ch2'], 'greeting', { message: 'hello' })
                 .then(res => res.json())
                 .then(res => {
                     expect(res.error).toBeDefined();
@@ -398,7 +434,7 @@ describe('http api test', () => {
         Utils.newServer({ 'eventLimits.maxNameLength': 7 }, (server: Server) => {
             let backend = Utils.newBackend();
 
-            Utils.sendEventToChannel(backend, 'ch1', 'greeting', { message: 'hello' })
+            backend.trigger('ch1', 'greeting', { message: 'hello' })
                 .then(res => res.json())
                 .then(res => {
                     expect(res.error).toBeDefined();
@@ -415,11 +451,11 @@ describe('http api test', () => {
         Utils.newServer({ 'eventLimits.maxPayloadInKb': 1/1024 }, (server: Server) => {
             let backend = Utils.newBackend();
 
-            Utils.sendEventToChannel(backend, 'ch1', 'greeting', { message: 'hello' })
+            backend.trigger('ch1', 'greeting', { message: 'hello' })
                 .then(res => res.json())
                 .then(res => {
                     expect(res.error).toBeDefined();
-                    expect(res.code).toBe(400);
+                    expect(res.code).toBe(413);
                     done();
                 })
                 .catch(error => {
@@ -432,7 +468,7 @@ describe('http api test', () => {
         Utils.newServer({ 'httpApi.requestLimitInMb': 1/1024/1024 }, (server: Server) => {
             let backend = Utils.newBackend();
 
-            Utils.sendEventToChannel(backend, 'ch1', 'greeting', { message: 'hello' })
+            backend.trigger('ch1', 'greeting', { message: 'hello' })
                 .catch(err => {
                     expect(err.body).toBeDefined();
                     expect(err.status).toBe(413);
@@ -448,7 +484,6 @@ describe('http api test', () => {
 
     test('non existent route must return 404', done => {
         Utils.newServer({}, (server: Server) => {
-
             axios.get('http://127.0.0.1:6001/favicon.ico').then(res => {
                 throw new Error('Status must be 404');
             },(e) => {
@@ -485,7 +520,7 @@ describe('http api test', () => {
                 });
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    Utils.sendEventToChannel(backend, channelName, 'greeting', { message: 'hello', weirdVariable: 'abc/d' })
+                    backend.trigger(channelName, 'greeting', { message: 'hello', weirdVariable: 'abc/d' })
                         .catch(error => {
                             throw new Error(error);
                         });

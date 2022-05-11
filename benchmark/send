@@ -18,7 +18,12 @@ $fs->setScriptFile($flags);
 $fs->addOpt('interval', 'i', 'Specify at which interval to send each message.', FlagType::FLOAT, false, 0.1);
 $fs->addOpt('messages', 'm', 'Specify the number of messages to send.', FlagType::INT, false);
 $fs->addOpt('host', 'h', 'Specify the host to connect to.', FlagType::STRING, false, '127.0.0.1');
+$fs->addOpt('app-id', 'app-id', 'Specify the ID to use.', FlagType::STRING, false, 'app-id');
+$fs->addOpt('app-key', 'app-key', 'Specify the key to use.', FlagType::STRING, false, 'app-key');
+$fs->addOpt('app-secret', 'app-secret', 'Specify the secret to use.', FlagType::STRING, false, 'app-secret');
+$fs->addOpt('port', 'p', 'Specify the port to connect to.', FlagType::INT, false, 6001);
 $fs->addOpt('ssl', 's', 'Securely connect to the server.', FlagType::BOOL, false, false);
+$fs->addOpt('verbose', 'v', 'Enable verbosity.', FlagType::BOOL, false, false);
 
 if (! $fs->parse($argv)) {
     return;
@@ -27,13 +32,18 @@ if (! $fs->parse($argv)) {
 $options = $fs->getOpts();
 $args = $fs->getArgs();
 
-$pusher = new Pusher('app-key', 'app-secret', 'app-id', [
-    'host' => $options['host'],
-    'port' => 6001,
-    'scheme' => $options['ssl'] ? 'https' : 'http',
-    'encrypted' => true,
-    'useTLS' => $options['ssl'],
-]);
+$pusher = new Pusher(
+    $options['app-key'] ?? 'app-key',
+    $options['app-secret'] ?? 'app-secret',
+    $options['app-id'] ?? 'app-id',
+    [
+        'host' => $options['host'],
+        'port' => $options['port'],
+        'scheme' => $options['ssl'] ? 'https' : 'http',
+        'encrypted' => true,
+        'useTLS' => $options['ssl'],
+    ]
+);
 
 $interval = $options['interval'] ?? null;
 $messagesBeforeStop = $options['messages'] ?? null;
@@ -46,8 +56,12 @@ $loop->addPeriodicTimer($interval, function () use ($pusher, &$totalMessages, $m
     }
 
     $pusher->trigger('benchmark', 'timed-message', [
-        'time' => Carbon::now()->getPreciseTimestamp(3),
+        'time' => $time = Carbon::now()->getPreciseTimestamp(3),
     ]);
 
     $totalMessages++;
+
+    if ($options['verbose'] ?? false) {
+        echo 'Sent message with time: '.$time.PHP_EOL;
+    }
 });

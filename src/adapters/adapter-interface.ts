@@ -1,12 +1,24 @@
 import { Namespace } from '../namespace';
-import { PresenceMember } from '../presence-member';
+import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { WebSocket } from 'uWebSockets.js';
+
+const Discover = require('node-discover');
 
 export interface AdapterInterface {
     /**
      * The app connections storage class to manage connections.
      */
     namespaces?: Map<string, Namespace>;
+
+    /**
+     * The list of nodes in the current private network.
+     */
+    driver?: AdapterInterface;
+
+    /**
+     * Initialize the adapter.
+     */
+    init(): Promise<AdapterInterface>;
 
     /**
      * Get the app namespace.
@@ -19,14 +31,46 @@ export interface AdapterInterface {
     getNamespaces(): Map<string, Namespace>;
 
     /**
+     * Add a new socket to the namespace.
+     */
+    addSocket(appId: string, ws: WebSocket): Promise<boolean>;
+
+    /**
+     * Remove a socket from the namespace.
+     */
+    removeSocket(appId: string, wsId: string): Promise<boolean>;
+
+    /**
+     * Add a socket ID to the channel identifier.
+     * Return the total number of connections after the connection.
+     */
+    addToChannel(appId: string, channel: string, ws: WebSocket): Promise<number>;
+
+    /**
+     * Remove a socket ID from the channel identifier.
+     * Return the total number of connections remaining to the channel.
+     */
+    removeFromChannel(appId: string, channel: string|string[], wsId: string): Promise<number|void>;
+
+    /**
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string|null): any;
 
     /**
-     * Clear the local namespaces.
+     * Clear the connection for the adapter.
      */
-    clear(namespaceId?: string): void;
+    disconnect(): Promise<void>;
+
+    /**
+     * Clear the namespace from the local adapter.
+     */
+    clearNamespace(namespaceId: string): Promise<void>;
+
+    /**
+     * Clear all namespaces from the local adapter.
+     */
+    clearNamespaces(): Promise<void>;
 
     /**
      * Get all sockets from the namespace.
@@ -44,6 +88,11 @@ export interface AdapterInterface {
     getChannels(appId: string, onlyLocal?: boolean): Promise<Map<string, Set<string>>>;
 
     /**
+     * Get the list of channels with the websockets count.
+     */
+    getChannelsWithSocketsCount(appId: string, onlyLocal?: boolean): Promise<Map<string, number>>;
+
+    /**
      * Get all the channel sockets associated with a namespace.
      */
     getChannelSockets(appId: string, channel: string, onlyLocal?: boolean): Promise<Map<string, WebSocket>>;
@@ -56,7 +105,7 @@ export interface AdapterInterface {
     /**
      * Get a given presence channel's members.
      */
-    getChannelMembers(appId: string, channel: string, onlyLocal?: boolean): Promise<Map<string, PresenceMember>>;
+    getChannelMembers(appId: string, channel: string, onlyLocal?: boolean): Promise<Map<string, PresenceMemberInfo>>;
 
     /**
      * Get a given presence channel's members count

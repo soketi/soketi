@@ -1,4 +1,4 @@
-name: Release
+name: NPM Release
 
 on:
   push:
@@ -14,9 +14,9 @@ jobs:
     name: Publish to NPM
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.0.0
 
-      - uses: actions/setup-node@v2.5.0
+      - uses: actions/setup-node@v3.1.0
         name: Installing Node.js v16.x
         with:
           node-version: 16.x
@@ -37,7 +37,7 @@ jobs:
 
       - name: Compute GitHub tag
         id: tag
-        uses: dawidd6/action-get-tag@v1
+        uses: dawidd6/action-get-tag@v1.1.0
 
       - name: Publish
         run: |

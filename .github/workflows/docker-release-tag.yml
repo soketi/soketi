@@ -1,4 +1,4 @@
-name: Docker Release
+name: Docker Release - Standard
 
 on:
   push:
@@ -19,11 +19,11 @@ jobs:
     name: Tag Release (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.0.0
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v3.6.2
+        uses: docker/metadata-action@v3.7.0
         with:
           images: quay.io/soketi/soketi
           tags: |
@@ -31,24 +31,24 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}-alpine
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v1.2.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v1.6.0
 
       - name: Compute GitHub tag
         id: tag
-        uses: dawidd6/action-get-tag@v1
+        uses: dawidd6/action-get-tag@v1.1.0
 
       - name: Login to Quay
-        uses: docker/login-action@v1
+        uses: docker/login-action@v1.12.0
         with:
           registry: quay.io
           username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
       - name: Build and push (node:${{ matrix.node }})
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v2.7.0
         with:
           push: true
           context: .
@@ -56,3 +56,7 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
           build-args: |
             VERSION=${{ matrix.node }}
+          platforms: |
+            linux/amd64
+            linux/arm64
+            linux/arm/v7

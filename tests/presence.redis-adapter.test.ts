@@ -1,7 +1,7 @@
 import { Server } from './../src/server';
 import { Utils } from './utils';
 
-jest.retryTimes(2);
+jest.retryTimes(parseInt(process.env.RETRY_TIMES || '1'));
 
 describe('presence channel test for redis adapter', () => {
     beforeEach(() => {
@@ -69,6 +69,7 @@ describe('presence channel test for redis adapter', () => {
                     johnChannel.bind('pusher:member_removed', data => {
                         expect(data.id).toBe(2);
                         expect(data.info.name).toBe('Alice');
+                        johnClient.disconnect();
                         done();
                     });
                 });
