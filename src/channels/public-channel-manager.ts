@@ -54,7 +54,7 @@ export class PublicChannelManager {
         return this.server.adapter.removeFromChannel(ws.app.id, channel, ws.id).then((remainingConnections) => {
             return {
                 left: true,
-                remainingConnections,
+                remainingConnections: remainingConnections as number,
             };
         });
     }

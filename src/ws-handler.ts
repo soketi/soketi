@@ -457,7 +457,7 @@ export class WsHandler {
     /**
      * Instruct the server to unsubscribe the connection from the channel.
      */
-    unsubscribeFromChannel(ws: WebSocket, channel: string): Promise<void> {
+    unsubscribeFromChannel(ws: WebSocket, channel: string, closing = false): Promise<void> {
         let channelManager = this.getChannelManagerFor(channel);
 
         return channelManager.leave(ws, channel).then(response => {
@@ -489,8 +489,11 @@ export class WsHandler {
 
                 ws.subscribedChannels.delete(channel);
 
-                // Make sure to update the socket after new data was pushed in.
-                this.server.adapter.addSocket(ws.app.id, ws);
+                // Make sure to update the socket after new data was pushed in,
+                // but only if the user is not closing the connection.
+                if (!closing) {
+                    this.server.adapter.addSocket(ws.app.id, ws);
+                }
 
                 if (response.remainingConnections === 0) {
                     this.server.webhookSender.sendChannelVacated(ws.app, channel);
@@ -515,7 +518,7 @@ export class WsHandler {
         }
 
         return async.each(ws.subscribedChannels, (channel, callback) => {
-            this.unsubscribeFromChannel(ws, channel).then(() => callback());
+            this.unsubscribeFromChannel(ws, channel, true).then(() => callback());
         });
     }
 

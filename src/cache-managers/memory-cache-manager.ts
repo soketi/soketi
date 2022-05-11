@@ -26,7 +26,7 @@ export class MemoryCacheManager implements CacheManagerInterface {
             for (let [key, { ttlSeconds, setTime }] of Object.entries(this.memory)) {
                 let currentTime = parseInt((new Date().getTime() / 1000) as unknown as string);
 
-                if (ttlSeconds > 0 && (setTime + ttlSeconds) >= currentTime) {
+                if (ttlSeconds > 0 && (setTime + ttlSeconds) <= currentTime) {
                     delete this.memory[key];
                 }
             }
