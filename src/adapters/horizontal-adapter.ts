@@ -161,7 +161,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                 }
             },
             resolveValue: (request: Request, response: Response) => {
-                return request.channels;
+                return request.channelsWithSocketsCount;
             },
         },
         [RequestType.CHANNEL_MEMBERS]: {

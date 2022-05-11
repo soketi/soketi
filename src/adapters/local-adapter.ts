@@ -7,7 +7,6 @@ import { WebSocket } from 'uWebSockets.js';
 export class LocalAdapter implements AdapterInterface {
     // TODO: Force disconnect a specific socket
     // TODO: Force disconnect all sockets from an app.
-    // TODO: Add a getChannelsWithSocketsCount to fetch fewer data from other nodes
 
     /**
      * The app connections storage class to manage connections.
