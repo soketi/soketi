@@ -62,6 +62,10 @@ export interface Options {
         array: {
             apps: AppInterface[];
         };
+        cache: {
+            enabled: boolean;
+            ttl: number;
+        };
         dynamodb: {
             table: string;
             region: string;
@@ -77,11 +81,14 @@ export interface Options {
             version: string|number;
         };
     };
+    cache: {
+        driver: string;
+    };
     channelLimits: {
         maxNameLength: number;
     };
     cluster: {
-        host: string;
+        hostname: string;
         helloInterval: number;
         checkInterval: number;
         nodeTimeout: number,
@@ -89,6 +96,9 @@ export interface Options {
         port: number;
         prefix: string;
         ignoreProcess: boolean;
+        broadcast: string;
+        unicast: string|null;
+        multicast: string|null;
     };
     cors: {
         credentials: boolean;

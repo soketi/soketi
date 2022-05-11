@@ -40,9 +40,7 @@ export class Namespace {
      * Remove a socket from the namespace.
      */
     async removeSocket(wsId: string): Promise<boolean> {
-        for (let channel of this.channels.keys()) {
-            this.removeFromChannel(wsId, channel);
-        }
+        this.removeFromChannel(wsId, [...this.channels.keys()]);
 
         return this.sockets.delete(wsId);
     }
@@ -67,8 +65,8 @@ export class Namespace {
      * Remove a socket ID from the channel identifier.
      * Return the total number of connections remaining to the channel.
      */
-    async removeFromChannel(wsId: string, channel: string): Promise<number> {
-        return new Promise(resolve => {
+    async removeFromChannel(wsId: string, channel: string|string[]): Promise<number|void> {
+        let remove = (channel) => {
             if (this.channels.has(channel)) {
                 this.channels.get(channel).delete(wsId);
 
@@ -76,6 +74,16 @@ export class Namespace {
                     this.channels.delete(channel);
                 }
             }
+        };
+
+        return new Promise(resolve => {
+            if (Array.isArray(channel)) {
+                channel.forEach(ch => remove(ch));
+
+                return resolve();
+            }
+
+            remove(channel);
 
             resolve(this.channels.has(channel) ? this.channels.get(channel).size : 0);
         });
@@ -99,6 +107,21 @@ export class Namespace {
      */
     getChannels(): Promise<Map<string, Set<string>>> {
         return Promise.resolve(this.channels);
+    }
+
+    /**
+     * Get the list of channels with the websocket IDs.
+     */
+    getChannelsWithSocketsCount(): Promise<Map<string, number>> {
+        return this.getChannels().then((channels) => {
+            let list = new Map<string, number>();
+
+            for (let [channel, connections] of [...channels]) {
+                list.set(channel, connections.size);
+            }
+
+            return list;
+        });
     }
 
     /**

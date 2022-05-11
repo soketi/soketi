@@ -49,11 +49,16 @@ export const options = {
     scenarios: {
         // Keep connected many users users at the same time.
         soakTraffic: {
-            executor: 'per-vu-iterations',
-            vus: 250,
-            iterations: 6,
+            executor: 'ramping-vus',
+            startVUs: 0,
+            startTime: '0s',
+            stages: [
+                { duration: '50s', target: 250 },
+                { duration: '110s', target: 250 },
+            ],
+            gracefulRampDown: '40s',
             env: {
-                SLEEP_FOR: '10',
+                SLEEP_FOR: '160',
                 WS_HOST: __ENV.WS_HOST || 'ws://127.0.0.1:6001/app/app-key',
             },
         },
@@ -64,17 +69,17 @@ export const options = {
         highTraffic: {
             executor: 'ramping-vus',
             startVUs: 0,
-            startTime: '5s',
+            startTime: '50s',
             stages: [
+                { duration: '50s', target: 250 },
                 { duration: '30s', target: 250 },
-                { duration: '10s', target: 250 },
                 { duration: '10s', target: 100 },
                 { duration: '10s', target: 50 },
                 { duration: '10s', target: 100 },
             ],
-            gracefulRampDown: '5s',
+            gracefulRampDown: '20s',
             env: {
-                SLEEP_FOR: '5',
+                SLEEP_FOR: '110',
                 WS_HOST: __ENV.WS_HOST || 'ws://127.0.0.1:6001/app/app-key',
             },
         },

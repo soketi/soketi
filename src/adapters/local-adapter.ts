@@ -64,15 +64,23 @@ export class LocalAdapter implements AdapterInterface {
      * Return the total number of connections after the connection.
      */
     async addToChannel(appId: string, channel: string, ws: WebSocket): Promise<number> {
-        return this.getNamespace(appId).addToChannel(ws, channel);
+        return this.getNamespace(appId).addToChannel(ws, channel).then(() => {
+            return this.getChannelSocketsCount(appId, channel);
+        });
     }
 
     /**
      * Remove a socket ID from the channel identifier.
      * Return the total number of connections remaining to the channel.
      */
-    async removeFromChannel(appId: string, channel: string, wsId: string): Promise<number> {
-        return this.getNamespace(appId).removeFromChannel(wsId, channel);
+    async removeFromChannel(appId: string, channel: string|string[], wsId: string): Promise<number|void> {
+        return this.getNamespace(appId).removeFromChannel(wsId, channel).then((remainingConnections) => {
+            if (!Array.isArray(channel)) {
+                return this.getChannelSocketsCount(appId, channel);
+            }
+
+            return;
+        });
     }
 
     /**
@@ -96,6 +104,13 @@ export class LocalAdapter implements AdapterInterface {
      */
     async getChannels(appId: string, onlyLocal = false): Promise<Map<string, Set<string>>> {
         return this.getNamespace(appId).getChannels();
+    }
+
+    /**
+     * Get channels with total sockets count.
+     */
+    async getChannelsWithSocketsCount(appId: string, onlyLocal?: boolean): Promise<Map<string, number>> {
+        return this.getNamespace(appId).getChannelsWithSocketsCount();
     }
 
     /**
