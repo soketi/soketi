@@ -87,8 +87,9 @@ export class RedisAdapter extends HorizontalAdapter {
                 `${this.requestChannel}#${appId}`,
                 `${this.responseChannel}#${appId}`
             ], onError).then(() => {
-                this.subClient.on('messageBuffer', this.processMessage.bind(this));
-                super.subscribeToApp(appId);
+                return super.subscribeToApp(appId).then(() => {
+                    return this.subClient.on('messageBuffer', this.processMessage.bind(this));
+                });
             });
         } else {
             return this.subClient.subscribe([
@@ -96,9 +97,35 @@ export class RedisAdapter extends HorizontalAdapter {
                 `${this.requestChannel}#${appId}`,
                 `${this.responseChannel}#${appId}`
             ], onError).then(() => {
-                this.subClient.on('messageBuffer', this.processMessage.bind(this));
-                super.subscribeToApp(appId);
+                return super.subscribeToApp(appId).then(() => {
+                    return this.subClient.on('messageBuffer', this.processMessage.bind(this));
+                });
             });
+        }
+    }
+
+    /**
+     * Unsubscribe from the app in case no sockets are connected to it.
+     */
+     protected unsubscribeFromApp(appId: string): void {
+        super.unsubscribeFromApp(appId);
+
+        try {
+            if (this.server.options.adapter.redis.shardMode) {
+                this.subClient.sunsubscribe([
+                    `${this.requestChannel}#${appId}`,
+                    `${this.responseChannel}#${appId}`,
+                    `${this.channel}#${appId}`,
+                ]);
+            } else {
+                this.subClient.unsubscribe([
+                    `${this.requestChannel}#${appId}`,
+                    `${this.responseChannel}#${appId}`,
+                    `${this.channel}#${appId}`,
+                ]);
+            }
+        } catch (error) {
+            Log.warning(error);
         }
     }
 
