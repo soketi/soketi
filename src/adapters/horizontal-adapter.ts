@@ -403,7 +403,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(list);
                 }
 
-                this.getNumSub().then(numSub => {
+                this.getNumSub(appId).then(numSub => {
                     if (numSub <= 1) {
                         return resolve(list);
                     }
