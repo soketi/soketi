@@ -168,11 +168,10 @@ describe('ws test', () => {
         Utils.newServer({}, (server: Server) => {
             let client = Utils.newClient({}, 6001, 'invalid-key', false);
 
-            client.connection.bind('state_change', ({ current }) => {
-                if (['unavailable', 'failed', 'disconnected'].includes(current)) {
+            client.connection.bind('error', ({ error }) => {
+                if (error.data.code === 4001) {
+                    client.disconnect();
                     done();
-                } else {
-                    throw new Error(`${current} is not an expected state.`);
                 }
             });
         });
@@ -200,11 +199,10 @@ describe('ws test', () => {
         Utils.newServer({ 'appManager.array.apps.0.enabled': false }, (server: Server) => {
             let client = Utils.newClient();
 
-            client.connection.bind('state_change', ({ current }) => {
-                if (['unavailable', 'failed', 'disconnected'].includes(current)) {
+            client.connection.bind('error', ({ error }) => {
+                if (error.data.code === 4003) {
+                    client.disconnect();
                     done();
-                } else {
-                    throw new Error(`${current} is not an expected state.`);
                 }
             });
         });
