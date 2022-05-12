@@ -22,6 +22,7 @@ export enum RequestType {
     CHANNEL_MEMBERS_COUNT = 5,
     CHANNEL_SOCKETS_COUNT = 6,
     SOCKET_EXISTS_IN_CHANNEL = 7,
+    CHANNELS_WITH_SOCKETS_COUNT = 8,
 }
 
 export interface RequestExtra {
@@ -30,6 +31,7 @@ export interface RequestExtra {
     sockets?: Map<string, any>;
     members?: Map<string, PresenceMemberInfo>;
     channels?: Map<string, Set<string>>;
+    channelsWithSocketsCount?: Map<string, number>;
     totalCount?: number;
 }
 
@@ -58,6 +60,7 @@ export interface Response {
     sockets?: Map<string, WebSocket>;
     members?: [string, PresenceMemberInfo][];
     channels?: [string, string[]][];
+    channelsWithSocketsCount?: [string, number][];
     totalCount?: number;
     exists?: boolean;
 }
@@ -152,6 +155,25 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             },
             resolveValue: (request: Request, response: Response) => {
                 return request.channels;
+            },
+        },
+        [RequestType.CHANNELS_WITH_SOCKETS_COUNT]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (response.channelsWithSocketsCount) {
+                    response.channelsWithSocketsCount.forEach(([channel, connectionsCount]) => {
+                        if (request.channelsWithSocketsCount.has(channel)) {
+                            request.channelsWithSocketsCount.set(
+                                channel,
+                                request.channelsWithSocketsCount.get(channel) + connectionsCount,
+                            );
+                        } else {
+                            request.channelsWithSocketsCount.set(channel, connectionsCount);
+                        }
+                    });
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.channelsWithSocketsCount;
             },
         },
         [RequestType.CHANNEL_MEMBERS]: {
@@ -372,6 +394,33 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     }
 
     /**
+     * Get total sockets count.
+     */
+    async getChannelsWithSocketsCount(appId: string, onlyLocal?: boolean): Promise<Map<string, number>> {
+        return new Promise((resolve, reject) => {
+            super.getChannelsWithSocketsCount(appId).then(list => {
+                if (onlyLocal) {
+                    return resolve(list);
+                }
+
+                this.getNumSub().then(numSub => {
+                    if (numSub <= 1) {
+                        return resolve(list);
+                    }
+
+                    this.sendRequest(
+                        appId,
+                        RequestType.CHANNELS_WITH_SOCKETS_COUNT,
+                        resolve,
+                        reject,
+                        { numSub, channelsWithSocketsCount: list },
+                    );
+                });
+            });
+        });
+    }
+
+    /**
      * Get all the channel sockets associated with a namespace.
      */
     async getChannelSockets(appId: string, channel: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
@@ -567,6 +616,14 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         return {
                             channels: [...localChannels].map(([channel, connections]) => [channel, [...connections]]),
                         };
+                    });
+                });
+                break;
+
+            case RequestType.CHANNELS_WITH_SOCKETS_COUNT:
+                this.processRequestFromAnotherInstance(request, () => {
+                    return super.getChannelsWithSocketsCount(appId).then(channelsWithSocketsCount => {
+                        return { channelsWithSocketsCount: [...channelsWithSocketsCount] };
                     });
                 });
                 break;
