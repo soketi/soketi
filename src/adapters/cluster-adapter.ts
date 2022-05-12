@@ -24,38 +24,11 @@ export class ClusterAdapter extends HorizontalAdapter {
      * Initialize the adapter.
      */
     async init(): Promise<AdapterInterface> {
+        this.server.discover.join(this.requestChannel, this.onRequest.bind(this));
+        this.server.discover.join(this.responseChannel, this.onResponse.bind(this));
+        this.server.discover.join(this.channel, this.onMessage.bind(this));
+
         return Promise.resolve(this);
-    }
-
-    /**
-     * Signal that someone is using the app. Usually,
-     * subscribe to app-specific channels in the adapter.
-     */
-    subscribeToApp(appId: string): Promise<void> {
-        if (this.subscribedApps.includes(appId)) {
-            return Promise.resolve();
-        }
-
-        return super.subscribeToApp(appId).then(() => {
-            this.server.discover.join(this.requestChannel, this.onRequest.bind(this));
-            this.server.discover.join(this.responseChannel, this.onResponse.bind(this));
-            this.server.discover.join(this.channel, this.onMessage.bind(this));
-        });
-    }
-
-    /**
-     * Unsubscribe from the app in case no sockets are connected to it.
-     */
-    protected unsubscribeFromApp(appId: string): void {
-        if (!this.subscribedApps.includes(appId)) {
-            return;
-        }
-
-        super.unsubscribeFromApp(appId);
-
-        this.server.discover.leave(this.requestChannel);
-        this.server.discover.leave(this.responseChannel);
-        this.server.discover.leave(this.channel);
     }
 
     /**
