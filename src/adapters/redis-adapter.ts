@@ -108,24 +108,30 @@ export class RedisAdapter extends HorizontalAdapter {
      * Unsubscribe from the app in case no sockets are connected to it.
      */
      protected unsubscribeFromApp(appId: string): void {
+        if (!this.subscribedApps.includes(appId)) {
+            return;
+        }
+
+        let onError = err => {
+            if (err) {
+                Log.warning(err);
+            }
+        };
+
         super.unsubscribeFromApp(appId);
 
-        try {
-            if (this.server.options.adapter.redis.shardMode) {
-                this.subClient.sunsubscribe([
-                    `${this.requestChannel}#${appId}`,
-                    `${this.responseChannel}#${appId}`,
-                    `${this.channel}#${appId}`,
-                ]);
-            } else {
-                this.subClient.unsubscribe([
-                    `${this.requestChannel}#${appId}`,
-                    `${this.responseChannel}#${appId}`,
-                    `${this.channel}#${appId}`,
-                ]);
-            }
-        } catch (error) {
-            Log.warning(error);
+        if (this.server.options.adapter.redis.shardMode) {
+            this.subClient.sunsubscribe([
+                `${this.requestChannel}#${appId}`,
+                `${this.responseChannel}#${appId}`,
+                `${this.channel}#${appId}`,
+            ], onError);
+        } else {
+            this.subClient.unsubscribe([
+                `${this.requestChannel}#${appId}`,
+                `${this.responseChannel}#${appId}`,
+                `${this.channel}#${appId}`,
+            ], onError);
         }
     }
 
