@@ -71,43 +71,39 @@ export class RedisAdapter extends HorizontalAdapter {
      * subscribe to app-specific channels in the adapter.
      */
     subscribeToApp(appId: string): Promise<void> {
+        if (this.subscribedApps.includes(appId)) {
+            return Promise.resolve();
+        }
+
         let onError = err => {
             if (err) {
                 Log.warning(err);
             }
         };
 
-        if (this.subscribedApps.includes(appId)) {
-            return Promise.resolve();
-        }
+        let subscribeToMessages = () => {
+            return this.subClient.on('messageBuffer', this.processMessage.bind(this));
+        };
 
-        if (this.server.options.adapter.redis.shardMode) {
-            return this.subClient.ssubscribe([
-                `${this.channel}#${appId}`,
-                `${this.requestChannel}#${appId}`,
-                `${this.responseChannel}#${appId}`
-            ], onError).then(() => {
-                return super.subscribeToApp(appId).then(() => {
-                    return this.subClient.on('messageBuffer', this.processMessage.bind(this));
-                });
-            });
-        } else {
-            return this.subClient.subscribe([
-                `${this.channel}#${appId}`,
-                `${this.requestChannel}#${appId}`,
-                `${this.responseChannel}#${appId}`
-            ], onError).then(() => {
-                return super.subscribeToApp(appId).then(() => {
-                    return this.subClient.on('messageBuffer', this.processMessage.bind(this));
-                });
-            });
-        }
+        let channels = [
+            `${this.channel}#${appId}`,
+            `${this.requestChannel}#${appId}`,
+            `${this.responseChannel}#${appId}`,
+        ];
+
+        return super.subscribeToApp(appId).then(() => {
+            if (this.server.options.adapter.redis.shardMode) {
+                return this.subClient.ssubscribe(channels, onError).then(subscribeToMessages);
+            } else {
+                return this.subClient.subscribe(channels, onError).then(subscribeToMessages);
+            }
+        });
     }
 
     /**
      * Unsubscribe from the app in case no sockets are connected to it.
      */
-     protected unsubscribeFromApp(appId: string): void {
+    protected unsubscribeFromApp(appId: string): void {
         if (!this.subscribedApps.includes(appId)) {
             return;
         }
@@ -118,20 +114,18 @@ export class RedisAdapter extends HorizontalAdapter {
             }
         };
 
+        let channels = [
+            `${this.requestChannel}#${appId}`,
+            `${this.responseChannel}#${appId}`,
+            `${this.channel}#${appId}`,
+        ];
+
         super.unsubscribeFromApp(appId);
 
         if (this.server.options.adapter.redis.shardMode) {
-            this.subClient.sunsubscribe([
-                `${this.requestChannel}#${appId}`,
-                `${this.responseChannel}#${appId}`,
-                `${this.channel}#${appId}`,
-            ], onError);
+            this.subClient.sunsubscribe(channels, onError);
         } else {
-            this.subClient.unsubscribe([
-                `${this.requestChannel}#${appId}`,
-                `${this.responseChannel}#${appId}`,
-                `${this.channel}#${appId}`,
-            ], onError);
+            this.subClient.unsubscribe(channels, onError);
         }
     }
 

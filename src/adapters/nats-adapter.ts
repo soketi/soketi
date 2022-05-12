@@ -81,7 +81,7 @@ export class NatsAdapter extends HorizontalAdapter {
             return Promise.resolve();
         }
 
-        return new Promise(resolve => {
+        return super.subscribeToApp(appId).then(() => {
             let queuesWithCallbacks: QueueWithCallback[] = [
                 {
                     name: `${this.requestChannel}#${appId}#req`,
@@ -97,13 +97,13 @@ export class NatsAdapter extends HorizontalAdapter {
                 },
             ];
 
-            async.each(queuesWithCallbacks, (queue: QueueWithCallback, callback) => {
+            return async.each(queuesWithCallbacks, (queue: QueueWithCallback, callback) => {
                 let sub = this.connection.subscribe(queue.name, { callback: queue.callback });
 
                 if (sub) {
                     callback();
                 }
-            }).then(() => super.subscribeToApp(appId).then(() => resolve()));
+            });
         });
     }
 
