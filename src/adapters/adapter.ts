@@ -105,6 +105,13 @@ export class Adapter implements AdapterInterface {
     }
 
     /**
+     * Get the list of channels with the websockets count.
+     */
+    async getChannelsWithSocketsCount(appId: string, onlyLocal = false): Promise<Map<string, number>> {
+        return this.driver.getChannelsWithSocketsCount(appId, onlyLocal);
+    }
+
+    /**
      * Get all the channel sockets associated with a namespace.
      */
     async getChannelSockets(appId: string, channel: string, onlyLocal = false): Promise<Map<string, WebSocket>> {
