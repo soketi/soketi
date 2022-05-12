@@ -182,7 +182,7 @@ describe('ws test for redis adapter', () => {
                         let client2 = Utils.newClient({}, 6002, 'app-key', false);
 
                         client2.connection.bind('error', ({ error }) => {
-                            if (error.data.code === 4004) {
+                            if (error && error.data.code === 4004) {
                                 client1.disconnect();
                                 client2.disconnect();
                                 done();
