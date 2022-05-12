@@ -34,7 +34,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}-alpine
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1.2.0
+        uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
@@ -90,7 +90,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}-distroless
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1.2.0
+        uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
@@ -147,7 +147,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}-${{ matrix.node }}-debian
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1.2.0
+        uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
