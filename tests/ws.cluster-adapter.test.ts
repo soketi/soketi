@@ -189,12 +189,11 @@ describe('ws test for cluster adapter', () => {
                     Utils.wait(3000).then(() => {
                         let client2 = Utils.newClient({}, 6002, 'app-key', false);
 
-                        client2.connection.bind('state_change', ({ current }) => {
-                            if (['disconnected', 'failed', 'unavailable', 'failed'].includes(current)) {
+                        client2.connection.bind('error', ({ error }) => {
+                            if (error.data.code === 4004) {
                                 client1.disconnect();
+                                client2.disconnect();
                                 done();
-                            } else {
-                                throw new Error(`${current} is not an expected state.`);
                             }
                         });
                     });
