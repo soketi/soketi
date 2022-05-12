@@ -182,7 +182,7 @@ describe('ws test for redis adapter', () => {
                         let client2 = Utils.newClient({}, 6002, 'app-key', false);
 
                         client2.connection.bind('state_change', ({ current }) => {
-                            if (current === 'failed') {
+                            if (['disconnected', 'failed', 'unavailable', 'failed'].includes(current)) {
                                 client1.disconnect();
                                 done();
                             } else {
