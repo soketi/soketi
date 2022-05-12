@@ -6,7 +6,7 @@ import ws from 'k6/ws';
  *
  * 1. Run the servers:
  *
- * PORT=6001 ADAPTER_DRIVER=local RATE_LIMITER_DRIVER=local bin/server.js start
+ * SOKETI_PORT=6001 SOKETI_ADAPTER_DRIVER=local SOKETI_RATE_LIMITER_DRIVER=local bin/server.js start
  *
  * 2. Run the PHP senders based on the amount of messages per second you want to receive.
  *    The sending rate influences the final benchmark.
@@ -36,6 +36,11 @@ if (['mysql', 'postgres', 'dynamodb'].includes(__ENV.APP_MANAGER_DRIVER)) {
 if (['redis', 'cluster', 'nats'].includes(__ENV.ADAPTER_DRIVER)) {
     maxP95 += 100;
     maxAvg += 100;
+}
+
+if (['redis'].includes(__ENV.CACHE_DRIVER)) {
+    maxP95 += 20;
+    maxAvg += 20;
 }
 
 export const options = {

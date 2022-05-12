@@ -94,9 +94,16 @@ export class Server {
         },
         cache: {
             driver: 'memory',
+            redis: {
+                redisOptions: {
+                    //
+                },
+                clusterMode: false,
+            },
         },
         channelLimits: {
             maxNameLength: 200,
+            cacheTtl: 3600,
         },
         cluster: {
             hostname: '0.0.0.0',

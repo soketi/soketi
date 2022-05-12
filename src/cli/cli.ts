@@ -41,7 +41,10 @@ export class Cli {
         APP_MANAGER_POSTGRES_VERSION: 'appManager.postgres.version',
         APP_MANAGER_MYSQL_USE_V2: 'appManager.mysql.useMysql2',
         CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength',
+        CHANNEL_CACHE_TTL: 'channelLimits.cacheTtl',
         CACHE_DRIVER: 'cache.driver',
+        CACHE_REDIS_CLUSTER_MODE: 'cache.redis.clusterMode',
+        CACHE_REDIS_OPTIONS: 'cache.redis.redisOptions',
         CLUSTER_CHECK_INTERVAL: 'cluster.checkInterval',
         CLUSTER_HOST: 'cluster.hostname',
         CLUSTER_IGNORE_PROCESS: 'cluster.ignoreProcess',
@@ -139,7 +142,7 @@ export class Cli {
         require('dotenv').config();
 
         for (let envVar in this.envVariables) {
-            let value = process.env[envVar] || process.env[`SOKETI_${envVar}`] || null;
+            let value = process.env[`SOKETI_${envVar}`] || null;
             let optionKey = this.envVariables[envVar.replace('SOKETI_', '')];
 
             if (value !== null) {

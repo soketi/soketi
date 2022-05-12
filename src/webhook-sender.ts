@@ -169,6 +169,7 @@ export class WebhookSender {
             server.queueManager.processQueue('member_removed_webhooks', queueProcessor);
             server.queueManager.processQueue('channel_vacated_webhooks', queueProcessor);
             server.queueManager.processQueue('channel_occupied_webhooks', queueProcessor);
+            server.queueManager.processQueue('cache_miss_webhooks', queueProcessor);
         }
     }
 
@@ -254,6 +255,20 @@ export class WebhookSender {
             name: App.CHANNEL_OCCUPIED_WEBHOOK,
             channel,
         }, 'channel_occupied_webhooks');
+    }
+
+    /**
+     * Send a cache_missed event.
+     */
+    public sendCacheMissed(app: App, channel: string): void {
+        if (!app.hasCacheMissedWebhooks) {
+            return;
+        }
+
+        this.send(app, {
+            name: App.CACHE_MISSED_WEBHOOK,
+            channel,
+        }, 'cache_miss_webhooks');
     }
 
     /**

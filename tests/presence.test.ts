@@ -307,4 +307,57 @@ describe('presence channel test', () => {
             });
         });
     });
+
+    test('cached presence channels work', done => {
+        Utils.newServer({}, (server: Server) => {
+            let john = {
+                user_id: 1,
+                user_info: {
+                    id: 1,
+                    name: 'John',
+                },
+            };
+
+            let alice = {
+                user_id: 2,
+                user_info: {
+                    id: 2,
+                    name: 'Alice',
+                },
+            };
+
+            let client1 = Utils.newClientForPresenceUser(john);
+            let backend = Utils.newBackend();
+            let channelName = `presence-cache-${Utils.randomChannelName()}`;
+
+            client1.connection.bind('connected', () => {
+                let channel = client1.subscribe(channelName);
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    channel.bind('greeting', e => {
+                        expect(e.message).toBe('hello');
+
+                        let client2 = Utils.newClientForPresenceUser(alice);
+
+                        client2.connection.bind('connected', () => {
+                            let channel = client2.subscribe(channelName);
+
+                            channel.bind('pusher:cache_miss', ({ event, data }) => {
+                                expect(event).toBe('greeting');
+                                expect(data).toBe(JSON.stringify({ message: 'hello'}));
+
+                                client1.disconnect();
+                                client2.disconnect();
+                                done();
+                            });
+                        });
+                    });
+
+                    backend.trigger(channelName, 'greeting', { message: 'hello' }).catch(error => {
+                        throw new Error(error);
+                    });
+                });
+            });
+        });
+    });
 });

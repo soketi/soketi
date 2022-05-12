@@ -1,5 +1,4 @@
 import { CacheManagerInterface } from './cache-manager-interface';
-import { Log } from '../log';
 import { Server } from '../server';
 
 interface Memory {
