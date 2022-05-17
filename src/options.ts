@@ -45,7 +45,7 @@ export interface Options {
             shardMode: boolean;
         };
         cluster: {
-            requestsTimeout: 5_000,
+            requestsTimeout: number;
         },
         nats: {
             requestsTimeout: number;
@@ -57,6 +57,11 @@ export interface Options {
             timeout: number;
             nodesNumber: number|null;
             credentials: string|null;
+        };
+        amqp: {
+            requestsTimeout: number;
+            prefix: string;
+            uri: string;
         };
     };
     appManager: {

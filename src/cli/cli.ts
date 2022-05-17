@@ -15,6 +15,9 @@ export class Cli {
      */
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
+        ADAPTER_AMQP_REQUESTS_TIMEOUT: 'adapter.amqp.requestsTimeout',
+        ADAPTER_AMQP_PREFIX: 'adapter.amqp.prefix',
+        ADAPTER_AMQP_URI: 'adapter.amqp.uri',
         ADAPTER_CLUSTER_REQUESTS_TIMEOUT: 'adapter.cluster.requestsTimeout',
         ADAPTER_REDIS_PREFIX: 'adapter.redis.prefix',
         ADAPTER_REDIS_CLUSTER_MODE: 'adapter.redis.clusterMode',

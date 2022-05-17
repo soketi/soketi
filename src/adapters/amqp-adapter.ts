@@ -25,20 +25,20 @@ export class AmqpAdapter extends HorizontalAdapter {
     constructor(server: Server) {
         super(server);
 
-        /* if (server.options.adapter.redis.prefix) {
-            this.channel = server.options.adapter.redis.prefix + '#' + this.channel;
-        } */
+        if (server.options.adapter.amqp.prefix) {
+            this.channel = server.options.adapter.amqp.prefix + '#' + this.channel;
+        }
 
         this.requestChannel = `${this.channel}_comms_req`;
         this.responseChannel = `${this.channel}_comms_res`;
-        // this.requestsTimeout = server.options.adapter.cluster.requestsTimeout;
+        this.requestsTimeout = server.options.adapter.amqp.requestsTimeout;
     }
 
     /**
      * Initialize the adapter.
      */
     async init(): Promise<AdapterInterface> {
-        return connect('amqp://user:password@localhost:5672').then((connection) => {
+        return connect(this.server.options.adapter.amqp.uri).then((connection) => {
             this.connection = connection;
 
             return this.connection.createChannel().then((channel) => {

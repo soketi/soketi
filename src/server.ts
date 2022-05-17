@@ -56,6 +56,11 @@ export class Server {
                 nodesNumber: null,
                 credentials: null,
             },
+            amqp: {
+                requestsTimeout: 3_000,
+                prefix: '',
+                uri: 'amqp://user:password@localhost:5672',
+            },
         },
         appManager: {
             driver: 'array',
