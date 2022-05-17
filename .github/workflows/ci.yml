@@ -33,6 +33,7 @@ jobs:
           - redis
           - cluster
           - nats
+          - amqp
         app_manager:
           - array
           - mysql
@@ -143,6 +144,15 @@ jobs:
             -p 6222:6222 \
             -p 8222:8222 \
             nats --jetstream --user="" --pass=""
+
+      - name: Setup Rabbitmq
+        if: "matrix.adapter == 'amqp'"
+        run: docker run -d \
+          -p 15672:15672 \
+          -p 5672:5672 \
+          -e RABBITMQ_DEFAULT_USER=user \
+          -e RABBITMQ_DEFAULT_PASS=password \
+          rabbitmq:3-management
 
       - name: Execute tests
         run: npm run test
