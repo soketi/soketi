@@ -95,6 +95,8 @@ export class AmqpAdapter extends HorizontalAdapter {
             return;
         }
 
+        // TODO: Disconnect from current exchange and clear up Rabbit
+
         super.unsubscribeFromApp(appId);
     }
 
