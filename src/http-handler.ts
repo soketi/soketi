@@ -29,6 +29,7 @@ export class HttpHandler {
 
     ready(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             if (this.server.closing) {
@@ -76,6 +77,7 @@ export class HttpHandler {
 
     healthCheck(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             this.send(res, 'OK');
@@ -84,6 +86,7 @@ export class HttpHandler {
 
     usage(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             let {
@@ -111,6 +114,7 @@ export class HttpHandler {
 
     metrics(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             let handleError = err => {
@@ -137,6 +141,7 @@ export class HttpHandler {
 
     channels(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
@@ -173,6 +178,7 @@ export class HttpHandler {
 
     channel(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
@@ -226,6 +232,7 @@ export class HttpHandler {
 
     channelUsers(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
@@ -251,6 +258,7 @@ export class HttpHandler {
 
     events(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.jsonBodyMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
@@ -371,6 +379,7 @@ export class HttpHandler {
         res.writeStatus('404 Not Found');
 
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             this.send(res, '', '404 Not Found');
@@ -416,6 +425,10 @@ export class HttpHandler {
         }, err => {
             return this.badResponse(res, 'The received data is incorrect.');
         });
+    }
+
+    protected corkMiddleware(res: HttpResponse, next: CallableFunction): any {
+        res.cork(() => next(null, res));
     }
 
     protected corsMiddleware(res: HttpResponse, next: CallableFunction): any {
