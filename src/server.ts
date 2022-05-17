@@ -54,6 +54,7 @@ export class Server {
                 token: null,
                 timeout: 10_000,
                 nodesNumber: null,
+                credentials: null,
             },
         },
         appManager: {

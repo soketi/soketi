@@ -56,6 +56,7 @@ export interface Options {
             token: string|null;
             timeout: number;
             nodesNumber: number|null;
+            credentials: string|null;
         };
     };
     appManager: {

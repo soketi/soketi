@@ -1,6 +1,6 @@
 import { AdapterInterface } from './adapter-interface';
 import async from 'async';
-import { connect, JSONCodec, Msg, NatsConnection, StringCodec } from 'nats';
+import { connect, credsAuthenticator, JSONCodec, Msg, NatsConnection, StringCodec } from 'nats';
 import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
 import { Log } from '../log';
 import { Server } from '../server';
@@ -64,6 +64,9 @@ export class NatsAdapter extends HorizontalAdapter {
                 pingInterval: 30_000,
                 timeout: this.server.options.adapter.nats.timeout,
                 reconnect: false,
+                ...this.server.options.adapter.nats.credentials
+                    ? { authenticator: credsAuthenticator(new TextEncoder().encode(this.server.options.adapter.nats.credentials)) }
+                    : {},
             }).then((connection) => {
                 this.connection = connection;
 
@@ -179,26 +182,6 @@ export class NatsAdapter extends HorizontalAdapter {
             return number;
         };
 
-        let nodesNumber = this.server.options.adapter.nats.nodesNumber;
-
-        if (nodesNumber && nodesNumber > 0) {
-            return new Promise(resolve => {
-                let timeout = setTimeout(() => {
-                    resolve(calculateResponses());
-                }, this.server.options.adapter.nats.requestsTimeout);
-
-                // TODO: Temporarily cache the response for this specific subject.
-                this.connection.request('$SYS.REQ.SERVER.PING.CONNZ', this.jc.encode({ 'filter_subject': `${this.requestChannel}#${appId}` })).then(response => {
-                    responses.push(response);
-
-                    if (responses.length === nodesNumber) {
-                        resolve(calculateResponses());
-                        clearTimeout(timeout);
-                    }
-                });
-            });
-        }
-
         return new Promise(resolve => {
             let responses: Msg[] = [];
 
@@ -208,6 +191,8 @@ export class NatsAdapter extends HorizontalAdapter {
 
             this.connection.request('$SYS.REQ.SERVER.PING.CONNZ', this.jc.encode({ 'filter_subject': `${this.requestChannel}#${appId}` })).then(response => {
                 responses.push(response);
+                console.log(this.sc.decode(response.data));
+
                 waiter.cancel();
                 waiter = timeout(200);
                 waiter.catch(() => resolve(calculateResponses()));
