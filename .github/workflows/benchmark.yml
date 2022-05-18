@@ -56,6 +56,10 @@ jobs:
             rate_limiter: redis
             queue_driver: sync
             cache_driver: redis
+          - adapter: rabbitmq
+            rate_limiter: redis
+            queue_driver: sync
+            cache_driver: redis
 
     name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
