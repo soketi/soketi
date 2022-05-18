@@ -49,6 +49,8 @@ export class NatsAdapter extends HorizontalAdapter {
         this.sc = StringCodec();
 
         this.requestsTimeout = server.options.adapter.nats.requestsTimeout;
+
+        Log.warning('NATS is deprecated and will be removed in Soketi 2.0');
     }
 
     /**
