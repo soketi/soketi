@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { AdapterInterface } from './adapter-interface';
-import { connect, Channel, Connection } from 'rabbitmqlib';
+import { connect, Channel, Connection } from 'amqplib';
 import { HorizontalAdapter, PubsubBroadcastedMessage, ShouldRequestOtherNodesReply } from './horizontal-adapter';
 import { Server } from '../server';
 
