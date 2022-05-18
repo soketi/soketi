@@ -65,10 +65,11 @@ export class WebhookSender {
                     return;
                 }
 
-                async.each(app.webhooks, (webhook: WebhookInterface, resolveWebhook) => { 
+                async.each(app.webhooks, (webhook: WebhookInterface, resolveWebhook) => {
                     const originalEventsLength = payload.events.length;
+                    let filteredPayloadEvents = payload.events;
 
-                    payload.events = payload.events.filter(function (event) {
+                    filteredPayloadEvents = filteredPayloadEvents.filter(event => {
                         if (!webhook.event_types.includes(event.name)) {
                             return false;
                         }
@@ -87,12 +88,14 @@ export class WebhookSender {
                     });
 
                     // If there's no webhooks to send after filtration, we should resolve early.
-                    if (payload.events.length === 0) {
+                    if (filteredPayloadEvents.length === 0) {
                         return resolveWebhook();
                     }
 
                     // If any events have been filtered out, regenerate the signature
-                    let pusherSignature = (originalEventsLength !== payload.events.length) ? createWebhookHmac(JSON.stringify(payload), app.secret) : originalPusherSignature;
+                    let pusherSignature = (originalEventsLength !== filteredPayloadEvents.length)
+                        ? createWebhookHmac(JSON.stringify(payload), app.secret)
+                        : originalPusherSignature;
 
                     if (this.server.options.debug) {
                         Log.webhookSenderTitle('🚀 Processing webhook from queue.');
