@@ -33,7 +33,7 @@ jobs:
           - redis
           - cluster
           - nats
-          - amqp
+          - rabbitmq
         app_manager:
           - array
           - mysql
@@ -146,7 +146,7 @@ jobs:
             nats --jetstream --user="" --pass=""
 
       - name: Setup Rabbitmq
-        if: "matrix.adapter == 'amqp'"
+        if: "matrix.adapter == 'rabbitmq'"
         run: docker run -d \
           -p 15672:15672 \
           -p 5672:5672 \

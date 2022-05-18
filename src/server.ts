@@ -56,10 +56,15 @@ export class Server {
                 nodesNumber: null,
                 credentials: null,
             },
-            amqp: {
+            rabbitmq: {
                 requestsTimeout: 3_000,
                 prefix: '',
-                uri: 'amqp://user:password@localhost:5672',
+                host: 'localhost',
+                username: 'user',
+                password: 'password',
+                port: 5672,
+                httpPort: 15672,
+                ssl: false,
             },
         },
         appManager: {

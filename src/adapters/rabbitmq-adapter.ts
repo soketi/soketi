@@ -1,13 +1,14 @@
+import axios, { AxiosInstance } from 'axios';
 import { AdapterInterface } from './adapter-interface';
-import { connect, Channel, Connection } from 'amqplib';
+import { connect, Channel, Connection } from 'rabbitmqlib';
 import { HorizontalAdapter, PubsubBroadcastedMessage, ShouldRequestOtherNodesReply } from './horizontal-adapter';
 import { Server } from '../server';
 
-export class AmqpAdapter extends HorizontalAdapter {
+export class RabbitmqAdapter extends HorizontalAdapter {
     /**
      * The channel to broadcast the information.
      */
-    protected channel = 'amqp-adapter';
+    protected channel = 'rabbitmq-adapter';
 
     /**
      * The AMQP connection.
@@ -30,20 +31,27 @@ export class AmqpAdapter extends HorizontalAdapter {
     constructor(server: Server) {
         super(server);
 
-        if (server.options.adapter.amqp.prefix) {
-            this.channel = server.options.adapter.amqp.prefix + '#' + this.channel;
+        if (server.options.adapter.rabbitmq.prefix) {
+            this.channel = server.options.adapter.rabbitmq.prefix + '#' + this.channel;
         }
 
         this.requestChannel = `${this.channel}_comms_req`;
         this.responseChannel = `${this.channel}_comms_res`;
-        this.requestsTimeout = server.options.adapter.amqp.requestsTimeout;
+        this.requestsTimeout = server.options.adapter.rabbitmq.requestsTimeout;
     }
 
     /**
      * Initialize the adapter.
      */
     async init(): Promise<AdapterInterface> {
-        return connect(this.server.options.adapter.amqp.uri).then((connection) => {
+        let {
+            host,
+            username,
+            password,
+            port,
+        } = this.server.options.adapter.rabbitmq;
+
+        return connect(`amqp://${username}:${password}@${host}:${port}`).then((connection) => {
             this.connection = connection;
 
             return this.connection.createChannel().then((channel) => {
@@ -173,9 +181,11 @@ export class AmqpAdapter extends HorizontalAdapter {
      * and how many responses are expected.
      */
     protected shouldRequestOtherNodes(appId: string): Promise<ShouldRequestOtherNodesReply> {
-        return Promise.resolve({
-            should: true,
-            totalNodes: 2,
+        return this.connectedNodesCount(appId).then(totalNodes => {
+            return {
+                should: totalNodes > 1,
+                totalNodes: totalNodes,
+            }
         });
     }
 
@@ -183,7 +193,7 @@ export class AmqpAdapter extends HorizontalAdapter {
      * Delete the exchange assigned to the app if there are no queues bound to it.
      */
     protected deleteExchange(appId): void {
-        // TODO: delete exchange if there are no queues within it
+        this.mqChannel.deleteExchange(appId, { ifUnused: true });
     }
 
     /**
@@ -195,5 +205,32 @@ export class AmqpAdapter extends HorizontalAdapter {
         }
 
         this.exclusiveQueues[appId].push(queue);
+    }
+
+    /**
+     * Get the client for RabbitMQ.
+     */
+    protected rabbitMqClient(): AxiosInstance {
+        let {
+            host,
+            username,
+            password,
+            httpPort,
+            ssl,
+        } = this.server.options.adapter.rabbitmq;
+
+        return axios.create({
+            auth: { username, password },
+            baseURL: `${ssl ? 'https' : 'http'}://${host}:${httpPort}`,
+        });
+    }
+
+    /**
+     * Check how many clients are connected within the app.
+     */
+    protected connectedNodesCount(appId): Promise<number> {
+        return this.rabbitMqClient().get(`/api/exchanges/%2F/${appId}/bindings/source?columns=source,routing_key&name=rabbitmq-adapter_comms_res`).then(response => {
+            return response.data.length / 3;
+        });
     }
 }

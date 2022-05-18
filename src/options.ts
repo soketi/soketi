@@ -58,10 +58,15 @@ export interface Options {
             nodesNumber: number|null;
             credentials: string|null;
         };
-        amqp: {
+        rabbitmq: {
             requestsTimeout: number;
             prefix: string;
-            uri: string;
+            host: string;
+            username: string;
+            password: string;
+            port: number;
+            httpPort: number;
+            ssl: boolean;
         };
     };
     appManager: {

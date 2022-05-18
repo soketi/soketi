@@ -37,7 +37,7 @@ if (['mysql', 'postgres', 'dynamodb'].includes(__ENV.APP_MANAGER_DRIVER)) {
 }
 
 // Horizontal drivers take additional time to communicate with other nodes.
-if (['redis', 'cluster', 'nats', 'amqp'].includes(__ENV.ADAPTER_DRIVER)) {
+if (['redis', 'cluster', 'nats', 'rabbitmq'].includes(__ENV.ADAPTER_DRIVER)) {
     maxP95 += 100;
     maxAvg += 100;
 }

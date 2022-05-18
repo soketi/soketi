@@ -1,5 +1,5 @@
 import { AdapterInterface } from './adapter-interface';
-import { AmqpAdapter } from './amqp-adapter';
+import { RabbitmqAdapter } from './rabbitmq-adapter';
 import { ClusterAdapter } from './cluster-adapter';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
@@ -28,8 +28,8 @@ export class Adapter implements AdapterInterface {
             this.driver = new NatsAdapter(server);
         } else if (server.options.adapter.driver === 'cluster') {
             this.driver = new ClusterAdapter(server);
-        } else if (server.options.adapter.driver === 'amqp') {
-            this.driver = new AmqpAdapter(server);
+        } else if (server.options.adapter.driver === 'rabbitmq') {
+            this.driver = new RabbitmqAdapter(server);
         } else {
             Log.error('Adapter driver not set.');
         }

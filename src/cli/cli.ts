@@ -15,10 +15,15 @@ export class Cli {
      */
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
-        ADAPTER_AMQP_REQUESTS_TIMEOUT: 'adapter.amqp.requestsTimeout',
-        ADAPTER_AMQP_PREFIX: 'adapter.amqp.prefix',
-        ADAPTER_AMQP_URI: 'adapter.amqp.uri',
         ADAPTER_CLUSTER_REQUESTS_TIMEOUT: 'adapter.cluster.requestsTimeout',
+        ADAPTER_RABBITMQ_REQUESTS_TIMEOUT: 'adapter.rabbitmq.requestsTimeout',
+        ADAPTER_RABBITMQ_PREFIX: 'adapter.rabbitmq.prefix',
+        ADAPTER_RABBITMQ_HOST: 'adapter.rabbitmq.host',
+        ADAPTER_RABBITMQ_USERNAME: 'adapter.rabbitmq.username',
+        ADAPTER_RABBITMQ_PASSWORD: 'adapter.rabbitmq.password',
+        ADAPTER_RABBITMQ_PORT: 'adapter.rabbitmq.port',
+        ADAPTER_RABBITMQ_HTTP_PORT: 'adapter.rabbitmq.httpPort',
+        ADAPTER_RABBITMQ_HTTPS: 'adapter.rabbitmq.ssl',
         ADAPTER_REDIS_PREFIX: 'adapter.redis.prefix',
         ADAPTER_REDIS_CLUSTER_MODE: 'adapter.redis.clusterMode',
         ADAPTER_REDIS_REQUESTS_TIMEOUT: 'adapter.redis.requestsTimeout',
