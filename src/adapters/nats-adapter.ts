@@ -1,7 +1,7 @@
 import { AdapterInterface } from './adapter-interface';
 import async from 'async';
 import { connect, credsAuthenticator, JSONCodec, Msg, NatsConnection, StringCodec } from 'nats';
-import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
+import { HorizontalAdapter, PubsubBroadcastedMessage, ShouldRequestOtherNodesReply } from './horizontal-adapter';
 import { Log } from '../log';
 import { Server } from '../server';
 import { timeout } from 'nats/lib/nats-base-client/util';
@@ -49,6 +49,8 @@ export class NatsAdapter extends HorizontalAdapter {
         this.sc = StringCodec();
 
         this.requestsTimeout = server.options.adapter.nats.requestsTimeout;
+
+        Log.warning('NATS is deprecated and will be removed in Soketi 2.0');
     }
 
     /**
@@ -163,12 +165,13 @@ export class NatsAdapter extends HorizontalAdapter {
     }
 
     /**
-     * Get the number of Discover nodes.
+     * Check if other nodes should be requested for additional data
+     * and how many responses are expected.
      */
-    protected async getNumSub(appId: string): Promise<number> {
+    protected async shouldRequestOtherNodes(appId: string): Promise<ShouldRequestOtherNodesReply> {
         let responses: Msg[] = [];
 
-        let calculateResponses: () => number = () => {
+        let calculateResponses: () => ShouldRequestOtherNodesReply = () => {
             let number = responses.reduce((total, response) => {
                 let { data } = JSON.parse(this.sc.decode(response.data)) as any;
 
@@ -179,7 +182,10 @@ export class NatsAdapter extends HorizontalAdapter {
                 Log.info(`Found ${number} subscribers in the NATS cluster.`);
             }
 
-            return number;
+            return {
+                totalNodes: number,
+                should: number > 1,
+            };
         };
 
         return new Promise(resolve => {

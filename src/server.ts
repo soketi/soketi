@@ -56,6 +56,16 @@ export class Server {
                 nodesNumber: null,
                 credentials: null,
             },
+            rabbitmq: {
+                requestsTimeout: 3_000,
+                prefix: '',
+                host: 'localhost',
+                username: 'user',
+                password: 'password',
+                port: 5672,
+                httpPort: 15672,
+                ssl: false,
+            },
         },
         appManager: {
             driver: 'array',
