@@ -29,6 +29,7 @@ jobs:
           - redis
           - cluster
           - nats
+          - rabbitmq
         app_manager:
           - array
           - mysql
@@ -169,6 +170,15 @@ jobs:
             -p 8222:8222 \
             nats --jetstream --user="" --pass=""
 
+      - name: Setup Rabbitmq
+        if: "matrix.adapter == 'rabbitmq'"
+        run: docker run -d \
+          -p 15672:15672 \
+          -p 5672:5672 \
+          -e RABBITMQ_DEFAULT_USER=user \
+          -e RABBITMQ_DEFAULT_PASS=password \
+          rabbitmq:3-management
+
       - name: Run Soketi (port 6001)
         run: |
           node bin/server.js start &
@@ -190,7 +200,7 @@ jobs:
           SOKETI_DB_MYSQL_PASSWORD: root
 
       - name: Run Soketi (port 6002)
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats' || matrix.adapter == 'rabbitmq'"
         run: |
           node bin/server.js start &
           timeout 30 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://127.0.0.1:6002/ready)" != "200" ]]; do echo "Waiting for server to be ready..."; sleep 5; done' || false
@@ -214,7 +224,7 @@ jobs:
         run: ./benchmark/send --interval 1 --port 6001 &
 
       - name: Run message sender (port 6002)
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats' || matrix.adapter == 'rabbitmq'"
         run: ./benchmark/send --interval 1 --port 6002 &
 
       - name: Execute benchmarks (single nodes)
@@ -228,7 +238,7 @@ jobs:
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
 
       - name: Execute benchmarks (multiple nodes)
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats' || matrix.adapter == 'rabbitmq'"
         run: k6 run benchmark/ci-horizontal.js
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}

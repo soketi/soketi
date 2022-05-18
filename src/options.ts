@@ -45,7 +45,7 @@ export interface Options {
             shardMode: boolean;
         };
         cluster: {
-            requestsTimeout: 5_000,
+            requestsTimeout: number;
         },
         nats: {
             requestsTimeout: number;
@@ -57,6 +57,16 @@ export interface Options {
             timeout: number;
             nodesNumber: number|null;
             credentials: string|null;
+        };
+        rabbitmq: {
+            requestsTimeout: number;
+            prefix: string;
+            host: string;
+            username: string;
+            password: string;
+            port: number;
+            httpPort: number;
+            ssl: boolean;
         };
     };
     appManager: {
