@@ -1,6 +1,6 @@
 import { AdapterInterface } from './adapter-interface';
-import { connect, Channel, Connection, ConsumeMessage, Options } from 'amqplib';
-import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
+import { connect, Channel, Connection } from 'amqplib';
+import { HorizontalAdapter, PubsubBroadcastedMessage, ShouldRequestOtherNodesReply } from './horizontal-adapter';
 import { Server } from '../server';
 
 export class AmqpAdapter extends HorizontalAdapter {
@@ -169,11 +169,14 @@ export class AmqpAdapter extends HorizontalAdapter {
     }
 
     /**
-     * Get the number of Discover nodes.
+     * Check if other nodes should be requested for additional data
+     * and how many responses are expected.
      */
-    protected getNumSub(appId: string): Promise<number> {
-        // TODO:
-        return Promise.resolve(1);
+    protected shouldRequestOtherNodes(appId: string): Promise<ShouldRequestOtherNodesReply> {
+        return Promise.resolve({
+            should: true,
+            totalNodes: 2,
+        });
     }
 
     /**

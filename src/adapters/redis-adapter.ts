@@ -1,5 +1,5 @@
 import { AdapterInterface } from './adapter-interface';
-import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
+import { HorizontalAdapter, PubsubBroadcastedMessage, ShouldRequestOtherNodesReply } from './horizontal-adapter';
 import { Log } from '../log';
 import { Server } from '../server';
 
@@ -186,9 +186,10 @@ export class RedisAdapter extends HorizontalAdapter {
     }
 
     /**
-     * Get the number of Redis subscribers.
+     * Check if other nodes should be requested for additional data
+     * and how many responses are expected.
      */
-    protected getNumSub(appId: string): Promise<number> {
+    protected shouldRequestOtherNodes(appId: string): Promise<ShouldRequestOtherNodesReply> {
         if (this.server.options.adapter.redis.clusterMode) {
             if (this.server.options.adapter.redis.shardMode) {
                 return new Promise((resolve, reject) => {
@@ -206,7 +207,10 @@ export class RedisAdapter extends HorizontalAdapter {
                                 Log.info(`Found ${number} subscribers in the Sharded Redis cluster.`);
                             }
 
-                            resolve(number);
+                            resolve({
+                                totalNodes: number,
+                                should: number > 1,
+                            });
                         }
                     );
                 });
@@ -227,7 +231,10 @@ export class RedisAdapter extends HorizontalAdapter {
                     Log.info(`Found ${number} subscribers in the Redis cluster.`);
                 }
 
-                return number;
+                return {
+                    totalNodes: number,
+                    should: number > 1,
+                };
             });
         } else {
             // RedisClient or Redis
@@ -246,7 +253,10 @@ export class RedisAdapter extends HorizontalAdapter {
                             Log.info(`Found ${number} subscribers in the Redis cluster.`);
                         }
 
-                        resolve(number);
+                        resolve({
+                            totalNodes: number,
+                            should: number > 1,
+                        });
                     }
                 );
             });
