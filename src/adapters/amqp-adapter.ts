@@ -17,7 +17,12 @@ export class AmqpAdapter extends HorizontalAdapter {
     /**
      * The AMQP channel.
      */
-    protected sharedChannel: Channel;
+    protected mqChannel: Channel;
+
+    /**
+     * The list of exclusive queues.
+     */
+    protected exclusiveQueues: { [appId: string]: string[]; } = {};
 
     /**
      * Initialize the adapter.
@@ -42,7 +47,7 @@ export class AmqpAdapter extends HorizontalAdapter {
             this.connection = connection;
 
             return this.connection.createChannel().then((channel) => {
-                this.sharedChannel = channel;
+                this.mqChannel = channel;
 
                 return this;
             });
@@ -59,14 +64,20 @@ export class AmqpAdapter extends HorizontalAdapter {
         }
 
         return super.subscribeToApp(appId).then(() => {
-            return this.sharedChannel.assertExchange(appId, 'direct', { durable: false }).then(({ exchange }) => {
-                return this.sharedChannel.assertQueue('', { exclusive: true }).then(({ queue }) => {
+            return this.mqChannel.assertExchange(appId, 'direct', { durable: false }).then(({ exchange }) => {
+                return this.mqChannel.assertQueue('', { exclusive: true }).then(({ queue }) => {
+                    this.pushExclusiveQueue(appId, queue);
+
                     return Promise.all([
-                        this.sharedChannel.bindQueue(queue, exchange, this.channel),
-                        this.sharedChannel.bindQueue(queue, exchange, this.requestChannel),
-                        this.sharedChannel.bindQueue(queue, exchange, this.responseChannel),
+                        this.mqChannel.bindQueue(queue, exchange, this.channel),
+                        this.mqChannel.bindQueue(queue, exchange, this.requestChannel),
+                        this.mqChannel.bindQueue(queue, exchange, this.responseChannel),
                     ]).then(() => {
-                        return this.sharedChannel.consume(queue, (msg) => {
+                        return this.mqChannel.consume(queue, (msg) => {
+                            if (! msg) {
+                                return;
+                            }
+
                             let message = msg.content.toString();
 
                             switch (msg.fields.routingKey) {
@@ -95,9 +106,15 @@ export class AmqpAdapter extends HorizontalAdapter {
             return;
         }
 
-        // TODO: Disconnect from current exchange and clear up Rabbit
-
         super.unsubscribeFromApp(appId);
+
+        if (this.exclusiveQueues[appId]) {
+            Promise.all(
+                this.exclusiveQueues[appId].map((queue) => this.mqChannel.deleteQueue(queue)),
+            ).then(() => {
+                this.deleteExchange(appId);
+            });
+        }
     }
 
     /**
@@ -146,8 +163,8 @@ export class AmqpAdapter extends HorizontalAdapter {
      * Broadcast data to a given channel.
      */
     protected broadcastToChannel(channel: string, data: string, appId: string): void {
-        this.sharedChannel.assertExchange(appId, 'direct', { durable: false }).then(({ exchange }) => {
-            this.sharedChannel.publish(appId, channel, Buffer.from(data));
+        this.mqChannel.assertExchange(appId, 'direct', { durable: false }).then(({ exchange }) => {
+            this.mqChannel.publish(appId, channel, Buffer.from(data));
         });
     }
 
@@ -155,7 +172,25 @@ export class AmqpAdapter extends HorizontalAdapter {
      * Get the number of Discover nodes.
      */
     protected getNumSub(appId: string): Promise<number> {
-        // TODO: Resolve the right amount of queues for this app's exchange
-        return Promise.resolve(2);
+        // TODO:
+        return Promise.resolve(1);
+    }
+
+    /**
+     * Delete the exchange assigned to the app if there are no queues bound to it.
+     */
+    protected deleteExchange(appId): void {
+        // TODO: delete exchange if there are no queues within it
+    }
+
+    /**
+     * Keep track of the exclusive queue for a specific app.
+     */
+    protected pushExclusiveQueue(appId: string, queue: string): void {
+        if (! this.exclusiveQueues[appId]) {
+            this.exclusiveQueues[appId] = [];
+        }
+
+        this.exclusiveQueues[appId].push(queue);
     }
 }
