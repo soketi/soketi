@@ -28,7 +28,6 @@ jobs:
           - local
           - redis
           - cluster
-          - nats
           - rabbitmq
         app_manager:
           - array
@@ -52,10 +51,6 @@ jobs:
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis
-            cache_driver: redis
-          - adapter: nats
-            rate_limiter: redis
-            queue_driver: sync
             cache_driver: redis
           - adapter: rabbitmq
             rate_limiter: redis
@@ -106,7 +101,7 @@ jobs:
           sudo apt-get install k6
 
       - name: Setup Redis
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
         run: docker run -p 6379:6379 redis:6-alpine &
 
       # Setup MySQL with user `root`, password `root` and database `testing`
@@ -161,15 +156,6 @@ jobs:
             --region us-east-1
           awslocal sqs list-queues
 
-      - name: Setup NATS
-        if: "matrix.adapter == 'nats'"
-        run: |
-          docker run -d \
-            -p 4222:4222 \
-            -p 6222:6222 \
-            -p 8222:8222 \
-            nats --jetstream --user="" --pass=""
-
       - name: Setup Rabbitmq
         if: "matrix.adapter == 'rabbitmq'"
         run: |
@@ -201,7 +187,7 @@ jobs:
           SOKETI_DB_MYSQL_PASSWORD: root
 
       - name: Run Soketi (port 6002)
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats' || matrix.adapter == 'rabbitmq'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'rabbitmq'"
         run: |
           node bin/server.js start &
           timeout 30 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://127.0.0.1:6002/ready)" != "200" ]]; do echo "Waiting for server to be ready..."; sleep 5; done' || false
@@ -225,7 +211,7 @@ jobs:
         run: ./benchmark/send --interval 1 --port 6001 &
 
       - name: Run message sender (port 6002)
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats' || matrix.adapter == 'rabbitmq'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'rabbitmq'"
         run: ./benchmark/send --interval 1 --port 6002 &
 
       - name: Execute benchmarks (single nodes)
@@ -239,7 +225,7 @@ jobs:
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
 
       - name: Execute benchmarks (multiple nodes)
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'nats' || matrix.adapter == 'rabbitmq'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'rabbitmq'"
         run: k6 run benchmark/ci-horizontal.js
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}
