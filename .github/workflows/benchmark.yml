@@ -101,7 +101,7 @@ jobs:
           sudo apt-get install k6
 
       - name: Setup Redis
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'rabbitmq'"
         run: docker run -p 6379:6379 redis:6-alpine &
 
       # Setup MySQL with user `root`, password `root` and database `testing`
