@@ -420,12 +420,12 @@ describe('http api test', () => {
             backend.trigger(['ch1', 'ch2'], 'greeting', { message: 'hello' })
                 .then(res => res.json())
                 .then(res => {
-                    expect(res.error).toBeDefined();
-                    expect(res.code).toBe(400);
-                    done();
+                    throw new Error('This should not work.');
                 })
                 .catch(error => {
-                    throw new Error(error);
+                    expect(error.body).toBeDefined();
+                    expect(error.status).toBe(400);
+                    done();
                 });
         });
     });
@@ -437,12 +437,12 @@ describe('http api test', () => {
             backend.trigger('ch1', 'greeting', { message: 'hello' })
                 .then(res => res.json())
                 .then(res => {
-                    expect(res.error).toBeDefined();
-                    expect(res.code).toBe(400);
-                    done();
+                    throw new Error('This should not work.');
                 })
                 .catch(error => {
-                    throw new Error(error);
+                    expect(error.body).toBeDefined();
+                    expect(error.status).toBe(400);
+                    done();
                 });
         });
     });
