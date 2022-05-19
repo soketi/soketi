@@ -172,12 +172,13 @@ jobs:
 
       - name: Setup Rabbitmq
         if: "matrix.adapter == 'rabbitmq'"
-        run: docker run -d \
-          -p 15672:15672 \
-          -p 5672:5672 \
-          -e RABBITMQ_DEFAULT_USER=user \
-          -e RABBITMQ_DEFAULT_PASS=password \
-          rabbitmq:3-management
+        run: |
+          docker run -d \
+            -p 15672:15672 \
+            -p 5672:5672 \
+            -e RABBITMQ_DEFAULT_USER=user \
+            -e RABBITMQ_DEFAULT_PASS=password \
+            rabbitmq:3-management
 
       - name: Run Soketi (port 6001)
         run: |
