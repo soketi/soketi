@@ -8,5 +8,6 @@ production-app/
 benchmark/composer.lock
 config.json
 npm-debug.log
+package-lock.json
 yarn.lock
 *.db

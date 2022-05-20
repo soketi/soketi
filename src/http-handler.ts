@@ -29,6 +29,7 @@ export class HttpHandler {
 
     ready(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             if (this.server.closing) {
@@ -76,6 +77,7 @@ export class HttpHandler {
 
     healthCheck(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             this.send(res, 'OK');
@@ -84,6 +86,7 @@ export class HttpHandler {
 
     usage(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             let {
@@ -111,6 +114,7 @@ export class HttpHandler {
 
     metrics(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             let handleError = err => {
@@ -137,19 +141,20 @@ export class HttpHandler {
 
     channels(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
             this.readRateLimitingMiddleware,
         ]).then(res => {
-            this.server.adapter.getChannels(res.params.appId).then(channels => {
+            this.server.adapter.getChannelsWithSocketsCount(res.params.appId).then(channels => {
                 let response: { [channel: string]: ChannelResponse } = [...channels].reduce((channels, [channel, connections]) => {
-                    if (connections.size === 0) {
+                    if (connections === 0) {
                         return channels;
                     }
 
                     channels[channel] = {
-                        subscription_count: connections.size,
+                        subscription_count: connections,
                         occupied: true,
                     };
 
@@ -173,6 +178,7 @@ export class HttpHandler {
 
     channel(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
@@ -226,6 +232,7 @@ export class HttpHandler {
 
     channelUsers(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
             this.authMiddleware,
@@ -237,7 +244,9 @@ export class HttpHandler {
 
             this.server.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
                 let broadcastMessage = {
-                    users: [...members].map(([user_id, ]) => ({ id: user_id })),
+                    users: [...members].map(([user_id, user_info]) => (res.query.with_user_info === '1'
+                       ? { id: user_id, user_info }
+                       : { id: user_id })),
                 };
 
                 this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
@@ -249,6 +258,7 @@ export class HttpHandler {
 
     events(res: HttpResponse) {
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.jsonBodyMiddleware,
             this.corsMiddleware,
             this.appMiddleware,
@@ -257,6 +267,7 @@ export class HttpHandler {
         ]).then(res => {
             this.checkMessageToBroadcast(res.body as PusherApiMessage, res.app as App).then(message => {
                 this.broadcastMessage(message, res.app.id);
+                this.server.metricsManager.markApiMessage(res.app.id, res.body, { ok: true });
                 this.sendJson(res, { ok: true });
             }).catch(error => {
                 if (error.code === 400) {
@@ -285,6 +296,7 @@ export class HttpHandler {
 
             Promise.all(batch.map(message => this.checkMessageToBroadcast(message, res.app as App))).then(messages => {
                 messages.forEach(message => this.broadcastMessage(message, res.app.id));
+                this.server.metricsManager.markApiMessage(res.app.id, res.body, { ok: true });
                 this.sendJson(res, { ok: true });
             }).catch((error: MessageCheckError) => {
                 if (error.code === 400) {
@@ -345,21 +357,29 @@ export class HttpHandler {
 
     protected broadcastMessage(message: PusherApiMessage, appId: string): void {
         message.channels.forEach(channel => {
-            this.server.adapter.send(appId, channel, JSON.stringify({
+            let msg = {
                 event: message.name,
                 channel,
                 data: message.data,
-            }), message.socket_id);
-        });
+            };
 
-        this.server.metricsManager.markApiMessage(appId, message, { ok: true });
+            this.server.adapter.send(appId, channel, JSON.stringify(msg), message.socket_id);
+
+            if (Utils.isCachingChannel(channel)) {
+                this.server.cacheManager.set(
+                    `app:${appId}:channel:${channel}:cache_miss`,
+                    JSON.stringify({ event: msg.event, data: msg.data }),
+                    this.server.options.channelLimits.cacheTtl,
+                );
+            }
+        });
     }
 
     notFound(res: HttpResponse) {
-        //Send status before any headers.
         res.writeStatus('404 Not Found');
 
         this.attachMiddleware(res, [
+            this.corkMiddleware,
             this.corsMiddleware,
         ]).then(res => {
             this.send(res, '', '404 Not Found');
@@ -405,6 +425,10 @@ export class HttpHandler {
         }, err => {
             return this.badResponse(res, 'The received data is incorrect.');
         });
+    }
+
+    protected corkMiddleware(res: HttpResponse, next: CallableFunction): any {
+        res.cork(() => next(null, res));
     }
 
     protected corsMiddleware(res: HttpResponse, next: CallableFunction): any {

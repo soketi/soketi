@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const Pusher = require('pusher');
 const PusherJS = require('pusher-js');
+const Redis = require('ioredis');
 const tcpPortUsed = require('tcp-port-used');
 
 export class Utils {
@@ -20,6 +21,10 @@ export class Utils {
 
     static adapterIs(adapter: string) {
         return (process.env.TEST_ADAPTER || 'local') === adapter;
+    }
+
+    static queueDriverIs(queueDriver: string) {
+        return (process.env.TEST_QUEUE_DRIVER || 'sync') === queueDriver;
     }
 
     static waitForPortsToFreeUp(): Promise<any> {
@@ -47,8 +52,11 @@ export class Utils {
             'cluster.ignoreProcess': false,
             'webhooks.batching.enabled': false, // TODO: Find out why batching works but fails tests
             'webhooks.batching.duration': 1,
+            'appManager.cache.enabled': true,
+            'appManager.cache.ttl': -1,
             ...options,
             'adapter.driver': process.env.TEST_ADAPTER || 'local',
+            'cache.driver': process.env.TEST_CACHE_DRIVER || 'memory',
             'appManager.driver': process.env.TEST_APP_MANAGER || 'array',
             'queue.driver': process.env.TEST_QUEUE_DRIVER || 'sync',
             'rateLimiter.driver': process.env.TEST_RATE_LIMITER || 'local',
@@ -58,13 +66,19 @@ export class Utils {
             'database.postgres.user': process.env.TEST_POSTGRES_USER || 'testing',
             'database.postgres.password': process.env.TEST_POSTGRES_PASSWORD || 'testing',
             'database.postgres.database': process.env.TEST_POSTGRES_DATABASE || 'testing',
-            'queue.sqs.queueUrl': 'http://localhost:4566/000000000000/test.fifo',
+            'queue.sqs.queueUrl': process.env.TEST_SQS_URL || 'http://localhost:4566/000000000000/test.fifo',
         };
 
         return (new Server(options)).start((server: Server) => {
             this.wsServers.push(server);
 
-            callback(server);
+            if (server.options.cache.driver === 'redis') {
+                server.cacheManager.driver.redisConnection.flushdb().then(() => {
+                    callback(server);
+                });
+            } else {
+                callback(server);
+            }
         });
     }
 

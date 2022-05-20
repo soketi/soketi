@@ -1,10 +1,11 @@
 import { App, WebhookInterface } from './app';
+import async from 'async';
 import axios from 'axios';
+import { createHmac } from 'crypto';
 import { Utils } from './utils';
 import { Lambda } from 'aws-sdk';
 import { Log } from './log';
 import { Server } from './server';
-import { createHmac } from "crypto";
 
 export interface ClientEventData {
     name: string;
@@ -25,7 +26,7 @@ export interface JobData {
         time_ms: number;
         events: ClientEventData[];
     },
-    pusherSignature: string;
+    originalPusherSignature: string;
 }
 
 /**
@@ -55,29 +56,20 @@ export class WebhookSender {
         let queueProcessor = (job, done) => {
             let rawData: JobData = job.data;
 
-            const { appKey, payload, pusherSignature } = rawData;
+            const { appKey, payload, originalPusherSignature } = rawData;
 
             server.appManager.findByKey(appKey).then(app => {
-                app.webhooks.forEach((webhook: WebhookInterface) => {
-                    // Apply filters only if batching is disabled.
-                    if (!server.options.webhooks.batching.enabled) {
-                        if (!webhook.event_types.includes(payload.events[0].name)) {
-                            return;
-                        }
+                // Ensure the payload hasn't been tampered with between the job being dispatched
+                // and here, as we may need to recalculate the signature post filtration.
+                if (originalPusherSignature !== createWebhookHmac(JSON.stringify(payload), app.secret)) {
+                    return;
+                }
 
-                        if (webhook.filter) {
-                            if (webhook.filter.channel_name_starts_with && !payload.events[0].channel.startsWith(webhook.filter.channel_name_starts_with)) {
-                                return;
-                            }
+                async.each(app.webhooks, (webhook: WebhookInterface, resolveWebhook) => {
+                    const originalEventsLength = payload.events.length;
+                    let filteredPayloadEvents = payload.events;
 
-                            if (webhook.filter.channel_name_ends_with && !payload.events[0].channel.endsWith(webhook.filter.channel_name_ends_with)) {
-                                return;
-                            }
-                        }
-                    }
-
-                    // TODO: For batches, you can filter the messages, but recalculate the pusherSignature value.
-                    /* payload.events = payload.events.filter(event => {
+                    filteredPayloadEvents = filteredPayloadEvents.filter(event => {
                         if (!webhook.event_types.includes(event.name)) {
                             return false;
                         }
@@ -93,7 +85,17 @@ export class WebhookSender {
                         }
 
                         return true;
-                    }); */
+                    });
+
+                    // If there's no webhooks to send after filtration, we should resolve early.
+                    if (filteredPayloadEvents.length === 0) {
+                        return resolveWebhook();
+                    }
+
+                    // If any events have been filtered out, regenerate the signature
+                    let pusherSignature = (originalEventsLength !== filteredPayloadEvents.length)
+                        ? createWebhookHmac(JSON.stringify(payload), app.secret)
+                        : originalPusherSignature;
 
                     if (this.server.options.debug) {
                         Log.webhookSenderTitle('🚀 Processing webhook from queue.');
@@ -124,11 +126,7 @@ export class WebhookSender {
                                 Log.webhookSenderTitle('❎ Webhook could not be sent.');
                                 Log.webhookSender({ err, webhook, payload });
                             }
-                        }).then(() => {
-                            if (typeof done === 'function') {
-                                done();
-                            }
-                        });
+                        }).then(() => resolveWebhook());
                     } else if (webhook.lambda_function) {
                         // Invoke a Lambda function
                         const params = {
@@ -156,11 +154,12 @@ export class WebhookSender {
                                 }
                             }
 
-                            if (typeof done === 'function') {
-                                // TODO: Maybe retry exponentially?
-                                done();
-                            }
+                            resolveWebhook();
                         });
+                    }
+                }).then(() => {
+                    if (typeof done === 'function') {
+                        done();
                     }
                 });
             });
@@ -173,6 +172,7 @@ export class WebhookSender {
             server.queueManager.processQueue('member_removed_webhooks', queueProcessor);
             server.queueManager.processQueue('channel_vacated_webhooks', queueProcessor);
             server.queueManager.processQueue('channel_occupied_webhooks', queueProcessor);
+            server.queueManager.processQueue('cache_miss_webhooks', queueProcessor);
         }
     }
 
@@ -180,6 +180,10 @@ export class WebhookSender {
      * Send a webhook for the client event.
      */
     public sendClientEvent(app: App, channel: string, event: string, data: any, socketId?: string, userId?: string) {
+        if (!app.hasClientEventWebhooks) {
+            return;
+        }
+
         let formattedData: ClientEventData = {
             name: App.CLIENT_EVENT_WEBHOOK,
             channel,
@@ -202,6 +206,10 @@ export class WebhookSender {
      * Send a member_added event.
      */
     public sendMemberAdded(app: App, channel: string, userId: string): void {
+        if (!app.hasMemberAddedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.MEMBER_ADDED_WEBHOOK,
             channel,
@@ -213,6 +221,10 @@ export class WebhookSender {
      * Send a member_removed event.
      */
     public sendMemberRemoved(app: App, channel: string, userId: string): void {
+        if (!app.hasMemberRemovedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.MEMBER_REMOVED_WEBHOOK,
             channel,
@@ -224,6 +236,10 @@ export class WebhookSender {
      * Send a channel_vacated event.
      */
     public sendChannelVacated(app: App, channel: string): void {
+        if (!app.hasChannelVacatedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.CHANNEL_VACATED_WEBHOOK,
             channel,
@@ -234,10 +250,28 @@ export class WebhookSender {
      * Send a channel_occupied event.
      */
     public sendChannelOccupied(app: App, channel: string): void {
+        if (!app.hasChannelOccupiedWebhooks) {
+            return;
+        }
+
         this.send(app, {
             name: App.CHANNEL_OCCUPIED_WEBHOOK,
             channel,
         }, 'channel_occupied_webhooks');
+    }
+
+    /**
+     * Send a cache_missed event.
+     */
+    public sendCacheMissed(app: App, channel: string): void {
+        if (!app.hasCacheMissedWebhooks) {
+            return;
+        }
+
+        this.send(app, {
+            name: App.CACHE_MISSED_WEBHOOK,
+            channel,
+        }, 'cache_miss_webhooks');
     }
 
     /**
@@ -270,13 +304,13 @@ export class WebhookSender {
             events,
         };
 
-        let pusherSignature = createWebhookHmac(JSON.stringify(payload), app.secret);
+        let originalPusherSignature = createWebhookHmac(JSON.stringify(payload), app.secret);
 
         this.server.queueManager.addToQueue(queueName, {
             appKey: app.key,
             appId: app.id,
             payload,
-            pusherSignature,
+            originalPusherSignature,
         });
     }
 

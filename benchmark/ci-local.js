@@ -6,7 +6,7 @@ import ws from 'k6/ws';
  *
  * 1. Run the servers:
  *
- * PORT=6001 ADAPTER_DRIVER=local RATE_LIMITER_DRIVER=local bin/server.js start
+ * SOKETI_PORT=6001 SOKETI_ADAPTER_DRIVER=local SOKETI_RATE_LIMITER_DRIVER=local bin/server.js start
  *
  * 2. Run the PHP senders based on the amount of messages per second you want to receive.
  *    The sending rate influences the final benchmark.
@@ -38,6 +38,11 @@ if (['redis', 'cluster', 'nats'].includes(__ENV.ADAPTER_DRIVER)) {
     maxAvg += 100;
 }
 
+if (['redis'].includes(__ENV.CACHE_DRIVER)) {
+    maxP95 += 20;
+    maxAvg += 20;
+}
+
 export const options = {
     thresholds: {
         message_delay_ms: [
@@ -49,12 +54,17 @@ export const options = {
     scenarios: {
         // Keep connected many users users at the same time.
         soakTraffic: {
-            executor: 'per-vu-iterations',
-            vus: 250,
-            iterations: 6,
+            executor: 'ramping-vus',
+            startVUs: 0,
+            startTime: '0s',
+            stages: [
+                { duration: '50s', target: 250 },
+                { duration: '110s', target: 250 },
+            ],
+            gracefulRampDown: '40s',
             env: {
-                SLEEP_FOR: '10',
-                WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
+                SLEEP_FOR: '160',
+                WS_HOST: __ENV.WS_HOST || 'ws://127.0.0.1:6001/app/app-key',
             },
         },
 
@@ -64,18 +74,18 @@ export const options = {
         highTraffic: {
             executor: 'ramping-vus',
             startVUs: 0,
-            startTime: '5s',
+            startTime: '50s',
             stages: [
+                { duration: '50s', target: 250 },
                 { duration: '30s', target: 250 },
-                { duration: '10s', target: 250 },
                 { duration: '10s', target: 100 },
                 { duration: '10s', target: 50 },
                 { duration: '10s', target: 100 },
             ],
-            gracefulRampDown: '5s',
+            gracefulRampDown: '20s',
             env: {
-                SLEEP_FOR: '5',
-                WS_HOST: 'ws://127.0.0.1:6001/app/app-key',
+                SLEEP_FOR: '110',
+                WS_HOST: __ENV.WS_HOST || 'ws://127.0.0.1:6001/app/app-key',
             },
         },
     },

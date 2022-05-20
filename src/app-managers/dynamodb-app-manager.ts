@@ -38,6 +38,10 @@ export class DynamoDbAppManager extends BaseAppManager {
             let item = response.Item;
 
             if (!item) {
+                if (this.server.options.debug) {
+                    Log.error(`App ID not found: ${id}`);
+                }
+
                 return null;
             }
 
@@ -69,6 +73,10 @@ export class DynamoDbAppManager extends BaseAppManager {
             let item = response.Items[0] || null;
 
             if (!item) {
+                if (this.server.options.debug) {
+                    Log.error(`App key not found: ${key}`);
+                }
+
                 return null;
             }
 

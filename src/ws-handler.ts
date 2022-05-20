@@ -74,6 +74,10 @@ export class WsHandler {
             }
         }
 
+        ws.id = this.generateSocketId();
+        ws.subscribedChannels = new Set();
+        ws.presence = new Map<string, PresenceMemberInfo>();
+
         if (this.server.closing) {
             ws.sendJson({
                 event: 'pusher:error',
@@ -86,10 +90,6 @@ export class WsHandler {
             // See: https://www.iana.org/assignments/websocket/websocket.xhtml
             return ws.end(1012);
         }
-
-        ws.id = this.generateSocketId();
-        ws.subscribedChannels = new Set();
-        ws.presence = new Map<string, PresenceMemberInfo>();
 
         this.checkForValidApp(ws).then(validApp => {
             if (!validApp) {
@@ -397,6 +397,10 @@ export class WsHandler {
 
                 ws.sendJson(broadcastMessage);
 
+                if (Utils.isCachingChannel(channel)) {
+                    this.sendMissedCacheIfExists(ws, channel);
+                }
+
                 return;
             }
 
@@ -438,6 +442,10 @@ export class WsHandler {
                 };
 
                 ws.sendJson(broadcastMessage);
+
+                if (Utils.isCachingChannel(channel)) {
+                    this.sendMissedCacheIfExists(ws, channel);
+                }
             }).catch(err => {
                 Log.error(err);
 
@@ -457,7 +465,7 @@ export class WsHandler {
     /**
      * Instruct the server to unsubscribe the connection from the channel.
      */
-    unsubscribeFromChannel(ws: WebSocket, channel: string): Promise<void> {
+    unsubscribeFromChannel(ws: WebSocket, channel: string, closing = false): Promise<void> {
         let channelManager = this.getChannelManagerFor(channel);
 
         return channelManager.leave(ws, channel).then(response => {
@@ -489,8 +497,11 @@ export class WsHandler {
 
                 ws.subscribedChannels.delete(channel);
 
-                // Make sure to update the socket after new data was pushed in.
-                this.server.adapter.addSocket(ws.app.id, ws);
+                // Make sure to update the socket after new data was pushed in,
+                // but only if the user is not closing the connection.
+                if (!closing) {
+                    this.server.adapter.addSocket(ws.app.id, ws);
+                }
 
                 if (response.remainingConnections === 0) {
                     this.server.webhookSender.sendChannelVacated(ws.app, channel);
@@ -515,7 +526,7 @@ export class WsHandler {
         }
 
         return async.each(ws.subscribedChannels, (channel, callback) => {
-            this.unsubscribeFromChannel(ws, channel).then(() => callback());
+            this.unsubscribeFromChannel(ws, channel, true).then(() => callback());
         });
     }
 
@@ -600,6 +611,19 @@ export class WsHandler {
                     },
                 });
             });
+        });
+    }
+
+    /**
+     * Send the first event as cache_missed, if it exists, to catch up.
+     */
+    sendMissedCacheIfExists(ws: WebSocket, channel: string) {
+        this.server.cacheManager.get(`app:${ws.app.id}:channel:${channel}:cache_miss`).then(cachedEvent => {
+            if (cachedEvent) {
+                ws.sendJson({ event: 'pusher:cache_miss', channel, data: cachedEvent });
+            } else {
+                this.server.webhookSender.sendCacheMissed(ws.app, channel);
+            }
         });
     }
 

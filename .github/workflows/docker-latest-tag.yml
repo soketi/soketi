@@ -13,7 +13,10 @@ on:
       - "*"
 
 jobs:
-  push:
+  # Alpine build.
+  # WARNING: Deprecated, will be removed as it is not recommended
+  #          for uWebSockets.js
+  alpine:
     if: "!contains(github.event.head_commit.message, 'skip ci')"
 
     runs-on: ubuntu-latest
@@ -29,10 +32,10 @@ jobs:
         ports:
           - 5000:5000
 
-    name: Tag & Test Latest (node:${{ matrix.node }})
+    name: Tag & Test Latest Alpine (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3.0.0
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1.2.0
@@ -69,6 +72,137 @@ jobs:
           push: true
           context: .
           tags: quay.io/soketi/soketi:latest-${{ matrix.node }}-alpine
+          build-args: |
+            VERSION=${{ matrix.node }}
+          platforms: |
+            linux/amd64
+            linux/arm64
+            linux/arm/v7
+
+  # Distroless build.
+  distroless:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node:
+          - '16'
+
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+
+    name: Tag & Test Latest Distroless (node:${{ matrix.node }})
+
+    steps:
+      - uses: actions/checkout@v3.0.0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1.2.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        with:
+          driver-opts: network=host
+
+      - name: Build testing image
+        uses: docker/build-push-action@v2.7.0
+        with:
+          push: true
+          tags: localhost:5000/soketi/soketi:latest-${{ matrix.node }}-distroless
+          file: Dockerfile.distroless
+          build-args: |
+            VERSION=${{ matrix.node }}
+
+      - name: Test
+        run: |
+          docker run -d -p 6001:6001 -e DEBUG=1 localhost:5000/soketi/soketi:latest-${{ matrix.node }}-distroless
+          sleep 5
+          curl --silent -XGET --fail http://127.0.0.1:6001
+
+      - name: Login to Quay
+        uses: docker/login-action@v1.12.0
+        with:
+          registry: quay.io
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v2.7.0
+        with:
+          push: true
+          context: .
+          tags: quay.io/soketi/soketi:latest-${{ matrix.node }}-distroless
+          file: Dockerfile.distroless
+          build-args: |
+            VERSION=${{ matrix.node }}
+          platforms: |
+            linux/amd64
+            linux/arm64
+
+  # Debian build.
+  debian:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node:
+          - '16'
+
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+
+    name: Tag & Test Latest Debian (node:${{ matrix.node }})
+
+    steps:
+      - uses: actions/checkout@v3.0.0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1.2.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        with:
+          driver-opts: network=host
+
+      - name: Build testing image
+        uses: docker/build-push-action@v2.7.0
+        with:
+          push: true
+          tags: localhost:5000/soketi/soketi:latest-${{ matrix.node }}-debian
+          file: Dockerfile.debian
+          build-args: |
+            VERSION=${{ matrix.node }}
+
+      - name: Test
+        run: |
+          docker run -d -p 6001:6001 -e DEBUG=1 localhost:5000/soketi/soketi:latest-${{ matrix.node }}-debian
+          sleep 5
+          curl --silent -XGET --fail http://127.0.0.1:6001
+
+      - name: Login to Quay
+        uses: docker/login-action@v1.12.0
+        with:
+          registry: quay.io
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v2.7.0
+        with:
+          push: true
+          context: .
+          tags: quay.io/soketi/soketi:latest-${{ matrix.node }}-debian
+          file: Dockerfile.debian
           build-args: |
             VERSION=${{ matrix.node }}
           platforms: |

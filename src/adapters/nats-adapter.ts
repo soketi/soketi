@@ -1,7 +1,8 @@
 import { AdapterInterface } from './adapter-interface';
-import { connect, JSONCodec, NatsConnection, StringCodec } from 'nats';
+import { connect, JSONCodec, Msg, NatsConnection, StringCodec } from 'nats';
 import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
 import { Server } from '../server';
+import { timeout } from 'nats/lib/nats-base-client/util';
 
 export class NatsAdapter extends HorizontalAdapter {
     /**
@@ -39,6 +40,8 @@ export class NatsAdapter extends HorizontalAdapter {
 
         this.jc = JSONCodec();
         this.sc = StringCodec();
+
+        this.requestsTimeout = server.options.adapter.nats.requestsTimeout;
     }
 
     /**
@@ -48,7 +51,6 @@ export class NatsAdapter extends HorizontalAdapter {
         return new Promise(resolve => {
             connect({
                 servers: this.server.options.adapter.nats.servers,
-                port: this.server.options.adapter.nats.port,
                 user: this.server.options.adapter.nats.user,
                 pass: this.server.options.adapter.nats.pass,
                 token: this.server.options.adapter.nats.token,
@@ -107,11 +109,32 @@ export class NatsAdapter extends HorizontalAdapter {
     /**
      * Get the number of Discover nodes.
      */
-    protected getNumSub(): Promise<number> {
-        return this.connection.request('$SYS.REQ.SERVER.PING.CONNZ').then(response => {
-            let { data } = JSON.parse(this.sc.decode(response.data)) as any;
+    protected async getNumSub(): Promise<number> {
+        let nodesNumber = this.server.options.adapter.nats.nodesNumber;
 
-            return data.total;
+        if (nodesNumber && nodesNumber > 0) {
+            return Promise.resolve(nodesNumber);
+        }
+
+        return new Promise(resolve => {
+            let responses: Msg[] = [];
+
+            let calculateResponses = () => responses.reduce((total, response) => {
+                let { data } = JSON.parse(this.sc.decode(response.data)) as any;
+
+                return total += data.total;
+            }, 0);
+
+            let waiter = timeout(1000);
+
+            waiter.finally(() => resolve(calculateResponses()));
+
+            this.connection.request('$SYS.REQ.SERVER.PING.CONNZ').then(response => {
+                responses.push(response);
+                waiter.cancel();
+                waiter = timeout(200);
+                waiter.catch(() => resolve(calculateResponses()));
+            });
         });
     }
 

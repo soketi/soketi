@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import { Log } from '..';
 import { Server } from './../server';
 
 export class Cli {
@@ -14,16 +15,23 @@ export class Cli {
      */
     public envVariables: { [key: string]: string; } = {
         ADAPTER_DRIVER: 'adapter.driver',
+        ADAPTER_CLUSTER_REQUESTS_TIMEOUT: 'adapter.cluster.requestsTimeout',
         ADAPTER_REDIS_PREFIX: 'adapter.redis.prefix',
         ADAPTER_REDIS_CLUSTER_MODE: 'adapter.redis.clusterMode',
+        ADAPTER_REDIS_REQUESTS_TIMEOUT: 'adapter.redis.requestsTimeout',
+        ADAPTER_REDIS_SUB_OPTIONS: 'adapter.redis.redisSubOptions',
+        ADAPTER_REDIS_PUB_OPTIONS: 'adapter.redis.redisPubOptions',
         ADAPTER_NATS_PREFIX: 'adapter.nats.prefix',
         ADAPTER_NATS_SERVERS: 'adapter.nats.servers',
-        ADAPTER_NATS_PORT: 'adapter.nats.port',
         ADAPTER_NATS_USER: 'adapter.nats.user',
         ADAPTER_NATS_PASSWORD: 'adapter.nats.pass',
         ADAPTER_NATS_TOKEN: 'adapter.nats.token',
         ADAPTER_NATS_TIMEOUT: 'adapter.nats.timeout',
+        ADAPTER_NATS_REQUESTS_TIMEOUT: 'adapter.nats.requestsTimeout',
+        ADAPTER_NATS_NODES_NUMBER: 'adapter.nats.nodesNumber',
         APP_MANAGER_DRIVER: 'appManager.driver',
+        APP_MANAGER_CACHE_ENABLED: 'appManager.cache.enabled',
+        APP_MANAGER_CACHE_TTL: 'appManager.cache.ttl',
         APP_MANAGER_DYNAMODB_TABLE: 'appManager.dynamodb.table',
         APP_MANAGER_DYNAMODB_REGION: 'appManager.dynamodb.region',
         APP_MANAGER_DYNAMODB_ENDPOINT: 'appManager.dynamodb.endpoint',
@@ -33,14 +41,21 @@ export class Cli {
         APP_MANAGER_POSTGRES_VERSION: 'appManager.postgres.version',
         APP_MANAGER_MYSQL_USE_V2: 'appManager.mysql.useMysql2',
         CHANNEL_LIMITS_MAX_NAME_LENGTH: 'channelLimits.maxNameLength',
+        CHANNEL_CACHE_TTL: 'channelLimits.cacheTtl',
+        CACHE_DRIVER: 'cache.driver',
+        CACHE_REDIS_CLUSTER_MODE: 'cache.redis.clusterMode',
+        CACHE_REDIS_OPTIONS: 'cache.redis.redisOptions',
         CLUSTER_CHECK_INTERVAL: 'cluster.checkInterval',
-        CLUSTER_HOST: 'cluster.host',
+        CLUSTER_HOST: 'cluster.hostname',
         CLUSTER_IGNORE_PROCESS: 'cluster.ignoreProcess',
+        CLUSTER_BROADCAST_ADDRESS: 'cluster.broadcast',
         CLUSTER_KEEPALIVE_INTERVAL: 'cluster.helloInterval',
         CLUSTER_MASTER_TIMEOUT: 'cluster.masterTimeout',
+        CLUSTER_MULTICAST_ADDRESS: 'cluster.multicast',
         CLUSTER_NODE_TIMEOUT: 'cluster.nodeTimeout',
         CLUSTER_PORT: 'cluster.port',
         CLUSTER_PREFIX: 'cluster.prefix',
+        CLUSTER_UNICAST_ADDRESSES: 'cluster.unicast',
         DEBUG: 'debug',
         DEFAULT_APP_ID: 'appManager.array.apps.0.id',
         DEFAULT_APP_KEY: 'appManager.array.apps.0.key',
@@ -91,12 +106,17 @@ export class Cli {
         PRESENCE_MAX_MEMBERS: 'presence.maxMembersPerChannel',
         QUEUE_DRIVER: 'queue.driver',
         QUEUE_REDIS_CONCURRENCY: 'queue.redis.concurrency',
+        QUEUE_REDIS_OPTIONS: 'queue.redis.redisOptions',
         QUEUE_REDIS_CLUSTER_MODE: 'queue.redis.clusterMode',
         QUEUE_SQS_REGION: 'queue.sqs.region',
         QUEUE_SQS_CLIENT_OPTIONS: 'queue.sqs.clientOptions',
         QUEUE_SQS_URL: 'queue.sqs.queueUrl',
         QUEUE_SQS_ENDPOINT: 'queue.sqs.endpoint',
+        QUEUE_SQS_PROCESS_BATCH: 'queue.sqs.processBatch',
+        QUEUE_SQS_BATCH_SIZE: 'queue.sqs.batchSize',
+        QUEUE_SQS_POLLING_WAIT_TIME_MS: 'queue.sqs.pollingWaitTimeMs',
         RATE_LIMITER_DRIVER: 'rateLimiter.driver',
+        RATE_LIMITER_REDIS_OPTIONS: 'rateLimiter.redis.redisOptions',
         RATE_LIMITER_REDIS_CLUSTER_MODE: 'rateLimiter.redis.clusterMode',
         SHUTDOWN_GRACE_PERIOD: 'shutdownGracePeriod',
         SSL_CERT: 'ssl.certPath',
@@ -122,7 +142,7 @@ export class Cli {
         require('dotenv').config();
 
         for (let envVar in this.envVariables) {
-            let value = process.env[envVar] || process.env[`SOKETI_${envVar}`] || null;
+            let value = process.env[`SOKETI_${envVar}`] || null;
             let optionKey = this.envVariables[envVar.replace('SOKETI_', '')];
 
             if (value !== null) {
@@ -168,7 +188,7 @@ export class Cli {
                 this.server.setOptions(settingObject);
             }
         } catch (e) {
-            //
+            Log.errorTitle('There was an error while parsing the JSON in your config file. It has not been loaded.');
         }
     }
 

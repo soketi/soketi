@@ -37,24 +37,34 @@ export interface Options {
     adapter: {
         driver: string;
         redis: {
+            requestsTimeout: number;
             prefix: string;
-            redisOptions: any;
+            redisPubOptions: any;
+            redisSubOptions: any;
             clusterMode: boolean;
         };
+        cluster: {
+            requestsTimeout: 5_000,
+        },
         nats: {
+            requestsTimeout: number;
             prefix: string;
             servers: string[];
-            port: number;
             user?: string;
             pass?: string|null;
             token: string|null;
             timeout: number;
-        },
+            nodesNumber: number|null;
+        };
     };
     appManager: {
         driver: string;
         array: {
             apps: AppInterface[];
+        };
+        cache: {
+            enabled: boolean;
+            ttl: number;
         };
         dynamodb: {
             table: string;
@@ -71,11 +81,19 @@ export interface Options {
             version: string|number;
         };
     };
+    cache: {
+        driver: string;
+        redis: {
+            redisOptions: any;
+            clusterMode: boolean;
+        };
+    };
     channelLimits: {
         maxNameLength: number;
+        cacheTtl: number;
     };
     cluster: {
-        host: string;
+        hostname: string;
         helloInterval: number;
         checkInterval: number;
         nodeTimeout: number,
@@ -83,6 +101,9 @@ export interface Options {
         port: number;
         prefix: string;
         ignoreProcess: boolean;
+        broadcast: string;
+        unicast: string|null;
+        multicast: string|null;
     };
     cors: {
         credentials: boolean;
@@ -144,6 +165,9 @@ export interface Options {
             clientOptions?: SQS.Types.ClientConfiguration;
             consumerOptions?: ConsumerOptions;
             queueUrl: string;
+            processBatch: boolean;
+            batchSize: number;
+            pollingWaitTimeMs: number;
         };
     };
     rateLimiter: {

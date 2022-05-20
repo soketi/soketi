@@ -21,6 +21,7 @@ export enum RequestType {
     CHANNEL_MEMBERS_COUNT = 5,
     CHANNEL_SOCKETS_COUNT = 6,
     SOCKET_EXISTS_IN_CHANNEL = 7,
+    CHANNELS_WITH_SOCKETS_COUNT = 8,
 }
 
 export interface RequestExtra {
@@ -29,11 +30,14 @@ export interface RequestExtra {
     sockets?: Map<string, any>;
     members?: Map<string, PresenceMemberInfo>;
     channels?: Map<string, Set<string>>;
+    channelsWithSocketsCount?: Map<string, number>;
     totalCount?: number;
 }
 
 export interface Request extends RequestExtra {
+    appId: string;
     type: RequestType;
+    time: number;
     resolve: Function;
     reject: Function;
     timeout: any;
@@ -55,6 +59,7 @@ export interface Response {
     sockets?: Map<string, WebSocket>;
     members?: [string, PresenceMemberInfo][];
     channels?: [string, string[]][];
+    channelsWithSocketsCount?: [string, number][];
     totalCount?: number;
     exists?: boolean;
 }
@@ -97,6 +102,119 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * The UUID assigned for the current instance.
      */
     protected uuid: string = uuidv4();
+
+    /**
+     * The list of resolvers for each response type.
+     */
+    protected resolvers = {
+        [RequestType.SOCKETS]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (response.sockets) {
+                    response.sockets.forEach(ws => request.sockets.set(ws.id, ws));
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.sockets;
+            },
+        },
+        [RequestType.CHANNEL_SOCKETS]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (response.sockets) {
+                    response.sockets.forEach(ws => request.sockets.set(ws.id, ws));
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.sockets;
+            },
+        },
+        [RequestType.CHANNELS]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (response.channels) {
+                    response.channels.forEach(([channel, connections]) => {
+                        if (request.channels.has(channel)) {
+                            connections.forEach(connection => {
+                                request.channels.set(channel, request.channels.get(channel).add(connection));
+                            });
+                        } else {
+                            request.channels.set(channel, new Set(connections));
+                        }
+                    });
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.channels;
+            },
+        },
+        [RequestType.CHANNELS_WITH_SOCKETS_COUNT]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (response.channelsWithSocketsCount) {
+                    response.channelsWithSocketsCount.forEach(([channel, connectionsCount]) => {
+                        if (request.channelsWithSocketsCount.has(channel)) {
+                            request.channelsWithSocketsCount.set(
+                                channel,
+                                request.channelsWithSocketsCount.get(channel) + connectionsCount,
+                            );
+                        } else {
+                            request.channelsWithSocketsCount.set(channel, connectionsCount);
+                        }
+                    });
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.channelsWithSocketsCount;
+            },
+        },
+        [RequestType.CHANNEL_MEMBERS]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (response.members) {
+                    response.members.forEach(([id, member]) => request.members.set(id, member));
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.members;
+            },
+        },
+        [RequestType.SOCKETS_COUNT]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (typeof response.totalCount !== 'undefined') {
+                    request.totalCount += response.totalCount;
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.totalCount;
+            },
+        },
+        [RequestType.CHANNEL_MEMBERS_COUNT]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (typeof response.totalCount !== 'undefined') {
+                    request.totalCount += response.totalCount;
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.totalCount;
+            },
+        },
+        [RequestType.CHANNEL_SOCKETS_COUNT]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (typeof response.totalCount !== 'undefined') {
+                    request.totalCount += response.totalCount;
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.totalCount;
+            },
+        },
+        [RequestType.SOCKET_EXISTS_IN_CHANNEL]: {
+            computeResponse: (request: Request, response: Response) => {
+                if (typeof response.exists !== 'undefined' && response.exists === true) {
+                    request.exists = true;
+                }
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return request.exists || false;
+            },
+        },
+    };
 
     /**
      * Broadcast data to a given channel.
@@ -219,6 +337,33 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         resolve,
                         reject,
                         { numSub, channels: localChannels },
+                    );
+                });
+            });
+        });
+    }
+
+    /**
+     * Get total sockets count.
+     */
+    async getChannelsWithSocketsCount(appId: string, onlyLocal?: boolean): Promise<Map<string, number>> {
+        return new Promise((resolve, reject) => {
+            super.getChannelsWithSocketsCount(appId).then(list => {
+                if (onlyLocal) {
+                    return resolve(list);
+                }
+
+                this.getNumSub().then(numSub => {
+                    if (numSub <= 1) {
+                        return resolve(list);
+                    }
+
+                    this.sendRequest(
+                        appId,
+                        RequestType.CHANNELS_WITH_SOCKETS_COUNT,
+                        resolve,
+                        reject,
+                        { numSub, channelsWithSocketsCount: list },
                     );
                 });
             });
@@ -368,7 +513,15 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Listen for requests coming from other nodes.
      */
-    protected onRequest(channel: string, request: Request): void {
+    protected onRequest(channel: string, msg: string): void {
+        let request: RequestBody;
+
+        try {
+            request = JSON.parse(msg);
+        } catch (err) {
+            //
+        }
+
         let { appId } = request;
 
         if (this.server.options.debug) {
@@ -413,6 +566,14 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         return {
                             channels: [...localChannels].map(([channel, connections]) => [channel, [...connections]]),
                         };
+                    });
+                });
+                break;
+
+            case RequestType.CHANNELS_WITH_SOCKETS_COUNT:
+                this.processRequestFromAnotherInstance(request, () => {
+                    return super.getChannelsWithSocketsCount(appId).then(channelsWithSocketsCount => {
+                        return { channelsWithSocketsCount: [...channelsWithSocketsCount] };
                     });
                 });
                 break;
@@ -476,78 +637,11 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             Log.cluster(response);
         }
 
-        switch (request.type) {
-            case RequestType.SOCKETS:
-            case RequestType.CHANNEL_SOCKETS:
-                this.processReceivedResponse(
-                    response,
-                    (request: Request) => {
-                        if (response.sockets) {
-                            response.sockets.forEach(ws => request.sockets.set(ws.id, ws));
-                        }
-                    },
-                    (response: Response, request: Request) => request.sockets,
-                );
-                break;
-
-            case RequestType.CHANNELS:
-                this.processReceivedResponse(
-                    response,
-                    (request: Request) => {
-                        if (response.channels) {
-                            response.channels.forEach(([channel, connections]) => {
-                                if (request.channels.has(channel)) {
-                                    connections.forEach(connection => {
-                                        request.channels.set(channel, request.channels.get(channel).add(connection));
-                                    });
-                                } else {
-                                    request.channels.set(channel, new Set(connections));
-                                }
-                            });
-                        }
-                    },
-                    (response: Response, request: Request) => request.channels,
-                );
-                break;
-
-            case RequestType.CHANNEL_MEMBERS:
-                this.processReceivedResponse(
-                    response,
-                    (request: Request) => {
-                        if (response.members) {
-                            response.members.forEach(([id, member]) => request.members.set(id, member));
-                        }
-                    },
-                    (response: Response, request: Request) => request.members,
-                );
-                break;
-
-            case RequestType.SOCKETS_COUNT:
-            case RequestType.CHANNEL_MEMBERS_COUNT:
-            case RequestType.CHANNEL_SOCKETS_COUNT:
-                this.processReceivedResponse(
-                    response,
-                    (request: Request) => {
-                        if (typeof response.totalCount !== 'undefined') {
-                            request.totalCount += response.totalCount;
-                        }
-                    },
-                    (response: Response, request: Request) => request.totalCount,
-                );
-                break;
-
-            case RequestType.SOCKET_EXISTS_IN_CHANNEL:
-                this.processReceivedResponse(
-                    response,
-                    (request: Request) => {
-                        if (typeof response.exists !== 'undefined' && response.exists === true) {
-                            request.exists = true;
-                        }
-                    },
-                    (response: Response, request: Request) => request.exists || false,
-                );
-                break;
-        }
+        this.processReceivedResponse(
+            response,
+            this.resolvers[request.type].computeResponse.bind(this),
+            this.resolvers[request.type].resolveValue.bind(this),
+        );
     }
 
     /**
@@ -556,7 +650,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      */
     protected sendRequest(
         appId: string,
-        type: number,
+        type: RequestType,
         resolve: CallableFunction,
         reject: CallableFunction,
         requestExtra: RequestExtra = {},
@@ -564,22 +658,26 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     ) {
         const requestId = uuidv4();
 
-        const request = JSON.stringify({
-            requestId,
-            appId,
-            type,
-            ...requestOptions,
-        });
-
         const timeout = setTimeout(() => {
             if (this.requests.has(requestId)) {
-                reject(new Error(`timeout reached while waiting for response in type ${type}`));
-                this.requests.delete(requestId);
+                if (this.server.options.debug) {
+                    Log.error(`Timeout reached while waiting for response in type ${type}. Forcing resolve with the current values.`);
+                }
+
+                this.processReceivedResponse(
+                    { requestId },
+                    this.resolvers[type].computeResponse.bind(this),
+                    this.resolvers[type].resolveValue.bind(this),
+                    true
+                );
             }
         }, this.requestsTimeout);
 
+        // Add the request to the local memory.
         this.requests.set(requestId, {
+            appId,
             type,
+            time: Date.now(),
             timeout,
             msgCount: 1,
             resolve,
@@ -587,19 +685,29 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             ...requestExtra,
         });
 
-        this.sendToRequestChannel(request);
+        // The message to send to other nodes.
+        const requestToSend = JSON.stringify({
+            requestId,
+            appId,
+            type,
+            ...requestOptions,
+        });
+
+        this.sendToRequestChannel(requestToSend);
 
         if (this.server.options.debug) {
             Log.clusterTitle('✈ Sent message to other instances');
             Log.cluster({ request: this.requests.get(requestId) });
         }
+
+        this.server.metricsManager.markHorizontalAdapterRequestSent(appId);
     }
 
     /**
      * Process the incoming request from other subscriber.
      */
-    protected processRequestFromAnotherInstance(request: Request, callbackResolver: Function): void {
-        let { requestId } = request;
+    protected processRequestFromAnotherInstance(request: RequestBody, callbackResolver: Function): void {
+        let { requestId, appId } = request;
 
         // Do not process requests for the same node that created the request.
         if (this.requests.has(requestId)) {
@@ -615,6 +723,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                 Log.clusterTitle('✈ Sent response to the instance');
                 Log.cluster({ response });
             }
+
+            this.server.metricsManager.markHorizontalAdapterRequestReceived(appId);
         });
     }
 
@@ -623,21 +733,28 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      */
     protected processReceivedResponse(
         response: Response,
-        callbackResolver: CallableFunction,
+        responseComputer: CallableFunction,
         promiseResolver: CallableFunction,
+        forceResolve = false
     ) {
         const request = this.requests.get(response.requestId);
 
         request.msgCount++;
 
-        callbackResolver(request);
+        responseComputer(request, response);
 
-        if (request.msgCount === request.numSub) {
+        this.server.metricsManager.markHorizontalAdapterResponseReceived(request.appId);
+
+        if (forceResolve || request.msgCount === request.numSub) {
             clearTimeout(request.timeout);
 
             if (request.resolve) {
-                request.resolve(promiseResolver(response, request));
+                request.resolve(promiseResolver(request, response));
                 this.requests.delete(response.requestId);
+
+                // If the resolve was forced, it means not all nodes fulfilled the request, thus leading to timeout.
+                this.server.metricsManager.trackHorizontalAdapterResolvedPromises(request.appId, !forceResolve);
+                this.server.metricsManager.trackHorizontalAdapterResolveTime(request.appId, Date.now() - request.time);
             }
         }
     }
