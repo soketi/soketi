@@ -588,15 +588,19 @@ export class WsHandler {
 
             this.server.rateLimiter.consumeFrontendEventPoints(1, ws.app, ws).then(response => {
                 if (response.canContinue) {
-                    this.server.adapter.send(ws.app.id, channel, JSON.stringify({ event, channel, data }), ws.id);
+                    let userId = ws.presence.has(channel) ? ws.presence.get(channel).user_id : null;
+
+                    let message = JSON.stringify({
+                        event,
+                        channel,
+                        data,
+                        ...userId ? { user_id: userId } : {},
+                    });
+
+                    this.server.adapter.send(ws.app.id, channel, message, ws.id);
 
                     this.server.webhookSender.sendClientEvent(
-                        ws.app,
-                        channel,
-                        event,
-                        data,
-                        ws.id,
-                        ws.presence.has(channel) ? ws.presence.get(channel).user_id : null,
+                        ws.app, channel, event, data, ws.id, userId,
                     );
 
                     return;
