@@ -49,7 +49,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array'))('client events on presence channels', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('client events for presence channels', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server: Server) => {
             let user1 = {
                 user_id: 1,
@@ -68,30 +68,27 @@ describe('ws test', () => {
             };
 
             let client1 = Utils.newClientForPresenceUser(user1);
-            let client2 = Utils.newClientForPresenceUser(user2);
             let channelName = `presence-${Utils.randomChannelName()}`;
 
             client1.connection.bind('connected', () => {
-                client1.connection.bind('message', ({ event, channel, data, user_id }) => {
-                    if (event === 'client-greeting' && channel === channelName) {
-                        expect(data.message).toBe('hello');
-                        expect(user_id).toBe(2);
-                        client1.disconnect();
-                        client2.disconnect();
-                        done();
-                    }
-                });
+                let client2 = Utils.newClientForPresenceUser(user2);
 
                 let channel = client1.subscribe(channelName);
+
+                channel.bind('client-greeting', (data, metadata) => {
+                    expect(data.message).toBe('hello');
+                    expect(metadata.user_id).toBe(2);
+                    client1.disconnect();
+                    client2.disconnect();
+                    done();
+                });
 
                 channel.bind('pusher:subscription_succeeded', () => {
                     client2.connection.bind('connected', () => {
                         let channel = client2.subscribe(channelName);
 
                         channel.bind('pusher:subscription_succeeded', () => {
-                            channel.trigger('client-greeting', {
-                                message: 'hello',
-                            });
+                            channel.trigger('client-greeting', { message: 'hello' });
                         });
                     });
                 });
