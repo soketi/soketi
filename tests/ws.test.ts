@@ -49,7 +49,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array'))('client events for presence channels', done => {
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('client events for presence channels', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server: Server) => {
             let user1 = {
                 user_id: 1,
