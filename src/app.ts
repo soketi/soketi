@@ -138,7 +138,7 @@ export class App implements AppInterface {
     /**
      * @type {boolean}
      */
-    public enableUserAuthentication: boolean = false;
+    public enableUserAuthentication = false;
 
     /**
      * @type {boolean}
