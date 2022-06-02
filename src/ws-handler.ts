@@ -787,6 +787,6 @@ export class WsHandler {
             } catch (e) {
                 //
             }
-        }, 5_000);
+        }, 30_000);
     }
 }
