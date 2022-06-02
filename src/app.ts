@@ -23,6 +23,7 @@ export interface AppInterface {
     maxEventNameLength?: string|number;
     maxEventPayloadInKb?: string|number;
     maxEventBatchSize?: string|number;
+    enableUserAuthentication?: boolean;
     hasClientEventWebhooks?: boolean;
     hasChannelOccupiedWebhooks?: boolean;
     hasChannelVacatedWebhooks?: boolean;
@@ -137,6 +138,11 @@ export class App implements AppInterface {
     /**
      * @type {boolean}
      */
+    public enableUserAuthentication: boolean = false;
+
+    /**
+     * @type {boolean}
+     */
     public hasClientEventWebhooks = false;
 
     /**
@@ -192,6 +198,7 @@ export class App implements AppInterface {
         this.maxEventNameLength = parseInt(this.extractFromPassedKeys(initialApp, ['maxEventNameLength', 'MaxEventNameLength', 'max_event_name_length'], server.options.eventLimits.maxNameLength));
         this.maxEventPayloadInKb = parseFloat(this.extractFromPassedKeys(initialApp, ['maxEventPayloadInKb', 'MaxEventPayloadInKb', 'max_event_payload_in_kb'], server.options.eventLimits.maxPayloadInKb));
         this.maxEventBatchSize = parseInt(this.extractFromPassedKeys(initialApp, ['maxEventBatchSize', 'MaxEventBatchSize', 'max_event_batch_size'], server.options.eventLimits.maxBatchSize));
+        this.enableUserAuthentication = this.extractFromPassedKeys(initialApp, ['enableUserAuthentication', 'EnableUserAuthentication', 'enable_user_authentication'], false);
 
         this.hasClientEventWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.CLIENT_EVENT_WEBHOOK)).length > 0;
         this.hasChannelOccupiedWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.CHANNEL_OCCUPIED_WEBHOOK)).length > 0;
@@ -223,6 +230,7 @@ export class App implements AppInterface {
             maxEventNameLength: this.maxEventNameLength,
             maxEventPayloadInKb: this.maxEventPayloadInKb,
             maxEventBatchSize: this.maxEventBatchSize,
+            enableUserAuthentication: this.enableUserAuthentication,
         }
     }
 

@@ -14,6 +14,7 @@ import { Utils } from './utils';
 import { WebSocket } from 'uWebSockets.js';
 
 const ab2str = require('arraybuffer-to-string');
+const Pusher = require('pusher');
 
 export class WsHandler {
     /**
@@ -87,8 +88,7 @@ export class WsHandler {
                 },
             });
 
-            // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-            return ws.end(1012);
+            return ws.end(4200);
         }
 
         this.checkForValidApp(ws).then(validApp => {
@@ -101,8 +101,7 @@ export class WsHandler {
                     },
                 });
 
-                // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-                return ws.end(1002);
+                return ws.end(4001);
             }
 
             ws.app = validApp.forWebSocket();
@@ -117,8 +116,7 @@ export class WsHandler {
                         },
                     });
 
-                    // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-                    return ws.end(1002);
+                    return ws.end(4003);
                 }
 
                 this.checkAppConnectionLimit(ws).then(canConnect => {
@@ -131,8 +129,7 @@ export class WsHandler {
                             },
                         });
 
-                        // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-                        ws.end(1013);
+                        ws.end(4100);
                     } else {
                         // Make sure to update the socket after new data was pushed in.
                         this.server.adapter.addSocket(ws.app.id, ws);
@@ -146,6 +143,10 @@ export class WsHandler {
                         };
 
                         ws.sendJson(broadcastMessage);
+
+                        if (ws.app.enableUserAuthentication) {
+                            this.setUserAuthenticationTimeout(ws);
+                        }
 
                         this.server.metricsManager.markNewConnection(ws);
                     }
@@ -180,6 +181,8 @@ export class WsHandler {
                 this.unsubscribeFromChannel(ws, message.data.channel);
             } else if (Utils.isClientEvent(message.event)) {
                 this.handleClientEvent(ws, message);
+            } else if (message.event === 'pusher:signin') {
+                this.handleSignin(ws, message);
             } else {
                 Log.warning({
                     info: 'Message event handler not implemented.',
@@ -244,8 +247,7 @@ export class WsHandler {
                             },
                         });
 
-                        // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-                        ws.end(1012);
+                        ws.end(4200);
                     } catch (e) {
                         //
                     }
@@ -300,8 +302,7 @@ export class WsHandler {
                 },
             });
 
-            // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-            ws.end(1012);
+            ws.end(4200);
 
             this.evictSocketFromMemory(ws);
         }
@@ -320,8 +321,7 @@ export class WsHandler {
                 },
             });
 
-            // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-            ws.end(1012);
+            ws.end(4200);
 
             this.evictSocketFromMemory(ws);
 
@@ -619,6 +619,40 @@ export class WsHandler {
     }
 
     /**
+     * Handle the signin coming from the frontend.
+     */
+    handleSignin(ws: WebSocket, message: PusherMessage): void {
+        if (!ws.userAuthenticationTimeout) {
+            return;
+        }
+
+        this.signinTokenIsValid(ws, message.data.user_data, message.data.auth).then(isValid => {
+            if (isValid && ws.userAuthenticationTimeout) {
+                clearTimeout(ws.userAuthenticationTimeout);
+
+                ws.sendJson({
+                    event: 'pusher:signin_success',
+                    data: {},
+                });
+            } else if (!isValid) {
+                ws.sendJson({
+                    event: 'pusher:error',
+                    data: {
+                        code: 4009,
+                        message: 'Connection not authorized.',
+                    },
+                });
+
+                try {
+                    ws.end(4009);
+                } catch (e) {
+                    //
+                }
+            }
+        });
+    }
+
+    /**
      * Send the first event as cache_missed, if it exists, to catch up.
      */
     sendMissedCacheIfExists(ws: WebSocket, channel: string) {
@@ -681,6 +715,29 @@ export class WsHandler {
     }
 
     /**
+     * Check is an incoming connection can subscribe.
+     */
+    signinTokenIsValid(ws: WebSocket, userData: string, signatureToCheck: string): Promise<boolean> {
+        return this.signinTokenForUserData(ws, userData).then(expectedSignature => {
+            return signatureToCheck === expectedSignature;
+        });
+    }
+
+    /**
+     * Get the signin token from the given message, by the Socket.
+     */
+    protected signinTokenForUserData(ws: WebSocket, userData: string): Promise<string> {
+        return new Promise(resolve => {
+            let decodedString = `${ws.id}::user::${userData}`;
+            let token = new Pusher.Token(ws.app.key, ws.app.secret);
+
+            resolve(
+                ws.app.key + ':' + token.sign(decodedString)
+            );
+        });
+    }
+
+    /**
      * Generate a Pusher-like Socket ID.
      */
     protected generateSocketId(): string {
@@ -708,8 +765,28 @@ export class WsHandler {
         this.clearTimeout(ws);
 
         ws.timeout = setTimeout(() => {
-            // See: https://www.iana.org/assignments/websocket/websocket.xhtml
-            ws.end(1006);
+            ws.end(4201);
         }, 120_000);
+    }
+
+    /**
+     * Set the authentication timeout for the socket.
+     */
+    protected setUserAuthenticationTimeout(ws: WebSocket): void {
+        ws.userAuthenticationTimeout = setTimeout(() => {
+            ws.sendJson({
+                event: 'pusher:error',
+                data: {
+                    code: 4009,
+                    message: 'Connection not authorized within timeout.',
+                },
+            });
+
+            try {
+                ws.end(4009);
+            } catch (e) {
+                //
+            }
+        }, 5_000);
     }
 }
