@@ -787,6 +787,6 @@ export class WsHandler {
             } catch (e) {
                 //
             }
-        }, 30_000);
+        }, this.server.options.userAuthenticationTimeout);
     }
 }

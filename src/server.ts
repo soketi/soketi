@@ -234,6 +234,7 @@ export class Server {
             passphrase: '',
             caPath: '',
         },
+        userAuthenticationTimeout: 30_000,
         webhooks: {
             batching: {
                 enabled: false,

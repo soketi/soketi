@@ -180,4 +180,24 @@ describe('private channel test', () => {
             });
         });
     });
+
+    test('user authentication works if immediately joins a private channel', (done) => {
+        Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
+            let client = Utils.newClientForPrivateChannel();
+            let backend = Utils.newBackend();
+            let channelName = `private-${Utils.randomChannelName()}`;
+
+            client.connection.bind('connected', () => {
+                let channel = client.subscribe(channelName);
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    // After subscription, wait 10 seconds to make sure it isn't disconnected
+                    setTimeout(() => {
+                        client.disconnect();
+                        done();
+                    }, 10_000);
+                });
+            });
+        });
+    });
 });
