@@ -439,4 +439,20 @@ describe('ws test', () => {
             });
         });
     });
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('not calling signin after connection throws right error code', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
+            let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
+
+            client.connection.bind('connected', () => {
+                client.connection.bind('message', (error) => {
+                    if (error.event === 'pusher:error') {
+                        expect(error.data.code).toBe(4009);
+                        client.disconnect();
+                        done();
+                    }
+                });
+            });
+        });
+    });
 });
