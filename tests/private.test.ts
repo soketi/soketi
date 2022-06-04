@@ -181,7 +181,7 @@ describe('private channel test', () => {
         });
     });
 
-    test('user authentication works if immediately joins a private channel', (done) => {
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('user authentication works if conn immediately joins a private channel', (done) => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
             let client = Utils.newClientForPrivateChannel();
             let backend = Utils.newBackend();
