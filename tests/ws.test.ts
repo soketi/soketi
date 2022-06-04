@@ -419,4 +419,24 @@ describe('ws test', () => {
             });
         });
     });
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('signin after connection', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
+            let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
+
+            client.connection.bind('connected', () => {
+                client.connection.bind('message', ({ event }) => {
+                    if (event === 'pusher:signin_success') {
+                        // After subscription, wait 10 seconds to make sure it isn't disconnected
+                        setTimeout(() => {
+                            client.disconnect();
+                            done();
+                        }, 10_000);
+                    }
+                });
+
+                client.signin();
+            });
+        });
+    });
 });

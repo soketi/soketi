@@ -372,13 +372,13 @@ describe('presence channel test', () => {
             };
 
             let client = Utils.newClientForPresenceUser(user);
-            let backend = Utils.newBackend();
             let channelName = `presence-${Utils.randomChannelName()}`;
 
             client.connection.bind('connected', () => {
                 let channel = client.subscribe(channelName);
 
                 channel.bind('pusher:subscription_succeeded', () => {
+                    // After subscription, wait 10 seconds to make sure it isn't disconnected
                     setTimeout(() => {
                         client.disconnect();
                         done();
