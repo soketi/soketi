@@ -156,6 +156,21 @@ export class LocalAdapter implements AdapterInterface {
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId: string|null = null): any {
+        // For user-dedicated channels, intercept the .send() call and use custom logic.
+        if (channel.indexOf('#server-to-user-') === 0) {
+            let userId = channel.split('#server-to-user-').pop();
+
+            this.getUserSockets(appId, userId).then(sockets => {
+                sockets.forEach(ws => {
+                    if (ws.sendJson) {
+                        ws.sendJson(JSON.parse(data));
+                    }
+                });
+            });
+
+            return;
+        }
+
         this.getNamespace(appId).getChannelSockets(channel).then(sockets => {
             sockets.forEach((ws) => {
                 if (exceptingId && exceptingId === ws.id) {
@@ -168,6 +183,34 @@ export class LocalAdapter implements AdapterInterface {
                 }
             });
         });
+    }
+
+    /**
+     * Terminate an User ID's connections.
+     */
+    terminateUserConnections(appId: string, userId: number|string): void {
+        this.getNamespace(appId).terminateUserConnections(userId);
+    }
+
+    /**
+     * Add to the users list the associated socket connection ID.
+     */
+    addUser(ws: WebSocket): Promise<void> {
+        return this.getNamespace(ws.app.id).addUser(ws);
+    }
+
+    /**
+     * Remove the user associated with the connection ID.
+     */
+    removeUser(ws: WebSocket): Promise<void> {
+        return this.getNamespace(ws.app.id).removeUser(ws);
+    }
+
+    /**
+     * Get the sockets associated with an user.
+     */
+    getUserSockets(appId: string, userId: number|string): Promise<Set<WebSocket>> {
+        return this.getNamespace(appId).getUserSockets(userId);
     }
 
     /**

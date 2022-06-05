@@ -205,8 +205,8 @@ export class WsHandler {
             Log.websocket({ ws, code, message });
         }
 
-        // If code 1012 (reconnect immediately) is called, it means the `closeAllLocalSockets()` was called.
-        if (code !== 1012) {
+        // If code 4200 (reconnect immediately) is called, it means the `closeAllLocalSockets()` was called.
+        if (code !== 4200) {
             this.evictSocketFromMemory(ws);
         }
     }
@@ -215,7 +215,7 @@ export class WsHandler {
      * Evict the local socket.
      */
     evictSocketFromMemory(ws: WebSocket): Promise<void> {
-        return this.unsubscribeFromAllChannels(ws).then(() => {
+        return this.unsubscribeFromAllChannels(ws, true).then(() => {
             if (ws.app) {
                 this.server.adapter.removeSocket(ws.app.id, ws.id);
                 this.server.metricsManager.markDisconnection(ws);
@@ -520,14 +520,19 @@ export class WsHandler {
     /**
      * Unsubscribe the connection from all channels.
      */
-    unsubscribeFromAllChannels(ws: WebSocket): Promise<void> {
+    unsubscribeFromAllChannels(ws: WebSocket, closing = true): Promise<void> {
         if (!ws.subscribedChannels) {
             return Promise.resolve();
         }
 
-        return async.each(ws.subscribedChannels, (channel, callback) => {
-            this.unsubscribeFromChannel(ws, channel, true).then(() => callback());
-        });
+        return Promise.all([
+            async.each(ws.subscribedChannels, (channel, callback) => {
+                this.unsubscribeFromChannel(ws, channel, closing).then(() => callback());
+            }),
+            this.server.adapter.removeUser(ws),
+        ]).then(() => {
+            return;
+        })
     }
 
     /**
@@ -627,14 +632,7 @@ export class WsHandler {
         }
 
         this.signinTokenIsValid(ws, message.data.user_data, message.data.auth).then(isValid => {
-            if (isValid && ws.userAuthenticationTimeout) {
-                clearTimeout(ws.userAuthenticationTimeout);
-
-                ws.sendJson({
-                    event: 'pusher:signin_success',
-                    data: {},
-                });
-            } else if (!isValid) {
+            if (!isValid) {
                 ws.sendJson({
                     event: 'pusher:error',
                     data: {
@@ -648,7 +646,24 @@ export class WsHandler {
                 } catch (e) {
                     //
                 }
+
+                return;
             }
+
+            if (ws.userAuthenticationTimeout) {
+                clearTimeout(ws.userAuthenticationTimeout);
+            }
+
+            ws.user = JSON.parse(message.data.user_data);
+
+            this.server.adapter.addSocket(ws.app.id, ws);
+
+            this.server.adapter.addUser(ws).then(() => {
+                ws.sendJson({
+                    event: 'pusher:signin_success',
+                    data: message.data,
+                });
+            });
         });
     }
 

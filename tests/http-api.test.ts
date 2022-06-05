@@ -528,4 +528,48 @@ describe('http api test', () => {
             });
         });
     });
+
+    Utils.shouldRun(Utils.appManagerIs('array'))('signin after connection with termination call', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
+            let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
+            let backend = Utils.newBackend();
+
+            client.connection.bind('connected', () => {
+                client.connection.bind('message', (error) => {
+                    if (error.event === 'pusher:error' && error.data.code === 4009) {
+                        client.disconnect();
+                        done();
+                    }
+
+                    if (error.event === 'pusher:signin_success') {
+                        backend.terminateUserConnections('1');
+                    }
+                });
+
+                client.signin();
+            });
+        });
+    });
+
+    Utils.shouldRun(Utils.appManagerIs('array'))('broadcast to user', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
+            let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
+            let backend = Utils.newBackend();
+
+            client.connection.bind('connected', () => {
+                client.connection.bind('message', (message) => {
+                    if (message.event === 'my-event') {
+                        client.disconnect();
+                        done();
+                    }
+
+                    if (message.event === 'pusher:signin_success') {
+                        backend.sendToUser('1', 'my-event', { works: true });
+                    }
+                });
+
+                client.signin();
+            });
+        });
+    });
 });

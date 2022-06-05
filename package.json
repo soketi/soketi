@@ -43,7 +43,7 @@
     "pm2": "^5.1.2",
     "prom-client": "^14.0.1",
     "prometheus-query": "^3.0.3",
-    "pusher": "^5.0.0",
+    "pusher": "^5.1.0-beta",
     "query-string": "^7.1.0",
     "rate-limiter-flexible": "^2.3.6",
     "sqs-consumer": "^5.6.0",
@@ -80,7 +80,7 @@
     "build:watch": "npm run build -- -W",
     "lint": "eslint --ext .js,.ts ./src",
     "prepublish": "npm run build",
-    "test": "jest --detectOpenHandles --forceExit --silent",
+    "test": "jest --detectOpenHandles --forceExit",
     "test:watch": "npm test -- --watch"
   },
   "bin": {
