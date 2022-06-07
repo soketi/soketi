@@ -650,11 +650,36 @@ export class WsHandler {
                 return;
             }
 
+            let decodedUser = JSON.parse(message.data.user_data);
+
+            if (!decodedUser.id) {
+                ws.sendJson({
+                    event: 'pusher:error',
+                    data: {
+                        code: 4009,
+                        message: 'The returned user data must contain the "id" field.',
+                    },
+                });
+
+                try {
+                    ws.end(4009);
+                } catch (e) {
+                    //
+                }
+
+                return;
+            }
+
+            ws.user = {
+                ...decodedUser,
+                ...{
+                    id: decodedUser.id.toString(),
+                },
+            };
+
             if (ws.userAuthenticationTimeout) {
                 clearTimeout(ws.userAuthenticationTimeout);
             }
-
-            ws.user = JSON.parse(message.data.user_data);
 
             this.server.adapter.addSocket(ws.app.id, ws);
 
