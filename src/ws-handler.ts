@@ -529,7 +529,7 @@ export class WsHandler {
             async.each(ws.subscribedChannels, (channel, callback) => {
                 this.unsubscribeFromChannel(ws, channel, closing).then(() => callback());
             }),
-            this.server.adapter.removeUser(ws),
+            ws.app && ws.user ? this.server.adapter.removeUser(ws) : new Promise<void>(resolve => resolve()),
         ]).then(() => {
             return;
         })
