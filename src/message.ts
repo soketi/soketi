@@ -1,6 +1,7 @@
 export interface MessageData {
     channel_data?: string;
     channel?: string;
+    user_data?: string;
     [key: string]: any;
 }
 
