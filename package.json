@@ -40,7 +40,7 @@
     "nats": "^2.5.0",
     "node-discover": "^1.2.1",
     "pg": "^8.7.1",
-    "pm2": "^5.1.2",
+    "pm2": "^5.2.0",
     "prom-client": "^14.0.1",
     "prometheus-query": "^3.0.3",
     "pusher": "^5.1.0-beta",
