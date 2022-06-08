@@ -35,7 +35,7 @@ jobs:
     name: Tag & Test Alpine Commit (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.0
+      - uses: actions/checkout@v3.0.2
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -83,7 +83,7 @@ jobs:
     name: Tag & Test Distroless Commit (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.0
+      - uses: actions/checkout@v3.0.2
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -132,7 +132,7 @@ jobs:
     name: Tag & Test Debian Commit (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.0
+      - uses: actions/checkout@v3.0.2
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1

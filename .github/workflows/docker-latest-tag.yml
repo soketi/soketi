@@ -35,7 +35,7 @@ jobs:
     name: Tag & Test Latest Alpine (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.0
+      - uses: actions/checkout@v3.0.2
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1.2.0
@@ -99,7 +99,7 @@ jobs:
     name: Tag & Test Latest Distroless (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.0
+      - uses: actions/checkout@v3.0.2
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1.2.0
@@ -164,7 +164,7 @@ jobs:
     name: Tag & Test Latest Debian (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.0
+      - uses: actions/checkout@v3.0.2
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1.2.0
