@@ -292,7 +292,7 @@ describe('http api test for redis adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('redis'))('signin after connection with termination call for redis', done => {
+    Utils.shouldRun(Utils.adapterIs('redis') && Utils.appManagerIs('array'))('signin after connection with termination call for redis', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002, 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
@@ -328,7 +328,7 @@ describe('http api test for redis adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('redis'))('broadcast to user for redis', done => {
+    Utils.shouldRun(Utils.adapterIs('redis') && Utils.appManagerIs('array'))('broadcast to user for redis', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'port': 6002, 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });

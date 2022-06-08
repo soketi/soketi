@@ -292,7 +292,7 @@ describe('http api test for cluster adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('cluster'))('signin after connection with termination call for cluster', done => {
+    Utils.shouldRun(Utils.adapterIs('cluster') && Utils.appManagerIs('array'))('signin after connection with termination call for cluster', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002, 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
@@ -328,7 +328,7 @@ describe('http api test for cluster adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('cluster'))('broadcast to user for cluster', done => {
+    Utils.shouldRun(Utils.adapterIs('cluster') && Utils.appManagerIs('array'))('broadcast to user for cluster', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'port': 6002, 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });

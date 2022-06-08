@@ -292,7 +292,7 @@ describe('http api test for nats adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('nats'))('signin after connection with termination call for nats', done => {
+    Utils.shouldRun(Utils.adapterIs('nats') && Utils.appManagerIs('array'))('signin after connection with termination call for nats', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002, 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
@@ -328,7 +328,7 @@ describe('http api test for nats adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('nats'))('broadcast to user for nats', done => {
+    Utils.shouldRun(Utils.adapterIs('nats') && Utils.appManagerIs('array'))('broadcast to user for nats', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server1: Server) => {
             Utils.newClonedServer(server1, { 'port': 6002, 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server2: Server) => {
                 let client1 = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
