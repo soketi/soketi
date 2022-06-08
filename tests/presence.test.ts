@@ -360,4 +360,31 @@ describe('presence channel test', () => {
             });
         });
     });
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('user authentication works if conn immediately joins a presence channel', (done) => {
+        Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
+            let user = {
+                user_id: 1,
+                user_info: {
+                    id: 1,
+                    name: 'John',
+                },
+            };
+
+            let client = Utils.newClientForPresenceUser(user);
+            let channelName = `presence-${Utils.randomChannelName()}`;
+
+            client.connection.bind('connected', () => {
+                let channel = client.subscribe(channelName);
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    // After subscription, wait 10 seconds to make sure it isn't disconnected
+                    setTimeout(() => {
+                        client.disconnect();
+                        done();
+                    }, 10_000);
+                });
+            });
+        });
+    });
 });

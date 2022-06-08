@@ -33,6 +33,7 @@ let createRecord = () => {
             // MaxEventNameLength: { N: '-1' },
             // MaxEventPayloadInKb: { N: '-1' },
             // MaxEventBatchSize: { N: '-1' },
+            // EnableUserAuthentication: { B: 'false' }
         },
     };
 

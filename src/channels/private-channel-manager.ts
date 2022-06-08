@@ -24,7 +24,15 @@ export class PrivateChannelManager extends PublicChannelManager {
                 };
             }
 
-            return super.join(ws, channel, message);
+            return super.join(ws, channel, message).then(joinResponse => {
+                // If the users joined to a private channel with authentication,
+                // proceed clearing the authentication timeout.
+                if (joinResponse.success && ws.userAuthenticationTimeout) {
+                    clearTimeout(ws.userAuthenticationTimeout);
+                }
+
+                return joinResponse;
+            });
         });
     }
 
