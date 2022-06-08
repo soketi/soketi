@@ -238,7 +238,7 @@ export class Namespace {
     getUserSockets(userId: string|number): Promise<Set<WebSocket>> {
         let wsIds = this.users.get(userId);
 
-        if (wsIds.size === 0) {
+        if (!wsIds || wsIds.size === 0) {
             return Promise.resolve(new Set());
         }
 

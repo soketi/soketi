@@ -664,7 +664,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                 this.processRequestFromAnotherInstance(request, () => {
                     this.terminateLocalUserConnections(appId, request.opts.userId);
 
-                    return { processed: true };
+                    return Promise.resolve();
                 });
                 break;
         }

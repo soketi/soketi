@@ -535,13 +535,13 @@ describe('http api test', () => {
             let backend = Utils.newBackend();
 
             client.connection.bind('connected', () => {
-                client.connection.bind('message', (error) => {
-                    if (error.event === 'pusher:error' && error.data.code === 4009) {
+                client.connection.bind('message', (payload) => {
+                    if (payload.event === 'pusher:error' && payload.data.code === 4009) {
                         client.disconnect();
                         done();
                     }
 
-                    if (error.event === 'pusher:signin_success') {
+                    if (payload.event === 'pusher:signin_success') {
                         backend.terminateUserConnections('1');
                     }
                 });
