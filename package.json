@@ -46,7 +46,7 @@
     "rate-limiter-flexible": "^2.3.6",
     "sqs-consumer": "^5.6.0",
     "uuid": "^8.3.2",
-    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.6.0",
+    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.10.0",
     "yargs": "^17.3.1"
   },
   "devDependencies": {
@@ -59,7 +59,7 @@
     "@babel/preset-env": "^7.18.2",
     "@types/bull": "^3.15.7",
     "@types/express": "^4.17.13",
-    "@types/jest": "^26.0.24",
+    "@types/jest": "^28.1.1",
     "@types/node": "^16.11.19",
     "@types/pusher-js": "^5.1.0",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
