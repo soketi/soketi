@@ -124,4 +124,12 @@ export class Utils {
 
         return isClientEvent;
     }
+
+    /**
+     * Check if the channel name is restricted for connections from the client.
+     * Read: https://pusher.com/docs/channels/using_channels/channels/#channel-naming-conventions
+     */
+    static restrictedChannelName(name: string) {
+        return /^#?[-a-zA-Z0-9_=@,.;]+$/.test(name) === false;
+    }
 }

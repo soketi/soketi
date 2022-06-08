@@ -1,6 +1,7 @@
 import { PresenceMember } from '../channels/presence-channel-manager';
-import { Server } from '../server';
 import { PusherMessage } from '../message';
+import { Server } from '../server';
+import { Utils } from '../utils';
 import { WebSocket } from 'uWebSockets.js';
 
 export interface JoinResponse {
@@ -29,11 +30,20 @@ export class PublicChannelManager {
      * Join the connection to the channel.
      */
     join(ws: WebSocket, channel: string, message?: PusherMessage): Promise<JoinResponse> {
+        if (Utils.restrictedChannelName(channel)) {
+            return Promise.resolve({
+                ws,
+                success: false,
+                errorCode: 4009,
+                errorMessage: 'The channel name is not allowed. Read channel conventions: https://pusher.com/docs/channels/using_channels/channels/#channel-naming-conventions',
+            });
+        }
+
         if (!ws.app) {
             return Promise.resolve({
                 ws,
                 success: false,
-                errorCode: 4007,
+                errorCode: 4009,
                 errorMessage: 'Subscriptions messages should be sent after the pusher:connection_established event is received.',
             });
         }

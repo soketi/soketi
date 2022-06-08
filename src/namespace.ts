@@ -13,6 +13,11 @@ export class Namespace {
     public sockets: Map<string, WebSocket> = new Map();
 
     /**
+     * The list of user IDs and their associated socket ids.
+     */
+    public users: Map<number|string, Set<string>> = new Map();
+
+    /**
      * Initialize the namespace for an app.
      */
     constructor(protected appId: string) {
@@ -162,5 +167,87 @@ export class Namespace {
                 return members;
             }, new Map<string, PresenceMemberInfo>());
         });
+    }
+
+    /**
+     * Terminate the user's connections.
+     */
+    terminateUserConnections(userId: number|string): void {
+        this.getSockets().then(sockets => {
+            [...sockets].forEach(([wsId, ws]) => {
+                if (ws.user && ws.user.id == userId) {
+                    ws.sendJson({
+                        event: 'pusher:error',
+                        data: {
+                            code: 4009,
+                            message: 'You got disconnected by the app.',
+                        },
+                    });
+
+                    try {
+                        ws.end(4009);
+                    } catch (e) {
+                        //
+                    }
+                }
+            });
+        });
+    }
+
+    /**
+     * Add to the users list the associated socket connection ID.
+     */
+    addUser(ws: WebSocket): Promise<void> {
+        if (!ws.user) {
+            return Promise.resolve();
+        }
+
+        if (!this.users.has(ws.user.id)) {
+            this.users.set(ws.user.id, new Set());
+        }
+
+        if (!this.users.get(ws.user.id).has(ws.id)) {
+            this.users.get(ws.user.id).add(ws.id);
+        }
+
+        return Promise.resolve();
+    }
+
+    /**
+     * Remove the user associated with the connection ID.
+     */
+    removeUser(ws: WebSocket): Promise<void> {
+        if (!ws.user) {
+            return Promise.resolve();
+        }
+
+        if (this.users.has(ws.user.id)) {
+            this.users.get(ws.user.id).delete(ws.id);
+        }
+
+        if (this.users.get(ws.user.id) && this.users.get(ws.user.id).size === 0) {
+            this.users.delete(ws.user.id);
+        }
+
+        return Promise.resolve();
+    }
+
+    /**
+     * Get the sockets associated with an user.
+     */
+    getUserSockets(userId: string|number): Promise<Set<WebSocket>> {
+        let wsIds = this.users.get(userId);
+
+        if (!wsIds || wsIds.size === 0) {
+            return Promise.resolve(new Set());
+        }
+
+        return Promise.resolve(
+            [...wsIds].reduce((sockets, wsId) => {
+                sockets.add(this.sockets.get(wsId));
+
+                return sockets;
+            }, new Set<WebSocket>())
+        );
     }
 }
