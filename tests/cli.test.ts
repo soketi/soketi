@@ -10,7 +10,7 @@ describe('CLI test', () => {
         jest.resetModules();
     });
 
-    test.only('soketi-pm2 reads config parameter', done => {
+    test('soketi-pm2 reads config parameter', done => {
         const pm2 = spawn('bin/pm2.js', ['start', '--config=tests/fixtures/config.json']);
         setTimeout(() => {
             throw new Error('Config file wasn\'t loaded.');
