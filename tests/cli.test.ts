@@ -11,7 +11,7 @@ describe('CLI test', () => {
     });
 
     test('soketi-pm2 reads config parameter', done => {
-        const pm2 = spawn('bin/pm2.js', ['start', '--config=tests/fixtures/config.json']);
+        const pm2 = spawn('bin/pm2.js', ['start', '--config=tests/fixtures/test-config.json']);
         setTimeout(() => {
             throw new Error('Config file wasn\'t loaded.');
         }, 5000)
