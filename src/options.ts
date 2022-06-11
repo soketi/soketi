@@ -196,6 +196,7 @@ export interface Options {
         passphrase: string;
         caPath: string;
     };
+    userAuthenticationTimeout: number;
     webhooks: {
         batching: {
             enabled: boolean;

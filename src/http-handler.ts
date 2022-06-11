@@ -308,6 +308,18 @@ export class HttpHandler {
         });
     }
 
+    terminateUserConnections(res: HttpResponse) {
+        this.attachMiddleware(res, [
+            this.jsonBodyMiddleware,
+            this.corsMiddleware,
+            this.appMiddleware,
+            this.authMiddleware,
+        ]).then(res => {
+            this.server.adapter.terminateUserConnections(res.app.id, res.params.userId);
+            this.sendJson(res, { ok: true });
+        });
+    }
+
     protected checkMessageToBroadcast(message: PusherApiMessage, app: App): Promise<PusherApiMessage> {
         return new Promise((resolve, reject) => {
             if (

@@ -49,6 +49,53 @@ describe('ws test', () => {
         });
     });
 
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('client events for presence channels', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server: Server) => {
+            let user1 = {
+                user_id: 1,
+                user_info: {
+                    id: 1,
+                    name: 'John',
+                },
+            };
+
+            let user2 = {
+                user_id: 2,
+                user_info: {
+                    id: 2,
+                    name: 'Alice',
+                },
+            };
+
+            let client1 = Utils.newClientForPresenceUser(user1);
+            let channelName = `presence-${Utils.randomChannelName()}`;
+
+            client1.connection.bind('connected', () => {
+                let client2 = Utils.newClientForPresenceUser(user2);
+
+                let channel = client1.subscribe(channelName);
+
+                channel.bind('client-greeting', (data, metadata) => {
+                    expect(data.message).toBe('hello');
+                    expect(metadata.user_id).toBe(2);
+                    client1.disconnect();
+                    client2.disconnect();
+                    done();
+                });
+
+                channel.bind('pusher:subscription_succeeded', () => {
+                    client2.connection.bind('connected', () => {
+                        let channel = client2.subscribe(channelName);
+
+                        channel.bind('pusher:subscription_succeeded', () => {
+                            channel.trigger('client-greeting', { message: 'hello' });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
     Utils.shouldRun(Utils.appManagerIs('array'))('client events dont get emitted when client messaging is disabled', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': false }, (server: Server) => {
             let client1 = Utils.newClientForPrivateChannel();
@@ -365,6 +412,83 @@ describe('ws test', () => {
                             });
                         });
                     });
+                });
+            });
+        });
+    });
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('signin after connection', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
+            let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
+
+            client.connection.bind('connected', () => {
+                client.connection.bind('message', ({ event }) => {
+                    if (event === 'pusher:signin_success') {
+                        // After subscription, wait 10 seconds to make sure it isn't disconnected
+                        setTimeout(() => {
+                            client.disconnect();
+                            done();
+                        }, 10_000);
+                    }
+                });
+
+                client.signin();
+            });
+        });
+    });
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('not calling signin after connection throws right error code', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
+            let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
+
+            client.connection.bind('connected', () => {
+                client.connection.bind('message', (error) => {
+                    if (error.event === 'pusher:error') {
+                        expect(error.data.code).toBe(4009);
+                        client.disconnect();
+                        done();
+                    }
+                });
+            });
+        });
+    });
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('not having user id throws an error', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
+            let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { name: 'John' });
+
+            client.connection.bind('connected', () => {
+                client.connection.bind('message', (error) => {
+                    if (error.event === 'pusher:error') {
+                        expect(error.data.code).toBe(4009);
+                        client.disconnect();
+                        done();
+                    }
+                });
+            });
+        });
+    });
+
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('sending wrong user data token throws error', done => {
+        Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
+            let client = Utils.newClientForPrivateChannel({
+                userAuthentication: {
+                    customHandler: ({ socketId }, callback) => {
+                        callback(false, {
+                            auth: 'fail-on-purpose',
+                            user_data: JSON.stringify({ id: 1 }),
+                        });
+                    },
+                },
+            }, 6001, 'app-key', { id: 1 });
+
+            client.connection.bind('connected', () => {
+                client.connection.bind('message', (error) => {
+                    if (error.event === 'pusher:error') {
+                        expect(error.data.code).toBe(4009);
+                        client.disconnect();
+                        done();
+                    }
                 });
             });
         });

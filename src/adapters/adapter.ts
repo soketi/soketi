@@ -165,6 +165,34 @@ export class Adapter implements AdapterInterface {
     }
 
     /**
+     * Terminate an User ID's connections.
+     */
+    terminateUserConnections(appId: string, userId: number|string): void {
+        return this.driver.terminateUserConnections(appId, userId);
+    }
+
+    /**
+     * Add to the users list the associated socket connection ID.
+     */
+    addUser(ws: WebSocket): Promise<void> {
+        return this.driver.addUser(ws);
+    }
+
+    /**
+     * Remove the user associated with the connection ID.
+     */
+    removeUser(ws: WebSocket): Promise<void> {
+        return this.driver.removeUser(ws);
+    }
+
+    /**
+     * Get the sockets associated with an user.
+     */
+    getUserSockets(appId: string, userId: string|number): Promise<Set<WebSocket>> {
+        return this.driver.getUserSockets(appId, userId);
+    }
+
+    /**
      * Clear the namespace from the local adapter.
      */
     clearNamespace(namespaceId: string): Promise<void> {

@@ -75,6 +75,7 @@ export class Cli {
         DEFAULT_APP_MAX_BACKEND_EVENTS_PER_SEC: 'appManager.array.apps.0.maxBackendEventsPerSecond',
         DEFAULT_APP_MAX_CLIENT_EVENTS_PER_SEC: 'appManager.array.apps.0.maxClientEventsPerSecond',
         DEFAULT_APP_MAX_READ_REQ_PER_SEC: 'appManager.array.apps.0.maxReadRequestsPerSecond',
+        DEFAULT_APP_USER_AUTHENTICATION: 'appManager.array.apps.0.enableUserAuthentication',
         DEFAULT_APP_WEBHOOKS: 'appManager.array.apps.0.webhooks',
         DB_POOLING_ENABLED: 'databasePooling.enabled',
         DB_POOLING_MIN: 'databasePooling.min',
@@ -132,6 +133,7 @@ export class Cli {
         SSL_KEY: 'ssl.keyPath',
         SSL_PASS: 'ssl.passphrase',
         SSL_CA: 'ssl.caPath',
+        USER_AUTHENTICATION_TIMEOUT: 'userAuthenticationTimeout',
         WEBHOOKS_BATCHING: 'webhooks.batching.enabled',
         WEBHOOKS_BATCHING_DURATION: 'webhooks.batching.duration',
     };

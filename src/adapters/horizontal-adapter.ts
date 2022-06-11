@@ -23,6 +23,7 @@ export enum RequestType {
     CHANNEL_SOCKETS_COUNT = 6,
     SOCKET_EXISTS_IN_CHANNEL = 7,
     CHANNELS_WITH_SOCKETS_COUNT = 8,
+    TERMINATE_USER_CONNECTIONS = 9,
 }
 
 export interface RequestExtra {
@@ -231,6 +232,14 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                 return request.exists || false;
             },
         },
+        [RequestType.TERMINATE_USER_CONNECTIONS]: {
+            computeResponse: (request: Request, response: Response) => {
+                // Don't need to compute any response as we won't be sending one.
+            },
+            resolveValue: (request: Request, response: Response) => {
+                return true;
+            },
+        },
     };
 
     /**
@@ -316,6 +325,37 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      */
     sendLocally(appId: string, channel: string, data: string, exceptingId: string|null = null): any {
         super.send(appId, channel, data, exceptingId);
+    }
+
+    /**
+     * Terminate an User ID's connections.
+     */
+    terminateUserConnections(appId: string, userId: number|string): void {
+        new Promise((resolve, reject) => {
+            this.shouldRequestOtherNodes(appId).then(({ should, totalNodes = 0 }) => {
+                if (!should) {
+                    return this.terminateLocalUserConnections(appId, userId);
+                }
+
+                this.sendRequest(
+                    appId,
+                    RequestType.TERMINATE_USER_CONNECTIONS,
+                    resolve,
+                    reject,
+                    { numSub: totalNodes },
+                    { opts: { userId } },
+                );
+            });
+        });
+
+        this.terminateLocalUserConnections(appId, userId);
+    }
+
+    /**
+     * Terminate an User ID's local connections.
+     */
+    terminateLocalUserConnections(appId: string, userId: number|string): void {
+        super.terminateUserConnections(appId, userId);
     }
 
     /**
@@ -671,6 +711,14 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return super.isInChannel(appId, request.opts.channel, request.opts.wsId).then(existsLocally => {
                         return { exists: existsLocally };
                     });
+                });
+                break;
+
+            case RequestType.TERMINATE_USER_CONNECTIONS:
+                this.processRequestFromAnotherInstance(request, () => {
+                    this.terminateLocalUserConnections(appId, request.opts.userId);
+
+                    return Promise.resolve();
                 });
                 break;
         }

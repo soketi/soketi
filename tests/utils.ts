@@ -198,7 +198,7 @@ export class Utils {
         });
     }
 
-    static newClientForPrivateChannel(clientOptions = {}, port = 6001, key = 'app-key'): any {
+    static newClientForPrivateChannel(clientOptions = {}, port = 6001, key = 'app-key', userData = {}): any {
         return this.newClient({
             authorizer: (channel, options) => ({
                 authorize: (socketId, callback) => {
@@ -208,35 +208,59 @@ export class Utils {
                     });
                 },
             }),
+            userAuthentication: {
+                customHandler: ({ socketId }, callback) => {
+                    callback(false, {
+                        auth: this.signTokenForUserAuthentication(socketId, JSON.stringify(userData), key),
+                        user_data: JSON.stringify(userData),
+                    });
+                },
+            },
             ...clientOptions,
         }, port, key);
     }
 
-    static newClientForEncryptedPrivateChannel(clientOptions = {}, port = 6001, key = 'app-key'): any {
+    static newClientForEncryptedPrivateChannel(clientOptions = {}, port = 6001, key = 'app-key', userData = {}): any {
         return this.newClient({
             authorizer: (channel, options) => ({
                 authorize: (socketId, callback) => {
                     callback(false, {
-                        auth: this.signTokenForPrivateChannel(socketId, channel),
+                        auth: this.signTokenForPrivateChannel(socketId, channel, key),
                         channel_data: null,
                         shared_secret: this.newBackend().channelSharedSecret(channel.name).toString('base64'),
                     });
                 },
             }),
+            userAuthentication: {
+                customHandler: ({ socketId }, callback) => {
+                    callback(false, {
+                        auth: this.signTokenForUserAuthentication(socketId, JSON.stringify(userData), key),
+                        user_data: JSON.stringify(userData),
+                    });
+                },
+            },
             ...clientOptions,
         }, port, key);
     }
 
-    static newClientForPresenceUser(user: any, clientOptions = {}, port = 6001, key = 'app-key'): any {
+    static newClientForPresenceUser(user: any, clientOptions = {}, port = 6001, key = 'app-key', userData = {}): any {
         return this.newClient({
             authorizer: (channel, options) => ({
                 authorize: (socketId, callback) => {
                     callback(false, {
-                        auth: this.signTokenForPresenceChannel(socketId, channel, user),
+                        auth: this.signTokenForPresenceChannel(socketId, channel, user, key),
                         channel_data: JSON.stringify(user),
                     });
                 },
             }),
+            userAuthentication: {
+                customHandler: ({ socketId }, callback) => {
+                    callback(false, {
+                        auth: this.signTokenForUserAuthentication(socketId, JSON.stringify(userData), key),
+                        user_data: JSON.stringify(userData),
+                    });
+                },
+            },
             ...clientOptions,
         }, port, key);
     }
@@ -262,6 +286,17 @@ export class Utils {
         let token = new Pusher.Token(key, secret);
 
         return key + ':' + token.sign(`${socketId}:${channel.name}:${JSON.stringify(channelData)}`);
+    }
+
+    static signTokenForUserAuthentication(
+        socketId: string,
+        userData: string,
+        key = 'app-key',
+        secret = 'app-secret'
+    ): string {
+        let token = new Pusher.Token(key, secret);
+
+        return key + ':' + token.sign(`${socketId}::user::${userData}`);
     }
 
     static wait(ms): Promise<void> {

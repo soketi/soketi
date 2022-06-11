@@ -64,6 +64,11 @@ export interface AdapterInterface {
     send(appId: string, channel: string, data: string, exceptingId?: string|null): any;
 
     /**
+     * Terminate an User ID's connections.
+     */
+    terminateUserConnections(appId: string, userId: number|string): void;
+
+    /**
      * Clear the connection for the adapter.
      */
     disconnect(): Promise<void>;
@@ -122,4 +127,19 @@ export interface AdapterInterface {
      * Check if a given connection ID exists in a channel.
      */
     isInChannel(appId: string, channel: string, wsId: string, onlyLocal?: boolean): Promise<boolean>;
+
+    /**
+     * Add to the users list the associated socket connection ID.
+     */
+    addUser(ws: WebSocket): Promise<void>;
+
+    /**
+     * Remove the user associated with the connection ID.
+     */
+    removeUser(ws: WebSocket): Promise<void>;
+
+    /**
+     * Get the sockets associated with an user.
+     */
+    getUserSockets(appId: string, userId: string|number): Promise<Set<WebSocket>>;
 }

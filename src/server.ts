@@ -246,6 +246,7 @@ export class Server {
             passphrase: '',
             caPath: '',
         },
+        userAuthenticationTimeout: 30_000,
         webhooks: {
             batching: {
                 enabled: false,
@@ -709,6 +710,15 @@ export class Server {
                     res.url = req.getUrl();
 
                     return this.httpHandler.batchEvents(res);
+                });
+
+                server.post(this.url('/apps/:appId/users/:userId/terminate_connections'), (res, req) => {
+                    res.params = { appId: req.getParameter(0), userId: req.getParameter(1) };
+                    res.query = queryString.parse(req.getQuery());
+                    res.method = req.getMethod().toUpperCase();
+                    res.url = req.getUrl();
+
+                    return this.httpHandler.terminateUserConnections(res);
                 });
             }
 
