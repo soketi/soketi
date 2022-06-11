@@ -81,20 +81,16 @@ export class PrometheusMetricsDriver implements MetricsInterface {
      * Handle a new connection.
      */
     markNewConnection(ws: WebSocket): void {
-        this.server.adapter.getSocketsCount(ws.app.id).then(count => {
-            this.metrics.connectedSockets.set(this.getTags(ws.app.id), count);
-            this.metrics.newConnectionsTotal.inc(this.getTags(ws.app.id));
-        });
+        this.metrics.connectedSockets.inc(this.getTags(ws.app.id));
+        this.metrics.newConnectionsTotal.inc(this.getTags(ws.app.id));
     }
 
     /**
      * Handle a disconnection.
      */
     markDisconnection(ws: WebSocket): void {
-        this.server.adapter.getSocketsCount(ws.app.id).then(count => {
-            this.metrics.connectedSockets.set(this.getTags(ws.app.id), count);
-            this.metrics.newDisconnectionsTotal.inc(this.getTags(ws.app.id));
-        });
+        this.metrics.connectedSockets.dec(this.getTags(ws.app.id));
+        this.metrics.newDisconnectionsTotal.inc(this.getTags(ws.app.id));
     }
 
     /**
