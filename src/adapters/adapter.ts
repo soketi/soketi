@@ -3,7 +3,6 @@ import { ClusterAdapter } from './cluster-adapter';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { Namespace } from '../namespace';
-import { NatsAdapter } from './nats-adapter';
 import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { RedisAdapter } from './redis-adapter';
 import { Server } from '../server';
@@ -23,8 +22,6 @@ export class Adapter implements AdapterInterface {
             this.driver = new LocalAdapter(server);
         } else if (server.options.adapter.driver === 'redis') {
             this.driver = new RedisAdapter(server);
-        } else if (server.options.adapter.driver === 'nats') {
-            this.driver = new NatsAdapter(server);
         } else if (server.options.adapter.driver === 'cluster') {
             this.driver = new ClusterAdapter(server);
         } else {
