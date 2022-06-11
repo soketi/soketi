@@ -1,8 +1,15 @@
 import { AdapterInterface } from './adapter-interface';
-import { connect, JSONCodec, Msg, NatsConnection, StringCodec } from 'nats';
-import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
+import async from 'async';
+import { connect, credsAuthenticator, JSONCodec, Msg, NatsConnection, StringCodec } from 'nats';
+import { HorizontalAdapter, PubsubBroadcastedMessage, ShouldRequestOtherNodesReply } from './horizontal-adapter';
+import { Log } from '../log';
 import { Server } from '../server';
 import { timeout } from 'nats/lib/nats-base-client/util';
+
+interface QueueWithCallback {
+    name: string;
+    callback: any;
+}
 
 export class NatsAdapter extends HorizontalAdapter {
     /**
@@ -42,6 +49,8 @@ export class NatsAdapter extends HorizontalAdapter {
         this.sc = StringCodec();
 
         this.requestsTimeout = server.options.adapter.nats.requestsTimeout;
+
+        Log.warning('NATS is deprecated and will be removed in Soketi 2.0');
     }
 
     /**
@@ -57,12 +66,11 @@ export class NatsAdapter extends HorizontalAdapter {
                 pingInterval: 30_000,
                 timeout: this.server.options.adapter.nats.timeout,
                 reconnect: false,
+                ...this.server.options.adapter.nats.credentials
+                    ? { authenticator: credsAuthenticator(new TextEncoder().encode(this.server.options.adapter.nats.credentials)) }
+                    : {},
             }).then((connection) => {
                 this.connection = connection;
-
-                this.connection.subscribe(this.requestChannel, { callback: (_err, msg) => this.onRequest(msg) });
-                this.connection.subscribe(this.responseChannel, { callback: (_err, msg) => this.onResponse(msg) });
-                this.connection.subscribe(this.channel, { callback: (_err, msg) => this.onMessage(msg) });
 
                 resolve(this);
             });
@@ -70,17 +78,67 @@ export class NatsAdapter extends HorizontalAdapter {
     }
 
     /**
+     * Signal that someone is using the app. Usually,
+     * subscribe to app-specific channels in the adapter.
+     */
+    subscribeToApp(appId: string): Promise<void> {
+        if (this.subscribedApps.includes(appId)) {
+            return Promise.resolve();
+        }
+
+        return super.subscribeToApp(appId).then(() => {
+            let queuesWithCallbacks: QueueWithCallback[] = [
+                {
+                    name: `${this.requestChannel}#${appId}#req`,
+                    callback: (_err, msg) => this.onRequest(msg, appId),
+                },
+                {
+                    name: `${this.responseChannel}#${appId}#res`,
+                    callback: (_err, msg) => this.onResponse(msg, appId),
+                },
+                {
+                    name: `${this.channel}#${appId}`,
+                    callback: (_err, msg) => this.onMessage(msg),
+                },
+            ];
+
+            return async.each(queuesWithCallbacks, (queue: QueueWithCallback, callback) => {
+                let sub = this.connection.subscribe(queue.name, { callback: queue.callback });
+
+                if (sub) {
+                    callback();
+                }
+            });
+        });
+    }
+
+    /**
+     * Unsubscribe from the app in case no sockets are connected to it.
+     */
+    protected unsubscribeFromApp(appId: string): void {
+        super.unsubscribeFromApp(appId);
+
+        try {
+            this.connection.subscribe(`${this.requestChannel}#${appId}`).unsubscribe();
+            this.connection.subscribe(`${this.responseChannel}#${appId}`).unsubscribe();
+            this.connection.subscribe(`${this.channel}#${appId}`).unsubscribe();
+        } catch (error) {
+            Log.warning(error);
+        }
+    }
+
+    /**
      * Listen for requests coming from other nodes.
      */
-    protected onRequest(msg: any): void {
-        super.onRequest(this.requestChannel, JSON.stringify(this.jc.decode(msg.data)));
+    protected onRequest(msg: any, appId: string): void {
+        super.onRequest(`${this.requestChannel}#${appId}`, JSON.stringify(this.jc.decode(msg.data)));
     }
 
     /**
      * Handle a response from another node.
      */
-    protected onResponse(msg: any): void {
-        super.onResponse(this.responseChannel, JSON.stringify(this.jc.decode(msg.data)));
+    protected onResponse(msg: any, appId: string): void {
+        super.onResponse(`${this.responseChannel}#${appId}`, JSON.stringify(this.jc.decode(msg.data)));
     }
 
     /**
@@ -102,35 +160,45 @@ export class NatsAdapter extends HorizontalAdapter {
     /**
      * Broadcast data to a given channel.
      */
-    protected broadcastToChannel(channel: string, data: string): void {
-        this.connection.publish(channel, this.jc.encode(JSON.parse(data)));
+    protected broadcastToChannel(channel: string, data: string, appId: string): void {
+        this.connection.publish(`${channel}#${appId}`, this.jc.encode(JSON.parse(data)));
     }
 
     /**
-     * Get the number of Discover nodes.
+     * Check if other nodes should be requested for additional data
+     * and how many responses are expected.
      */
-    protected async getNumSub(): Promise<number> {
-        let nodesNumber = this.server.options.adapter.nats.nodesNumber;
+    protected async shouldRequestOtherNodes(appId: string): Promise<ShouldRequestOtherNodesReply> {
+        let responses: Msg[] = [];
 
-        if (nodesNumber && nodesNumber > 0) {
-            return Promise.resolve(nodesNumber);
-        }
+        let calculateResponses: () => ShouldRequestOtherNodesReply = () => {
+            let number = responses.reduce((total, response) => {
+                let { data } = JSON.parse(this.sc.decode(response.data)) as any;
+
+                return total += data.num_connections;
+            }, 0);
+
+            if (this.server.options.debug) {
+                Log.info(`Found ${number} subscribers in the NATS cluster.`);
+            }
+
+            return {
+                totalNodes: number,
+                should: number > 1,
+            };
+        };
 
         return new Promise(resolve => {
             let responses: Msg[] = [];
-
-            let calculateResponses = () => responses.reduce((total, response) => {
-                let { data } = JSON.parse(this.sc.decode(response.data)) as any;
-
-                return total += data.total;
-            }, 0);
 
             let waiter = timeout(1000);
 
             waiter.finally(() => resolve(calculateResponses()));
 
-            this.connection.request('$SYS.REQ.SERVER.PING.CONNZ').then(response => {
+            this.connection.request('$SYS.REQ.SERVER.PING.CONNZ', this.jc.encode({ 'filter_subject': `${this.requestChannel}#${appId}` })).then(response => {
                 responses.push(response);
+                console.log(this.sc.decode(response.data));
+
                 waiter.cancel();
                 waiter = timeout(200);
                 waiter.catch(() => resolve(calculateResponses()));

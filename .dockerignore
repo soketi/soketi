@@ -12,3 +12,4 @@ npm-debug.log
 package-lock.json
 yarn.lock
 *.db
+new-connection.sh

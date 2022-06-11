@@ -42,6 +42,7 @@ export class Utils {
             'cluster.prefix': uuidv4(),
             'adapter.redis.prefix': uuidv4(),
             'adapter.nats.prefix': uuidv4(),
+            'adapter.rabbitmq.prefix': uuidv4(),
             'appManager.array.apps.0.maxBackendEventsPerSecond': 200,
             'appManager.array.apps.0.maxClientEventsPerSecond': 200,
             'appManager.array.apps.0.maxReadRequestsPerSecond': 200,
@@ -52,6 +53,7 @@ export class Utils {
             'cluster.ignoreProcess': false,
             'webhooks.batching.enabled': false, // TODO: Find out why batching works but fails tests
             'webhooks.batching.duration': 1,
+            'database.redis.enableOfflineQueue': true,
             'appManager.cache.enabled': true,
             'appManager.cache.ttl': -1,
             ...options,
@@ -67,6 +69,7 @@ export class Utils {
             'database.postgres.password': process.env.TEST_POSTGRES_PASSWORD || 'testing',
             'database.postgres.database': process.env.TEST_POSTGRES_DATABASE || 'testing',
             'queue.sqs.queueUrl': process.env.TEST_SQS_URL || 'http://localhost:4566/000000000000/test.fifo',
+            'debug': process.env.TEST_DEBUG || false,
         };
 
         return (new Server(options)).start((server: Server) => {
@@ -87,6 +90,7 @@ export class Utils {
             // Make sure the same prefixes exists so that they can communicate
             'adapter.redis.prefix': server.options.adapter.redis.prefix,
             'adapter.nats.prefix': server.options.adapter.nats.prefix,
+            'adapter.rabbitmq.prefix': server.options.adapter.rabbitmq.prefix,
             'cluster.prefix': server.options.cluster.prefix,
             'cluster.port': server.options.cluster.port,
             ...options,

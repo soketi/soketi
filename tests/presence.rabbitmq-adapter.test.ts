@@ -3,7 +3,7 @@ import { Utils } from './utils';
 
 jest.retryTimes(parseInt(process.env.RETRY_TIMES || '1'));
 
-describe('presence channel test for nats adapter', () => {
+describe('presence channel test for rabbitmq adapter', () => {
     beforeEach(() => {
         jest.resetModules();
 
@@ -14,7 +14,7 @@ describe('presence channel test for nats adapter', () => {
         return Utils.flushServers();
     });
 
-    Utils.shouldRun(Utils.adapterIs('nats'))('handles joins and leaves for nats adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('rabbitmq'))('handles joins and leaves for rabbitmq adapter', done => {
         Utils.newServer({ port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let john = {
@@ -48,17 +48,15 @@ describe('presence channel test for nats adapter', () => {
                         let aliceClient = Utils.newClientForPresenceUser(alice, {}, 6002);
 
                         aliceClient.connection.bind('connected', () => {
-                            Utils.wait(3000).then(() => {
-                                let aliceChannel = aliceClient.subscribe(channelName);
+                            let aliceChannel = aliceClient.subscribe(channelName);
 
-                                aliceChannel.bind('pusher:subscription_succeeded', (data) => {
-                                    expect(data.count).toBe(2);
-                                    expect(data.me.id).toBe(2);
-                                    expect(data.members['1'].id).toBe(1);
-                                    expect(data.members['2'].id).toBe(2);
-                                    expect(data.me.info.name).toBe('Alice');
-                                    aliceClient.disconnect();
-                                });
+                            aliceChannel.bind('pusher:subscription_succeeded', (data) => {
+                                expect(data.count).toBe(2);
+                                expect(data.me.id).toBe(2);
+                                expect(data.members['1'].id).toBe(1);
+                                expect(data.members['2'].id).toBe(2);
+                                expect(data.me.info.name).toBe('Alice');
+                                aliceClient.disconnect();
                             });
                         });
                     });

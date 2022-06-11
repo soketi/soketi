@@ -215,11 +215,10 @@ describe('ws test', () => {
         Utils.newServer({}, (server: Server) => {
             let client = Utils.newClient({}, 6001, 'invalid-key', false);
 
-            client.connection.bind('state_change', ({ current }) => {
-                if (['unavailable', 'failed', 'disconnected'].includes(current)) {
+            client.connection.bind('error', ({ error }) => {
+                if (error && error.data.code === 4001) {
+                    client.disconnect();
                     done();
-                } else {
-                    throw new Error(`${current} is not an expected state.`);
                 }
             });
         });
@@ -232,12 +231,11 @@ describe('ws test', () => {
             client1.connection.bind('connected', () => {
                 let client2 = Utils.newClient({}, 6001, 'app-key', false);
 
-                client2.connection.bind('state_change', ({ current }) => {
-                    if (['unavailable', 'failed', 'disconnected'].includes(current)) {
+                client2.connection.bind('error', ({ error }) => {
+                    if (error && error.data.code === 4004) {
                         client1.disconnect();
+                        client2.disconnect();
                         done();
-                    } else {
-                        throw new Error(`${current} is not an expected state.`);
                     }
                 });
             });
@@ -248,11 +246,10 @@ describe('ws test', () => {
         Utils.newServer({ 'appManager.array.apps.0.enabled': false }, (server: Server) => {
             let client = Utils.newClient();
 
-            client.connection.bind('state_change', ({ current }) => {
-                if (['unavailable', 'failed', 'disconnected'].includes(current)) {
+            client.connection.bind('error', ({ error }) => {
+                if (error && error.data.code === 4003) {
+                    client.disconnect();
                     done();
-                } else {
-                    throw new Error(`${current} is not an expected state.`);
                 }
             });
         });
@@ -338,7 +335,7 @@ describe('ws test', () => {
                     client2.connection.bind('message', ({ event, channel, data }) => {
                         if (event === 'pusher:subscription_error' && channel === channelName) {
                             expect(data.type).toBe('LimitReached');
-                            expect(data.status).toBe(4100);
+                            expect(data.status).toBe(4004);
                             expect(data.error).toBeDefined();
                             client1.disconnect();
                             client2.disconnect();

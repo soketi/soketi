@@ -42,9 +42,10 @@ export interface Options {
             redisPubOptions: any;
             redisSubOptions: any;
             clusterMode: boolean;
+            shardMode: boolean;
         };
         cluster: {
-            requestsTimeout: 5_000,
+            requestsTimeout: number;
         },
         nats: {
             requestsTimeout: number;
@@ -55,6 +56,17 @@ export interface Options {
             token: string|null;
             timeout: number;
             nodesNumber: number|null;
+            credentials: string|null;
+        };
+        rabbitmq: {
+            requestsTimeout: number;
+            prefix: string;
+            host: string;
+            username: string;
+            password: string;
+            port: number;
+            httpPort: number;
+            ssl: boolean;
         };
     };
     appManager: {

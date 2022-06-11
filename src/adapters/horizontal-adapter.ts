@@ -1,6 +1,7 @@
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { PresenceMemberInfo } from '../channels/presence-channel-manager';
+import { Server } from '../server';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'uWebSockets.js';
 
@@ -73,6 +74,11 @@ export interface PubsubBroadcastedMessage {
     exceptingId?: string|null;
 }
 
+export interface ShouldRequestOtherNodesReply {
+    should: boolean;
+    totalNodes: number;
+}
+
 export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * The time (in ms) for the request to be fulfilled.
@@ -103,6 +109,17 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      * The UUID assigned for the current instance.
      */
     protected uuid: string = uuidv4();
+
+    /**
+     * The list of subscribers/publishers by appId.
+     */
+    protected subscribedApps: string[] = [];
+
+    /**
+     * The list of app Id mapped to an interval for that specific app
+     * to handle unsubscription.
+     */
+    protected subscribedAppsIntervals: { [appId: string]: any; } = {};
 
     /**
      * The list of resolvers for each response type.
@@ -228,25 +245,64 @@ export abstract class HorizontalAdapter extends LocalAdapter {
     /**
      * Broadcast data to a given channel.
      */
-    protected abstract broadcastToChannel(channel: string, data: string): void;
+    protected abstract broadcastToChannel(channel: string, data: string, appId: string): void;
 
     /**
-     * Get the number of total subscribers subscribers.
+     * Check if other nodes should be requested for additional data
+     * and how many responses are expected.
      */
-    protected abstract getNumSub(): Promise<number>;
+    protected abstract shouldRequestOtherNodes(appId: string): Promise<ShouldRequestOtherNodesReply>;
+
+    /**
+     * Signal that someone is using the app. Usually,
+     * subscribe to app-specific channels in the adapter.
+     */
+    subscribeToApp(appId: string): Promise<void> {
+        if (!this.subscribedApps.includes(appId)) {
+            this.subscribedApps.push(appId);
+
+            this.subscribedAppsIntervals[appId] = setInterval(() => {
+                super.getSocketsCount(appId).then(number => {
+                    if (number === 0) {
+                        this.unsubscribeFromApp(appId);
+                    }
+                });
+            }, 5_000); // TODO: Customizable unsubscriptions interval
+        }
+
+        return Promise.resolve();
+    }
+
+    /**
+     * Unsubscribe from the app in case no sockets are connected to it.
+     */
+    protected unsubscribeFromApp(appId: string): void {
+        if (this.subscribedApps.includes(appId)) {
+            this.subscribedApps.splice(this.subscribedApps.indexOf(appId), 1);
+            clearInterval(this.subscribedAppsIntervals[appId]);
+            delete this.subscribedAppsIntervals[appId];
+        }
+    }
+
+    /**
+     * Initialize the adapter.
+     */
+    constructor(protected server: Server) {
+        super(server);
+    }
 
     /**
      * Send a response through the response channel.
      */
-    protected sendToResponseChannel(data: string): void {
-        this.broadcastToChannel(this.responseChannel, data);
+    protected sendToResponseChannel(data: string, appId: string): void {
+        this.broadcastToChannel(this.responseChannel, data, appId);
     }
 
     /**
      * Send a request through the request channel.
      */
-    protected sendToRequestChannel(data: string): void {
-        this.broadcastToChannel(this.requestChannel, data);
+    protected sendToRequestChannel(data: string, appId: string): void {
+        this.broadcastToChannel(this.requestChannel, data, appId);
     }
 
     /**
@@ -259,7 +315,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             channel,
             data,
             exceptingId,
-        }));
+        }), appId);
 
         this.sendLocally(appId, channel, data, exceptingId);
     }
@@ -276,11 +332,9 @@ export abstract class HorizontalAdapter extends LocalAdapter {
      */
     terminateUserConnections(appId: string, userId: number|string): void {
         new Promise((resolve, reject) => {
-            this.getNumSub().then(numSub => {
-                if (numSub <= 1) {
-                    this.terminateLocalUserConnections(appId, userId);
-
-                    return;
+            this.shouldRequestOtherNodes(appId).then(({ should, totalNodes = 0 }) => {
+                if (!should) {
+                    return this.terminateLocalUserConnections(appId, userId);
                 }
 
                 this.sendRequest(
@@ -288,7 +342,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     RequestType.TERMINATE_USER_CONNECTIONS,
                     resolve,
                     reject,
-                    { numSub },
+                    { numSub: totalNodes },
                     { opts: { userId } },
                 );
             });
@@ -314,8 +368,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(localSockets);
                 }
 
-                this.getNumSub().then(numSub => {
-                    if (numSub <= 1) {
+                this.shouldRequestOtherNodes(appId).then(({ should, totalNodes = 0 }) => {
+                    if (!should) {
                         return resolve(localSockets);
                     }
 
@@ -324,7 +378,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         RequestType.SOCKETS,
                         resolve,
                         reject,
-                        { numSub, sockets: localSockets },
+                        { numSub: totalNodes, sockets: localSockets },
                     );
                 });
             });
@@ -341,8 +395,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(wsCount);
                 }
 
-                this.getNumSub().then(numSub => {
-                    if (numSub <= 1) {
+                this.shouldRequestOtherNodes(appId).then(({ should, totalNodes = 0 }) => {
+                    if (!should) {
                         return resolve(wsCount);
                     }
 
@@ -351,7 +405,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         RequestType.SOCKETS_COUNT,
                         resolve,
                         reject,
-                        { numSub, totalCount: wsCount },
+                        { numSub: totalNodes, totalCount: wsCount },
                     );
                 });
             });
@@ -368,8 +422,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     resolve(localChannels);
                 }
 
-                this.getNumSub().then(numSub => {
-                    if (numSub <= 1) {
+                this.shouldRequestOtherNodes(appId).then(({ should, totalNodes = 0 }) => {
+                    if (!should) {
                         return resolve(localChannels);
                     }
 
@@ -378,7 +432,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         RequestType.CHANNELS,
                         resolve,
                         reject,
-                        { numSub, channels: localChannels },
+                        { numSub: totalNodes, channels: localChannels },
                     );
                 });
             });
@@ -395,8 +449,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(list);
                 }
 
-                this.getNumSub().then(numSub => {
-                    if (numSub <= 1) {
+                this.shouldRequestOtherNodes(appId).then(({ should, totalNodes = 0 }) => {
+                    if (!should) {
                         return resolve(list);
                     }
 
@@ -405,7 +459,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         RequestType.CHANNELS_WITH_SOCKETS_COUNT,
                         resolve,
                         reject,
-                        { numSub, channelsWithSocketsCount: list },
+                        { numSub: totalNodes, channelsWithSocketsCount: list },
                     );
                 });
             });
@@ -422,8 +476,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(localSockets);
                 }
 
-                this.getNumSub().then(numSub => {
-                    if (numSub <= 1) {
+                this.shouldRequestOtherNodes(appId).then(({ should, totalNodes = 0 }) => {
+                    if (!should) {
                         return resolve(localSockets);
                     }
 
@@ -432,7 +486,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         RequestType.CHANNEL_SOCKETS,
                         resolve,
                         reject,
-                        { numSub, sockets: localSockets },
+                        { numSub: totalNodes, sockets: localSockets },
                         { opts: { channel } },
                     );
                 });
@@ -450,8 +504,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(wsCount);
                 }
 
-                this.getNumSub().then(numSub => {
-                    if (numSub <= 1) {
+                this.shouldRequestOtherNodes(appId).then(({ should, totalNodes = 0 }) => {
+                    if (!should) {
                         return resolve(wsCount);
                     }
 
@@ -460,7 +514,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         RequestType.CHANNEL_SOCKETS_COUNT,
                         resolve,
                         reject,
-                        { numSub, totalCount: wsCount },
+                        { numSub: totalNodes, totalCount: wsCount },
                         { opts: { channel } },
                     );
                 });
@@ -478,8 +532,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(localMembers);
                 }
 
-                this.getNumSub().then(numSub => {
-                    if (numSub <= 1) {
+                this.shouldRequestOtherNodes(appId).then(({ should, totalNodes = 0 }) => {
+                    if (!should) {
                         return resolve(localMembers);
                     }
 
@@ -488,7 +542,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         RequestType.CHANNEL_MEMBERS,
                         resolve,
                         reject,
-                        { numSub, members: localMembers },
+                        { numSub: totalNodes, members: localMembers },
                         { opts: { channel } },
                     );
                 });
@@ -506,8 +560,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(localMembersCount);
                 }
 
-                this.getNumSub().then(numSub => {
-                    if (numSub <= 1) {
+                this.shouldRequestOtherNodes(appId).then(({ should, totalNodes = 0 }) => {
+                    if (!should) {
                         return resolve(localMembersCount);
                     }
 
@@ -516,7 +570,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         RequestType.CHANNEL_MEMBERS_COUNT,
                         resolve,
                         reject,
-                        { numSub, totalCount: localMembersCount },
+                        { numSub: totalNodes, totalCount: localMembersCount },
                         { opts: { channel } },
                     );
                 });
@@ -534,8 +588,8 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                     return resolve(existsLocally);
                 }
 
-                this.getNumSub().then(numSub => {
-                    if (numSub <= 1) {
+                this.shouldRequestOtherNodes(appId).then(({ should, totalNodes = 0 }) => {
+                    if (!should) {
                         return resolve(existsLocally);
                     }
 
@@ -544,7 +598,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
                         RequestType.SOCKET_EXISTS_IN_CHANNEL,
                         resolve,
                         reject,
-                        { numSub },
+                        { numSub: totalNodes },
                         { opts: { channel, wsId } },
                     );
                 });
@@ -751,7 +805,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
             ...requestOptions,
         });
 
-        this.sendToRequestChannel(requestToSend);
+        this.sendToRequestChannel(requestToSend, appId);
 
         if (this.server.options.debug) {
             Log.clusterTitle('✈ Sent message to other instances');
@@ -775,7 +829,7 @@ export abstract class HorizontalAdapter extends LocalAdapter {
         callbackResolver().then(extra => {
             let response = JSON.stringify({ requestId, ...extra });
 
-            this.sendToResponseChannel(response);
+            this.sendToResponseChannel(response, appId);
 
             if (this.server.options.debug) {
                 Log.clusterTitle('✈ Sent response to the instance');

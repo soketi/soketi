@@ -3,7 +3,7 @@ import { Utils } from './utils';
 
 jest.retryTimes(parseInt(process.env.RETRY_TIMES || '1'));
 
-describe('http api test for nats adapter', () => {
+describe('http api test for rabbitmq adapter', () => {
     beforeEach(() => {
         jest.resetModules();
 
@@ -14,7 +14,7 @@ describe('http api test for nats adapter', () => {
         return Utils.flushServers();
     });
 
-    Utils.shouldRun(Utils.adapterIs('nats'))('get api channels with nats adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('rabbitmq'))('get api channels with rabbitmq adapter', done => {
         Utils.newServer({ port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();
@@ -64,7 +64,7 @@ describe('http api test for nats adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('nats'))('get api channel with nats adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('rabbitmq'))('get api channel with rabbitmq adapter', done => {
         Utils.newServer({ port: 6001 }, (server1: Server) => {
             Utils.newClonedServer(server1, { port: 6002 }, (server2: Server) => {
                 let client1 = Utils.newClient();
@@ -112,7 +112,7 @@ describe('http api test for nats adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('nats'))('get api presence channel with nats adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('rabbitmq'))('get api presence channel with rabbitmq adapter', done => {
         let user1 = {
             user_id: 1,
             user_info: {
@@ -178,7 +178,7 @@ describe('http api test for nats adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('nats'))('get api presence users with nats adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('rabbitmq'))('get api presence users with rabbitmq adapter', done => {
         let user1 = {
             user_id: 1,
             user_info: {
@@ -239,7 +239,7 @@ describe('http api test for nats adapter', () => {
         });
     });
 
-    Utils.shouldRun(Utils.adapterIs('nats'))('presence channel users should count only once for same-user multiple connections with nats adapter', done => {
+    Utils.shouldRun(Utils.adapterIs('rabbitmq'))('presence channel users should count only once for same-user multiple connections with rabbitmq adapter', done => {
         let user = {
             user_id: 1,
             user_info: {

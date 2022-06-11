@@ -40,6 +40,7 @@ export class Server {
                     //
                 },
                 clusterMode: false,
+                shardMode: false,
             },
             cluster: {
                 requestsTimeout: 5_000,
@@ -53,6 +54,17 @@ export class Server {
                 token: null,
                 timeout: 10_000,
                 nodesNumber: null,
+                credentials: null,
+            },
+            rabbitmq: {
+                requestsTimeout: 3_000,
+                prefix: '',
+                host: 'localhost',
+                username: 'user',
+                password: 'password',
+                port: 5672,
+                httpPort: 15672,
+                ssl: false,
             },
         },
         appManager: {

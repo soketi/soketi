@@ -189,12 +189,11 @@ describe('ws test for cluster adapter', () => {
                     Utils.wait(3000).then(() => {
                         let client2 = Utils.newClient({}, 6002, 'app-key', false);
 
-                        client2.connection.bind('state_change', ({ current }) => {
-                            if (current === 'failed') {
+                        client2.connection.bind('error', ({ error }) => {
+                            if (error && error.data.code === 4004) {
                                 client1.disconnect();
+                                client2.disconnect();
                                 done();
-                            } else {
-                                throw new Error(`${current} is not an expected state.`);
                             }
                         });
                     });
@@ -234,7 +233,7 @@ describe('ws test for cluster adapter', () => {
                             client2.connection.bind('message', ({ event, channel, data }) => {
                                 if (event === 'pusher:subscription_error' && channel === channelName) {
                                     expect(data.type).toBe('LimitReached');
-                                    expect(data.status).toBe(4100);
+                                    expect(data.status).toBe(4004);
                                     expect(data.error).toBeDefined();
                                     client1.disconnect();
                                     client2.disconnect();

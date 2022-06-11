@@ -1,5 +1,5 @@
 import { AdapterInterface } from './adapter-interface';
-import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
+import { HorizontalAdapter, PubsubBroadcastedMessage, ShouldRequestOtherNodesReply } from './horizontal-adapter';
 import { Log } from '../log';
 import { Server } from '../server';
 
@@ -33,7 +33,6 @@ export class RedisAdapter extends HorizontalAdapter {
 
         this.requestChannel = `${this.channel}#comms#req`;
         this.responseChannel = `${this.channel}#comms#res`;
-
         this.requestsTimeout = server.options.adapter.redis.requestsTimeout;
     }
 
@@ -55,18 +54,11 @@ export class RedisAdapter extends HorizontalAdapter {
             ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisPubOptions })
             : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisPubOptions });
 
-        const onError = err => {
+        let onError = err => {
             if (err) {
                 Log.warning(err);
             }
         };
-
-        this.subClient.psubscribe(`${this.channel}*`, onError);
-
-        this.subClient.on('pmessageBuffer', this.onMessage.bind(this));
-        this.subClient.on('messageBuffer', this.processMessage.bind(this));
-
-        this.subClient.subscribe([this.requestChannel, this.responseChannel], onError);
 
         this.pubClient.on('error', onError);
         this.subClient.on('error', onError);
@@ -75,10 +67,77 @@ export class RedisAdapter extends HorizontalAdapter {
     }
 
     /**
+     * Signal that someone is using the app. Usually,
+     * subscribe to app-specific channels in the adapter.
+     */
+    subscribeToApp(appId: string): Promise<void> {
+        if (this.subscribedApps.includes(appId)) {
+            return Promise.resolve();
+        }
+
+        let onError = err => {
+            if (err) {
+                Log.warning(err);
+            }
+        };
+
+        let subscribeToMessages = () => {
+            return this.subClient.on('messageBuffer', this.processMessage.bind(this));
+        };
+
+        let channels = [
+            `${this.channel}#${appId}`,
+            `${this.requestChannel}#${appId}`,
+            `${this.responseChannel}#${appId}`,
+        ];
+
+        return super.subscribeToApp(appId).then(() => {
+            if (this.server.options.adapter.redis.shardMode) {
+                return this.subClient.ssubscribe(channels, onError).then(subscribeToMessages);
+            } else {
+                return this.subClient.subscribe(channels, onError).then(subscribeToMessages);
+            }
+        });
+    }
+
+    /**
+     * Unsubscribe from the app in case no sockets are connected to it.
+     */
+    protected unsubscribeFromApp(appId: string): void {
+        if (!this.subscribedApps.includes(appId)) {
+            return;
+        }
+
+        let onError = err => {
+            if (err) {
+                Log.warning(err);
+            }
+        };
+
+        let channels = [
+            `${this.requestChannel}#${appId}`,
+            `${this.responseChannel}#${appId}`,
+            `${this.channel}#${appId}`,
+        ];
+
+        super.unsubscribeFromApp(appId);
+
+        if (this.server.options.adapter.redis.shardMode) {
+            this.subClient.sunsubscribe(channels, onError);
+        } else {
+            this.subClient.unsubscribe(channels, onError);
+        }
+    }
+
+    /**
      * Broadcast data to a given channel.
      */
-    protected broadcastToChannel(channel: string, data: string): void {
-        this.pubClient.publish(channel, data);
+    protected broadcastToChannel(channel: string, data: string, appId: string): void {
+        if (this.server.options.adapter.redis.shardMode) {
+            this.pubClient.spublish(`${channel}#${appId}`, data);
+        } else {
+            this.pubClient.publish(`${channel}#${appId}`, data);
+        }
     }
 
     /**
@@ -92,6 +151,8 @@ export class RedisAdapter extends HorizontalAdapter {
             this.onResponse(redisChannel, msg);
         } else if (redisChannel.startsWith(this.requestChannel)) {
             this.onRequest(redisChannel, msg);
+        } else {
+            this.onMessage(redisChannel, msg);
         }
     }
 
@@ -99,7 +160,7 @@ export class RedisAdapter extends HorizontalAdapter {
      * Listen for message coming from other nodes to broadcast
      * a specific message to the local sockets.
      */
-    protected onMessage(pattern: string, redisChannel: string, msg: Buffer|string): void {
+    protected onMessage(redisChannel: string, msg: Buffer|string): void {
         redisChannel = redisChannel.toString();
         msg = msg.toString();
 
@@ -125,15 +186,41 @@ export class RedisAdapter extends HorizontalAdapter {
     }
 
     /**
-     * Get the number of Redis subscribers.
+     * Check if other nodes should be requested for additional data
+     * and how many responses are expected.
      */
-    protected getNumSub(): Promise<number> {
+    protected shouldRequestOtherNodes(appId: string): Promise<ShouldRequestOtherNodesReply> {
         if (this.server.options.adapter.redis.clusterMode) {
+            if (this.server.options.adapter.redis.shardMode) {
+                return new Promise((resolve, reject) => {
+                    this.pubClient.send_command(
+                        'pubsub',
+                        ['shardnumsub', `${this.requestChannel}#${appId}`],
+                        (err, numSub) => {
+                            if (err) {
+                                return reject(err);
+                            }
+
+                            let number = parseInt(numSub[1], 10);
+
+                            if (this.server.options.debug) {
+                                Log.info(`Found ${number} subscribers in the Sharded Redis cluster.`);
+                            }
+
+                            resolve({
+                                totalNodes: number,
+                                should: number > 1,
+                            });
+                        }
+                    );
+                });
+            }
+
             const nodes = this.pubClient.nodes();
 
             return Promise.all(
                 nodes.map((node) =>
-                    node.send_command('pubsub', ['numsub', this.requestChannel])
+                    node.send_command('pubsub', ['numsub', `${this.requestChannel}#${appId}`])
                 )
             ).then((values: any[]) => {
                 let number = values.reduce((numSub, value) => {
@@ -144,14 +231,17 @@ export class RedisAdapter extends HorizontalAdapter {
                     Log.info(`Found ${number} subscribers in the Redis cluster.`);
                 }
 
-                return number;
+                return {
+                    totalNodes: number,
+                    should: number > 1,
+                };
             });
         } else {
             // RedisClient or Redis
             return new Promise((resolve, reject) => {
                 this.pubClient.send_command(
                     'pubsub',
-                    ['numsub', this.requestChannel],
+                    ['numsub', `${this.requestChannel}#${appId}`],
                     (err, numSub) => {
                         if (err) {
                             return reject(err);
@@ -163,7 +253,10 @@ export class RedisAdapter extends HorizontalAdapter {
                             Log.info(`Found ${number} subscribers in the Redis cluster.`);
                         }
 
-                        resolve(number);
+                        resolve({
+                            totalNodes: number,
+                            should: number > 1,
+                        });
                     }
                 );
             });

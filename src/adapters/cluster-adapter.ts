@@ -1,5 +1,5 @@
 import { AdapterInterface } from './adapter-interface';
-import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
+import { HorizontalAdapter, PubsubBroadcastedMessage, ShouldRequestOtherNodesReply } from './horizontal-adapter';
 import { Server } from '../server';
 
 export class ClusterAdapter extends HorizontalAdapter {
@@ -28,7 +28,7 @@ export class ClusterAdapter extends HorizontalAdapter {
         this.server.discover.join(this.responseChannel, this.onResponse.bind(this));
         this.server.discover.join(this.channel, this.onMessage.bind(this));
 
-        return this;
+        return Promise.resolve(this);
     }
 
     /**
@@ -76,14 +76,18 @@ export class ClusterAdapter extends HorizontalAdapter {
     /**
      * Broadcast data to a given channel.
      */
-    protected broadcastToChannel(channel: string, data: string): void {
+    protected broadcastToChannel(channel: string, data: string, appId: string): void {
         this.server.discover.send(channel, data);
     }
 
     /**
-     * Get the number of Discover nodes.
+     * Check if other nodes should be requested for additional data
+     * and how many responses are expected.
      */
-    protected getNumSub(): Promise<number> {
-        return Promise.resolve(this.server.nodes.size);
+    protected shouldRequestOtherNodes(appId: string): Promise<ShouldRequestOtherNodesReply> {
+        return Promise.resolve({
+            should: this.server.nodes.size > 1,
+            totalNodes: this.server.nodes.size,
+        });
     }
 }

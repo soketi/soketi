@@ -124,31 +124,34 @@ export class WsHandler {
                         ws.sendJson({
                             event: 'pusher:error',
                             data: {
-                                code: 4100,
+                                code: 4004,
                                 message: 'The current concurrent connections quota has been reached.',
                             },
                         });
 
                         ws.end(4100);
                     } else {
-                        // Make sure to update the socket after new data was pushed in.
-                        this.server.adapter.addSocket(ws.app.id, ws);
+                        // Notify the adapter someone is using the app.
+                        this.server.adapter.subscribeToApp(ws.app.id).then(() => {
+                            // Make sure to update the socket after new data was pushed in.
+                            this.server.adapter.addSocket(ws.app.id, ws);
 
-                        let broadcastMessage = {
-                            event: 'pusher:connection_established',
-                            data: JSON.stringify({
-                                socket_id: ws.id,
-                                activity_timeout: 30,
-                            }),
-                        };
+                            let broadcastMessage = {
+                                event: 'pusher:connection_established',
+                                data: JSON.stringify({
+                                    socket_id: ws.id,
+                                    activity_timeout: 30,
+                                }),
+                            };
 
-                        ws.sendJson(broadcastMessage);
+                            ws.sendJson(broadcastMessage);
 
-                        if (ws.app.enableUserAuthentication) {
-                            this.setUserAuthenticationTimeout(ws);
-                        }
+                            if (ws.app.enableUserAuthentication) {
+                                this.setUserAuthenticationTimeout(ws);
+                            }
 
-                        this.server.metricsManager.markNewConnection(ws);
+                            this.server.metricsManager.markNewConnection(ws);
+                        });
                     }
                 });
             });

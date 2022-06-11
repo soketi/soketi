@@ -53,6 +53,12 @@ export interface AdapterInterface {
     removeFromChannel(appId: string, channel: string|string[], wsId: string): Promise<number|void>;
 
     /**
+     * Signal that someone is using the app. Usually,
+     * subscribe to app-specific channels in the adapter.
+     */
+    subscribeToApp(appId: string): Promise<void>;
+
+    /**
      * Send a message to a namespace and channel.
      */
     send(appId: string, channel: string, data: string, exceptingId?: string|null): any;

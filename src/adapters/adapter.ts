@@ -1,4 +1,5 @@
 import { AdapterInterface } from './adapter-interface';
+import { RabbitmqAdapter } from './rabbitmq-adapter';
 import { ClusterAdapter } from './cluster-adapter';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
@@ -27,6 +28,8 @@ export class Adapter implements AdapterInterface {
             this.driver = new NatsAdapter(server);
         } else if (server.options.adapter.driver === 'cluster') {
             this.driver = new ClusterAdapter(server);
+        } else if (server.options.adapter.driver === 'rabbitmq') {
+            this.driver = new RabbitmqAdapter(server);
         } else {
             Log.error('Adapter driver not set.');
         }
@@ -144,6 +147,14 @@ export class Adapter implements AdapterInterface {
      */
     async isInChannel(appId: string, channel: string, wsId: string, onlyLocal?: boolean): Promise<boolean> {
         return this.driver.isInChannel(appId, channel, wsId, onlyLocal);
+    }
+
+    /**
+     * Signal that someone is using the app. Usually,
+     * subscribe to app-specific channels in the adapter.
+     */
+    subscribeToApp(appId: string): Promise<void> {
+        return this.driver.subscribeToApp(appId);
     }
 
     /**
