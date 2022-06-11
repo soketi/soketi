@@ -46,16 +46,6 @@ export interface Options {
         cluster: {
             requestsTimeout: 5_000,
         },
-        nats: {
-            requestsTimeout: number;
-            prefix: string;
-            servers: string[];
-            user?: string;
-            pass?: string|null;
-            token: string|null;
-            timeout: number;
-            nodesNumber: number|null;
-        };
     };
     appManager: {
         driver: string;
