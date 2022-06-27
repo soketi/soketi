@@ -1,6 +1,6 @@
-import { readFileSync } from 'fs';
 import { extname, resolve } from 'path';
 import { Log } from '..';
+import { readFileSync } from 'fs';
 import { Server } from './../server';
 
 export class Cli {
