@@ -74,7 +74,7 @@ export const options = {
         highTraffic: {
             executor: 'ramping-vus',
             startVUs: 0,
-            startTime: '50s',
+            startTime: '5s',
             stages: [
                 { duration: '50s', target: 250 },
                 { duration: '30s', target: 250 },
