@@ -24,6 +24,12 @@ const queryString = require('query-string');
 const uWS = require('uWebSockets.js');
 
 export class Server {
+    
+    /**
+     * The server version.
+     */
+    private VERSION = '1.2.0';
+    
     /**
      * The list of options for the server.
      */
@@ -380,7 +386,7 @@ export class Server {
 
                                 server.listen('0.0.0.0', this.options.port, serverProcess => {
                                     this.serverProcess = serverProcess;
-
+                                    Log.successTitle(`⏱  Soketi Version is ${this.VERSION}!`); 
                                     Log.successTitle('🎉 Server is up and running!');
                                     Log.successTitle(`📡 The Websockets server is available at 127.0.0.1:${this.options.port}`);
                                     Log.successTitle(`🔗 The HTTP API server is available at http://127.0.0.1:${this.options.port}`);
