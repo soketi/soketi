@@ -45,17 +45,6 @@ export class Server {
             cluster: {
                 requestsTimeout: 5_000,
             },
-            nats: {
-                requestsTimeout: 5_000,
-                prefix: '',
-                servers: ['127.0.0.1:4222'],
-                user: null,
-                pass: null,
-                token: null,
-                timeout: 10_000,
-                nodesNumber: null,
-                credentials: null,
-            },
             rabbitmq: {
                 requestsTimeout: 3_000,
                 prefix: '',

@@ -47,17 +47,6 @@ export interface Options {
         cluster: {
             requestsTimeout: number;
         },
-        nats: {
-            requestsTimeout: number;
-            prefix: string;
-            servers: string[];
-            user?: string;
-            pass?: string|null;
-            token: string|null;
-            timeout: number;
-            nodesNumber: number|null;
-            credentials: string|null;
-        };
         rabbitmq: {
             requestsTimeout: number;
             prefix: string;
