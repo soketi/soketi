@@ -41,7 +41,6 @@ export class Utils {
         options = {
             'cluster.prefix': uuidv4(),
             'adapter.redis.prefix': uuidv4(),
-            'adapter.rabbitmq.prefix': uuidv4(),
             'appManager.array.apps.0.maxBackendEventsPerSecond': 200,
             'appManager.array.apps.0.maxClientEventsPerSecond': 200,
             'appManager.array.apps.0.maxReadRequestsPerSecond': 200,
@@ -88,7 +87,6 @@ export class Utils {
         return this.newServer({
             // Make sure the same prefixes exists so that they can communicate
             'adapter.redis.prefix': server.options.adapter.redis.prefix,
-            'adapter.rabbitmq.prefix': server.options.adapter.rabbitmq.prefix,
             'cluster.prefix': server.options.cluster.prefix,
             'cluster.port': server.options.cluster.port,
             ...options,

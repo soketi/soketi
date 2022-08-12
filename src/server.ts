@@ -45,16 +45,6 @@ export class Server {
             cluster: {
                 requestsTimeout: 5_000,
             },
-            rabbitmq: {
-                requestsTimeout: 3_000,
-                prefix: '',
-                host: 'localhost',
-                username: 'user',
-                password: 'password',
-                port: 5672,
-                httpPort: 15672,
-                ssl: false,
-            },
         },
         appManager: {
             driver: 'array',

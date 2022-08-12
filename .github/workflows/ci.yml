@@ -32,7 +32,6 @@ jobs:
           - local
           - redis
           - cluster
-          - rabbitmq
         app_manager:
           - array
           - mysql
@@ -76,7 +75,7 @@ jobs:
           npm run build
 
       - name: Setup Redis
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster' || matrix.adapter == 'rabbitmq'"
+        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
         run: docker run -p 6379:6379 redis:6-alpine &
 
       # Setup MySQL with user `root`, password `root` and database `testing`
@@ -130,16 +129,6 @@ jobs:
             }' \
             --region us-east-1
           awslocal sqs list-queues
-
-      - name: Setup Rabbitmq
-        if: "matrix.adapter == 'rabbitmq'"
-        run: |
-          docker run -d \
-            -p 15672:15672 \
-            -p 5672:5672 \
-            -e RABBITMQ_DEFAULT_USER=user \
-            -e RABBITMQ_DEFAULT_PASS=password \
-            rabbitmq:3-management
 
       - name: Execute tests
         run: npm run test

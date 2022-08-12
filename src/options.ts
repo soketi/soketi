@@ -47,16 +47,6 @@ export interface Options {
         cluster: {
             requestsTimeout: number;
         },
-        rabbitmq: {
-            requestsTimeout: number;
-            prefix: string;
-            host: string;
-            username: string;
-            password: string;
-            port: number;
-            httpPort: number;
-            ssl: boolean;
-        };
     };
     appManager: {
         driver: string;
