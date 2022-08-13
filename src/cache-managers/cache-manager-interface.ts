@@ -1,4 +1,4 @@
-const Redis = require('ioredis');
+import Redis, { Cluster } from 'ioredis';
 
 export interface CacheManagerInterface {
     /**
@@ -9,7 +9,7 @@ export interface CacheManagerInterface {
     /**
      * The Redis connection.
      */
-    redisConnection?: typeof Redis;
+    redisConnection?: Redis|Cluster;
 
     /**
      * Check if the given key exists in cache.
