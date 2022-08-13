@@ -46,8 +46,8 @@ export class RedisRateLimiter extends LocalRateLimiter {
      * Clear the rate limiter or active connections.
      */
     disconnect(): Promise<void> {
-        this.redisConnection.disconnect();
-
-        return Promise.resolve();
+        return this.redisConnection.quit().then(() => {
+            //
+        });
     }
 }

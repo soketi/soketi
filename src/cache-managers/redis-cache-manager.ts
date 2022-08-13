@@ -39,36 +39,24 @@ export class RedisCacheManager implements CacheManagerInterface {
      * Returns false-returning value if cache does not exist.
      */
     get(key: string): Promise<any> {
-        return new Promise(resolve => {
-            this.redisConnection.get(key, (err, result) => {
-                if (err || !result) {
-                    resolve(null);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+        return this.redisConnection.get(key);
     }
 
     /**
      * Set or overwrite the value in the cache.
      */
     set(key: string, value: any, ttlSeconds = -1): Promise<any> {
-        if (ttlSeconds > 0) {
-            this.redisConnection.set(key, value, 'EX', ttlSeconds);
-        } else {
-            this.redisConnection.set(key, value);
-        }
-
-        return Promise.resolve(true);
+        return ttlSeconds > 0
+            ? this.redisConnection.set(key, value, 'EX', ttlSeconds)
+            : this.redisConnection.set(key, value);
     }
 
     /**
      * Disconnect the manager's made connections.
      */
     disconnect(): Promise<void> {
-        this.redisConnection.disconnect();
-
-        return Promise.resolve();
+        return this.redisConnection.quit().then(() => {
+            //
+        });
     }
 }
