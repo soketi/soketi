@@ -1,4 +1,5 @@
 import { AppInterface } from './app';
+import { ClusterOptions, RedisOptions } from 'ioredis';
 import { ConsumerOptions } from 'sqs-consumer';
 import { SQS } from 'aws-sdk';
 
@@ -75,7 +76,7 @@ export interface Options {
     cache: {
         driver: string;
         redis: {
-            redisOptions: any;
+            redisOptions: RedisOptions|ClusterOptions;
             clusterMode: boolean;
         };
     };
@@ -147,7 +148,7 @@ export interface Options {
         driver: string;
         redis: {
             concurrency: number;
-            redisOptions: any;
+            redisOptions: RedisOptions|ClusterOptions;
             clusterMode: boolean;
         };
         sqs: {
@@ -164,7 +165,7 @@ export interface Options {
     rateLimiter: {
         driver: string;
         redis: {
-            redisOptions: any;
+            redisOptions: RedisOptions|ClusterOptions;
             clusterMode: boolean;
         };
     };

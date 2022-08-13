@@ -8,7 +8,6 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const Pusher = require('pusher');
 const PusherJS = require('pusher-js');
-const Redis = require('ioredis');
 const tcpPortUsed = require('tcp-port-used');
 
 export class Utils {

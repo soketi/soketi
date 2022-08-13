@@ -1,9 +1,8 @@
 import { AdapterInterface } from './adapter-interface';
 import { HorizontalAdapter, PubsubBroadcastedMessage, ShouldRequestOtherNodesReply } from './horizontal-adapter';
 import { Log } from '../log';
+import Redis, { Cluster, ClusterOptions, RedisOptions } from 'ioredis';
 import { Server } from '../server';
-
-const Redis = require('ioredis');
 
 export class RedisAdapter extends HorizontalAdapter {
     /**
@@ -14,12 +13,12 @@ export class RedisAdapter extends HorizontalAdapter {
     /**
      * The subscription client.
      */
-    protected subClient: typeof Redis;
+    protected subClient: Redis|Cluster;
 
     /**
      * The publishing client.
      */
-    protected pubClient: typeof Redis;
+    protected pubClient: Redis|Cluster;
 
     /**
      * Initialize the adapter.
@@ -40,18 +39,18 @@ export class RedisAdapter extends HorizontalAdapter {
      * Initialize the adapter.
      */
     async init(): Promise<AdapterInterface> {
-        let redisOptions = {
+        let redisOptions: RedisOptions|ClusterOptions = {
             maxRetriesPerRequest: 2,
             retryStrategy: times => times * 2,
             ...this.server.options.database.redis,
         };
 
         this.subClient = this.server.options.adapter.redis.clusterMode
-            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisSubOptions })
+            ? new Cluster(this.server.options.database.redis.clusterNodes, { ...redisOptions, ...this.server.options.adapter.redis.redisSubOptions })
             : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisSubOptions });
 
         this.pubClient = this.server.options.adapter.redis.clusterMode
-            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisPubOptions })
+            ? new Cluster(this.server.options.database.redis.clusterNodes, { ...redisOptions, ...this.server.options.adapter.redis.redisPubOptions })
             : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisPubOptions });
 
         let onError = err => {
@@ -267,9 +266,11 @@ export class RedisAdapter extends HorizontalAdapter {
      * Clear the connections.
      */
     disconnect(): Promise<void> {
-        this.subClient.disconnect();
-        this.pubClient.disconnect();
-
-        return Promise.resolve();
+        return Promise.all([
+            this.subClient.quit(),
+            this.pubClient.quit(),
+        ]).then(() => {
+            //
+        });
     }
 }
