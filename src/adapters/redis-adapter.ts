@@ -1,9 +1,8 @@
 import { AdapterInterface } from './adapter-interface';
 import { HorizontalAdapter, PubsubBroadcastedMessage } from './horizontal-adapter';
 import { Log } from '../log';
+import Redis, { Cluster, ClusterOptions, RedisOptions } from 'ioredis';
 import { Server } from '../server';
-
-const Redis = require('ioredis');
 
 export class RedisAdapter extends HorizontalAdapter {
     /**
@@ -14,12 +13,12 @@ export class RedisAdapter extends HorizontalAdapter {
     /**
      * The subscription client.
      */
-    protected subClient: typeof Redis;
+    protected subClient: Redis|Cluster;
 
     /**
      * The publishing client.
      */
-    protected pubClient: typeof Redis;
+    protected pubClient: Redis|Cluster;
 
     /**
      * Initialize the adapter.
@@ -41,18 +40,18 @@ export class RedisAdapter extends HorizontalAdapter {
      * Initialize the adapter.
      */
     async init(): Promise<AdapterInterface> {
-        let redisOptions = {
+        let redisOptions: RedisOptions|ClusterOptions = {
             maxRetriesPerRequest: 2,
             retryStrategy: times => times * 2,
             ...this.server.options.database.redis,
         };
 
         this.subClient = this.server.options.adapter.redis.clusterMode
-            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisSubOptions })
+            ? new Cluster(this.server.options.database.redis.clusterNodes, { ...redisOptions, ...this.server.options.adapter.redis.redisSubOptions })
             : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisSubOptions });
 
         this.pubClient = this.server.options.adapter.redis.clusterMode
-            ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { redisOptions, ...this.server.options.adapter.redis.redisPubOptions })
+            ? new Cluster(this.server.options.database.redis.clusterNodes, { ...redisOptions, ...this.server.options.adapter.redis.redisPubOptions })
             : new Redis({ ...redisOptions, ...this.server.options.adapter.redis.redisPubOptions });
 
         const onError = err => {
@@ -66,7 +65,7 @@ export class RedisAdapter extends HorizontalAdapter {
         this.subClient.on('pmessageBuffer', this.onMessage.bind(this));
         this.subClient.on('messageBuffer', this.processMessage.bind(this));
 
-        this.subClient.subscribe([this.requestChannel, this.responseChannel], onError);
+        this.subClient.subscribe(this.requestChannel, this.responseChannel, onError);
 
         this.pubClient.on('error', onError);
         this.subClient.on('error', onError);
@@ -129,11 +128,11 @@ export class RedisAdapter extends HorizontalAdapter {
      */
     protected getNumSub(): Promise<number> {
         if (this.server.options.adapter.redis.clusterMode) {
-            const nodes = this.pubClient.nodes();
+            const nodes = (this.pubClient as Cluster).nodes();
 
             return Promise.all(
                 nodes.map((node) =>
-                    node.send_command('pubsub', ['numsub', this.requestChannel])
+                    node.pubsub('NUMSUB', this.requestChannel)
                 )
             ).then((values: any[]) => {
                 let number = values.reduce((numSub, value) => {
@@ -149,10 +148,10 @@ export class RedisAdapter extends HorizontalAdapter {
         } else {
             // RedisClient or Redis
             return new Promise((resolve, reject) => {
-                this.pubClient.send_command(
-                    'pubsub',
-                    ['numsub', this.requestChannel],
-                    (err, numSub) => {
+                this.pubClient.pubsub(
+                    'NUMSUB',
+                    this.requestChannel,
+                    (err, numSub: [any, string]) => {
                         if (err) {
                             return reject(err);
                         }

@@ -2,9 +2,8 @@ import async from 'async';
 import { JobData } from '../webhook-sender';
 import { Queue, Worker, QueueScheduler } from 'bullmq'
 import { QueueInterface } from './queue-interface';
+import Redis, { Cluster, ClusterOptions, RedisOptions } from 'ioredis';
 import { Server } from '../server';
-
-const Redis = require('ioredis');
 
 interface QueueWithWorker {
     queue: Queue;
@@ -46,7 +45,7 @@ export class RedisQueueDriver implements QueueInterface {
     processQueue(queueName: string, callback: CallableFunction): Promise<void> {
         return new Promise(resolve => {
             if (!this.queueWithWorker.has(queueName)) {
-                let redisOptions = {
+                let redisOptions: RedisOptions|ClusterOptions = {
                     maxRetriesPerRequest: null,
                     enableReadyCheck: false,
                     ...this.server.options.database.redis,
@@ -56,7 +55,7 @@ export class RedisQueueDriver implements QueueInterface {
                 };
 
                 const connection = this.server.options.queue.redis.clusterMode
-                    ? new Redis.Cluster(this.server.options.database.redis.clusterNodes, { scaleReads: 'slave', redisOptions })
+                    ? new Cluster(this.server.options.database.redis.clusterNodes, { scaleReads: 'slave', ...redisOptions })
                     : new Redis(redisOptions);
 
                 const queueSharedOptions = {
