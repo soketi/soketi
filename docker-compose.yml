@@ -1,8 +1,4 @@
-version: "3.8"
-
-networks:
-  redis-cluster:
-    driver: bridge
+version: "3"
 
 services:
   localstack:
