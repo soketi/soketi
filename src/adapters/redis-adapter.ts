@@ -40,8 +40,12 @@ export class RedisAdapter extends HorizontalAdapter {
      */
     async init(): Promise<AdapterInterface> {
         let redisOptions: RedisOptions|ClusterOptions = {
-            maxRetriesPerRequest: 2,
-            retryStrategy: times => times * 2,
+            maxRetriesPerRequest: 5,
+            retryStrategy: times => times * 10,
+            retryDelayOnClusterDown: 50,
+            retryDelayOnMoved: 10,
+            retryDelayOnTryAgain: 50,
+            retryDelayOnFailover: 50,
             ...this.server.options.database.redis,
         };
 

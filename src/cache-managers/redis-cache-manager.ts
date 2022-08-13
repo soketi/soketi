@@ -13,6 +13,10 @@ export class RedisCacheManager implements CacheManagerInterface {
      */
     constructor(protected server: Server) {
         let redisOptions: RedisOptions|ClusterOptions = {
+            retryDelayOnClusterDown: 50,
+            retryDelayOnMoved: 10,
+            retryDelayOnTryAgain: 50,
+            retryDelayOnFailover: 50,
             ...server.options.database.redis,
             ...server.options.cache.redis.redisOptions,
         };
