@@ -412,14 +412,6 @@ export class Server {
                     Log.warningTitle('⚡ All sockets were closed. Now closing the server.');
                 }
 
-                if (this.serverProcess) {
-                    uWS.us_listen_socket_close(this.serverProcess);
-                }
-
-                if (this.metricsServerProcess) {
-                    uWS.us_listen_socket_close(this.metricsServerProcess);
-                }
-
                 setTimeout(() => {
                     Promise.all([
                         this.metricsManager.clear(),
@@ -428,6 +420,14 @@ export class Server {
                         this.cacheManager.disconnect(),
                     ]).then(() => {
                         this.adapter.disconnect().then(() => resolve());
+                    }).then(() => {
+                        if (this.serverProcess) {
+                            uWS.us_listen_socket_close(this.serverProcess);
+                        }
+
+                        if (this.metricsServerProcess) {
+                            uWS.us_listen_socket_close(this.metricsServerProcess);
+                        }
                     });
                 }, this.options.shutdownGracePeriod);
             });
