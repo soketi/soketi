@@ -80,8 +80,8 @@ export class RedisAdapter extends HorizontalAdapter {
             }
         };
 
-        let subscribeToMessages = () => {
-            return this.subClient.on('messageBuffer', this.processMessage.bind(this));
+        let subscribeToMessages = (): void => {
+            this.subClient.on('messageBuffer', this.processMessage.bind(this));
         };
 
         let channels = [
@@ -92,10 +92,14 @@ export class RedisAdapter extends HorizontalAdapter {
 
         return super.subscribeToApp(appId).then(() => {
             if (this.server.options.adapter.redis.shardMode) {
-                return this.subClient.ssubscribe(channels, onError).then(subscribeToMessages);
-            } else {
-                return this.subClient.subscribe(channels, onError).then(subscribeToMessages);
+                return (this.subClient as Cluster).ssubscribe(...channels)
+                    .then(() => subscribeToMessages())
+                    .catch(err => onError(err));
             }
+
+            return this.subClient.subscribe(...channels)
+                .then(() => subscribeToMessages())
+                .catch(err => onError(err));
         });
     }
 
@@ -122,9 +126,9 @@ export class RedisAdapter extends HorizontalAdapter {
         super.unsubscribeFromApp(appId);
 
         if (this.server.options.adapter.redis.shardMode) {
-            this.subClient.sunsubscribe(channels, onError);
+            this.subClient.sunsubscribe(...channels).catch(err => onError(err));
         } else {
-            this.subClient.unsubscribe(channels, onError);
+            this.subClient.unsubscribe(...channels).catch(err => onError(err));
         }
     }
 
@@ -189,38 +193,32 @@ export class RedisAdapter extends HorizontalAdapter {
      * and how many responses are expected.
      */
     protected shouldRequestOtherNodes(appId: string): Promise<ShouldRequestOtherNodesReply> {
+        // Redis Cluster
         if (this.server.options.adapter.redis.clusterMode) {
+            // Sharded Mode
             if (this.server.options.adapter.redis.shardMode) {
-                return new Promise((resolve, reject) => {
-                    this.pubClient.send_command(
-                        'pubsub',
-                        ['shardnumsub', `${this.requestChannel}#${appId}`],
-                        (err, numSub) => {
-                            if (err) {
-                                return reject(err);
-                            }
+                return this.pubClient.pubsub(
+                    'SHARDNUMSUB',
+                    `${this.requestChannel}#${appId}`,
+                ).then((numSub: [any, string]) => {
+                    let number = parseInt(numSub[1], 10);
 
-                            let number = parseInt(numSub[1], 10);
+                    if (this.server.options.debug) {
+                        Log.info(`Found ${number} subscribers in the Sharded Redis cluster.`);
+                    }
 
-                            if (this.server.options.debug) {
-                                Log.info(`Found ${number} subscribers in the Sharded Redis cluster.`);
-                            }
-
-                            resolve({
-                                totalNodes: number,
-                                should: number > 1,
-                            });
-                        }
-                    );
+                    return {
+                        totalNodes: number,
+                        should: number > 1,
+                    };
                 });
             }
 
-            const nodes = this.pubClient.nodes();
+            // Replicas Mode
+            const nodes = (this.pubClient as Cluster).nodes();
 
             return Promise.all(
-                nodes.map((node) =>
-                    node.send_command('pubsub', ['numsub', `${this.requestChannel}#${appId}`])
-                )
+                nodes.map((node) => node.pubsub('NUMSUB', `${this.requestChannel}#${appId}`))
             ).then((values: any[]) => {
                 let number = values.reduce((numSub, value) => {
                     return numSub += parseInt(value[1], 10);
@@ -235,31 +233,23 @@ export class RedisAdapter extends HorizontalAdapter {
                     should: number > 1,
                 };
             });
-        } else {
-            // RedisClient or Redis
-            return new Promise((resolve, reject) => {
-                this.pubClient.send_command(
-                    'pubsub',
-                    ['numsub', `${this.requestChannel}#${appId}`],
-                    (err, numSub) => {
-                        if (err) {
-                            return reject(err);
-                        }
-
-                        let number = parseInt(numSub[1], 10);
-
-                        if (this.server.options.debug) {
-                            Log.info(`Found ${number} subscribers in the Redis cluster.`);
-                        }
-
-                        resolve({
-                            totalNodes: number,
-                            should: number > 1,
-                        });
-                    }
-                );
-            });
         }
+
+        // Standalone
+        return (this.pubClient as Redis).pubsub(
+            'NUMSUB', `${this.requestChannel}#${appId}`,
+        ).then((numSub: [any, string]) => {
+            let number = parseInt(numSub[1], 10);
+
+            if (this.server.options.debug) {
+                Log.info(`Found ${number} subscribers in the Redis cluster.`);
+            }
+
+            return {
+                totalNodes: number,
+                should: number > 1,
+            };
+        });
     }
 
     /**

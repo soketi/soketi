@@ -119,20 +119,20 @@ export class WsHandler {
                     return ws.end(4003);
                 }
 
-                this.checkAppConnectionLimit(ws).then(canConnect => {
-                    if (!canConnect) {
-                        ws.sendJson({
-                            event: 'pusher:error',
-                            data: {
-                                code: 4004,
-                                message: 'The current concurrent connections quota has been reached.',
-                            },
-                        });
+                // Notify the adapter someone is using the app.
+                this.server.adapter.subscribeToApp(ws.app.id).then(() => {
+                    this.checkAppConnectionLimit(ws).then(canConnect => {
+                        if (!canConnect) {
+                            ws.sendJson({
+                                event: 'pusher:error',
+                                data: {
+                                    code: 4004,
+                                    message: 'The current concurrent connections quota has been reached.',
+                                },
+                            });
 
-                        ws.end(4100);
-                    } else {
-                        // Notify the adapter someone is using the app.
-                        this.server.adapter.subscribeToApp(ws.app.id).then(() => {
+                            ws.end(4100);
+                        } else {
                             // Make sure to update the socket after new data was pushed in.
                             this.server.adapter.addSocket(ws.app.id, ws);
 
@@ -151,8 +151,8 @@ export class WsHandler {
                             }
 
                             this.server.metricsManager.markNewConnection(ws);
-                        });
-                    }
+                        }
+                    });
                 });
             });
         });
