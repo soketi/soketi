@@ -1,5 +1,9 @@
 version: "3.8"
 
+networks:
+  redis-cluster:
+    driver: bridge
+
 services:
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
@@ -19,3 +23,11 @@ services:
     volumes:
       - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+  redis:
+    container_name: redis
+    image: redis:7
+    network_mode: bridge
+    ports:
+      - 6379:6379
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
