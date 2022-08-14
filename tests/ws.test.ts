@@ -49,7 +49,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('client events for presence channels', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('client events for presence channels', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server: Server) => {
             let user1 = {
                 user_id: 1,
@@ -420,7 +420,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('signin after connection', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('signin after connection', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
             let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
 
@@ -440,7 +440,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('not calling signin after connection throws right error code', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('not calling signin after connection throws right error code', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
             let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
 
@@ -456,7 +456,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('not having user id throws an error', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('not having user id throws an error', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
             let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { name: 'John' });
 
@@ -472,7 +472,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('sending wrong user data token throws error', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('sending wrong user data token throws error', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
             let client = Utils.newClientForPrivateChannel({
                 userAuthentication: {
