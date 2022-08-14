@@ -119,37 +119,40 @@ export class WsHandler {
                     return ws.end(4003);
                 }
 
-                this.checkAppConnectionLimit(ws).then(canConnect => {
-                    if (!canConnect) {
-                        ws.sendJson({
-                            event: 'pusher:error',
-                            data: {
-                                code: 4100,
-                                message: 'The current concurrent connections quota has been reached.',
-                            },
-                        });
+                // Notify the adapter someone is using the app.
+                this.server.adapter.subscribeToApp(ws.app.id).then(() => {
+                    this.checkAppConnectionLimit(ws).then(canConnect => {
+                        if (!canConnect) {
+                            ws.sendJson({
+                                event: 'pusher:error',
+                                data: {
+                                    code: 4004,
+                                    message: 'The current concurrent connections quota has been reached.',
+                                },
+                            });
 
-                        ws.end(4100);
-                    } else {
-                        // Make sure to update the socket after new data was pushed in.
-                        this.server.adapter.addSocket(ws.app.id, ws);
+                            ws.end(4100);
+                        } else {
+                            // Make sure to update the socket after new data was pushed in.
+                            this.server.adapter.addSocket(ws.app.id, ws);
 
-                        let broadcastMessage = {
-                            event: 'pusher:connection_established',
-                            data: JSON.stringify({
-                                socket_id: ws.id,
-                                activity_timeout: 30,
-                            }),
-                        };
+                            let broadcastMessage = {
+                                event: 'pusher:connection_established',
+                                data: JSON.stringify({
+                                    socket_id: ws.id,
+                                    activity_timeout: 30,
+                                }),
+                            };
 
-                        ws.sendJson(broadcastMessage);
+                            ws.sendJson(broadcastMessage);
 
-                        if (ws.app.enableUserAuthentication) {
-                            this.setUserAuthenticationTimeout(ws);
+                            if (ws.app.enableUserAuthentication) {
+                                this.setUserAuthenticationTimeout(ws);
+                            }
+
+                            this.server.metricsManager.markNewConnection(ws);
                         }
-
-                        this.server.metricsManager.markNewConnection(ws);
-                    }
+                    });
                 });
             });
         });
@@ -805,7 +808,11 @@ export class WsHandler {
         this.clearTimeout(ws);
 
         ws.timeout = setTimeout(() => {
-            ws.end(4201);
+            try {
+                ws.end(4201);
+            } catch (e) {
+                //
+            }
         }, 120_000);
     }
 

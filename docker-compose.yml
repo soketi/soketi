@@ -1,14 +1,17 @@
-version: "3.8"
+version: "3"
+
+networks:
+  soketi:
+    driver: bridge
 
 services:
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
     image: localstack/localstack
-    network_mode: bridge
     ports:
-      - "127.0.0.1:4510-4530:4510-4530"
-      - "127.0.0.1:4566:4566"
-      - "127.0.0.1:4571:4571"
+      - "4510-4530:4510-4530"
+      - "4566:4566"
+      - "4571:4571"
     environment:
       - SERVICES=${SERVICES:-sqs,s3}
       - DEBUG=${DEBUG-}
@@ -19,3 +22,22 @@ services:
     volumes:
       - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - soketi
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
+      retries: 3
+      timeout: 5s
+  redis:
+    container_name: redis
+    image: redis:7.0.0
+    ports:
+      - 6379:6379
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    networks:
+      - soketi
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      retries: 3
+      timeout: 5s

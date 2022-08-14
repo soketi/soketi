@@ -50,6 +50,7 @@ export class Utils {
             'cluster.ignoreProcess': false,
             'webhooks.batching.enabled': false, // TODO: Find out why batching works but fails tests
             'webhooks.batching.duration': 1,
+            'database.redis.enableOfflineQueue': true,
             'appManager.cache.enabled': true,
             'appManager.cache.ttl': -1,
             ...options,
@@ -65,6 +66,8 @@ export class Utils {
             'database.postgres.password': process.env.TEST_POSTGRES_PASSWORD || 'testing',
             'database.postgres.database': process.env.TEST_POSTGRES_DATABASE || 'testing',
             'queue.sqs.queueUrl': process.env.TEST_SQS_URL || 'http://localhost:4566/000000000000/test.fifo',
+            'debug': process.env.TEST_DEBUG || false,
+            'shutdownGracePeriod': 1_000,
         };
 
         return (new Server(options)).start((server: Server) => {
@@ -106,15 +109,15 @@ export class Utils {
 
         let server = webhooksApp.listen(3001, () => {
             Log.successTitle('🎉 Webhook Server is up and running!');
+
+            server.on('error', err => {
+                console.log('Websocket server error', err);
+            });
+
+            this.httpServers.push(server);
+
+            onReadyCallback(server);
         });
-
-        server.on('error', err => {
-            console.log('Websocket server error', err);
-        });
-
-        this.httpServers.push(server);
-
-        onReadyCallback(server);
     }
 
     static flushWsServers(): Promise<void> {

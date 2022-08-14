@@ -43,9 +43,10 @@ export interface Options {
             redisPubOptions: any;
             redisSubOptions: any;
             clusterMode: boolean;
+            shardMode: boolean;
         };
         cluster: {
-            requestsTimeout: 5_000,
+            requestsTimeout: number;
         },
     };
     appManager: {

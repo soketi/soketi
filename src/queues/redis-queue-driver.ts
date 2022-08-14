@@ -48,6 +48,10 @@ export class RedisQueueDriver implements QueueInterface {
                 let redisOptions: RedisOptions|ClusterOptions = {
                     maxRetriesPerRequest: null,
                     enableReadyCheck: false,
+                    retryDelayOnClusterDown: 50,
+                    retryDelayOnMoved: 10,
+                    retryDelayOnTryAgain: 50,
+                    retryDelayOnFailover: 50,
                     ...this.server.options.database.redis,
                     ...this.server.options.queue.redis.redisOptions,
                     // We set the key prefix on the queue, worker and scheduler instead of on the connection itself

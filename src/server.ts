@@ -40,6 +40,7 @@ export class Server {
                     //
                 },
                 clusterMode: false,
+                shardMode: false,
             },
             cluster: {
                 requestsTimeout: 5_000,
@@ -411,14 +412,6 @@ export class Server {
                     Log.warningTitle('⚡ All sockets were closed. Now closing the server.');
                 }
 
-                if (this.serverProcess) {
-                    uWS.us_listen_socket_close(this.serverProcess);
-                }
-
-                if (this.metricsServerProcess) {
-                    uWS.us_listen_socket_close(this.metricsServerProcess);
-                }
-
                 setTimeout(() => {
                     Promise.all([
                         this.metricsManager.clear(),
@@ -426,7 +419,15 @@ export class Server {
                         this.rateLimiter.disconnect(),
                         this.cacheManager.disconnect(),
                     ]).then(() => {
-                        this.adapter.disconnect().then(() => resolve());
+                        this.adapter.disconnect().then(() => {
+                            if (this.serverProcess) {
+                                uWS.us_listen_socket_close(this.serverProcess);
+                            }
+
+                            if (this.metricsServerProcess) {
+                                uWS.us_listen_socket_close(this.metricsServerProcess);
+                            }
+                        }).then(() => resolve());
                     });
                 }, this.options.shutdownGracePeriod);
             });

@@ -49,7 +49,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('client events for presence channels', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('client events for presence channels', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': true }, (server: Server) => {
             let user1 = {
                 user_id: 1,
@@ -94,7 +94,7 @@ describe('ws test', () => {
                 });
             });
         });
-    });
+    }, 60_000);
 
     Utils.shouldRun(Utils.appManagerIs('array'))('client events dont get emitted when client messaging is disabled', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': false }, (server: Server) => {
@@ -215,11 +215,10 @@ describe('ws test', () => {
         Utils.newServer({}, (server: Server) => {
             let client = Utils.newClient({}, 6001, 'invalid-key', false);
 
-            client.connection.bind('state_change', ({ current }) => {
-                if (['unavailable', 'failed', 'disconnected'].includes(current)) {
+            client.connection.bind('error', ({ error }) => {
+                if (error && error.data.code === 4001) {
+                    client.disconnect();
                     done();
-                } else {
-                    throw new Error(`${current} is not an expected state.`);
                 }
             });
         });
@@ -232,12 +231,11 @@ describe('ws test', () => {
             client1.connection.bind('connected', () => {
                 let client2 = Utils.newClient({}, 6001, 'app-key', false);
 
-                client2.connection.bind('state_change', ({ current }) => {
-                    if (['unavailable', 'failed', 'disconnected'].includes(current)) {
+                client2.connection.bind('error', ({ error }) => {
+                    if (error && error.data.code === 4004) {
                         client1.disconnect();
+                        client2.disconnect();
                         done();
-                    } else {
-                        throw new Error(`${current} is not an expected state.`);
                     }
                 });
             });
@@ -248,11 +246,10 @@ describe('ws test', () => {
         Utils.newServer({ 'appManager.array.apps.0.enabled': false }, (server: Server) => {
             let client = Utils.newClient();
 
-            client.connection.bind('state_change', ({ current }) => {
-                if (['unavailable', 'failed', 'disconnected'].includes(current)) {
+            client.connection.bind('error', ({ error }) => {
+                if (error && error.data.code === 4003) {
+                    client.disconnect();
                     done();
-                } else {
-                    throw new Error(`${current} is not an expected state.`);
                 }
             });
         });
@@ -338,7 +335,7 @@ describe('ws test', () => {
                     client2.connection.bind('message', ({ event, channel, data }) => {
                         if (event === 'pusher:subscription_error' && channel === channelName) {
                             expect(data.type).toBe('LimitReached');
-                            expect(data.status).toBe(4100);
+                            expect(data.status).toBe(4004);
                             expect(data.error).toBeDefined();
                             client1.disconnect();
                             client2.disconnect();
@@ -420,7 +417,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('signin after connection', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('signin after connection', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
             let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
 
@@ -440,7 +437,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('not calling signin after connection throws right error code', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('not calling signin after connection throws right error code', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
             let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { id: 1 });
 
@@ -456,7 +453,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('not having user id throws an error', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('not having user id throws an error', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
             let client = Utils.newClientForPrivateChannel({}, 6001, 'app-key', { name: 'John' });
 
@@ -472,7 +469,7 @@ describe('ws test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('sending wrong user data token throws error', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('sending wrong user data token throws error', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
             let client = Utils.newClientForPrivateChannel({
                 userAuthentication: {

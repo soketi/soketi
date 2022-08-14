@@ -16,6 +16,10 @@ export class RedisRateLimiter extends LocalRateLimiter {
         super(server);
 
         let redisOptions: ClusterOptions|RedisOptions = {
+            retryDelayOnClusterDown: 50,
+            retryDelayOnMoved: 10,
+            retryDelayOnTryAgain: 50,
+            retryDelayOnFailover: 50,
             ...server.options.database.redis,
             ...server.options.rateLimiter.redis.redisOptions,
         };

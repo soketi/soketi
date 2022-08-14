@@ -530,7 +530,8 @@ export class HttpHandler {
             let abortHandlerMiddleware = (res, callback) => {
                 res.onAborted(() => {
                     Log.warning({ message: 'Aborted request.', res });
-                    this.serverErrorResponse(res, 'Aborted request.');
+                    // No need to send back the response.
+                    // this.serverErrorResponse(res, 'Aborted request.');
                 });
 
                 callback(null, res);

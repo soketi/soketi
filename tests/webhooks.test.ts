@@ -16,7 +16,7 @@ describe('webhooks test', () => {
         return Utils.flushServers();
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from client events', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('webhooks from client events', done => {
         let webhooks = [{
             event_types: ['client_event'],
             url: 'http://127.0.0.1:3001/webhook',
@@ -77,7 +77,7 @@ describe('webhooks test', () => {
         });
     }, 60 * 1000);
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from channel_occupied and channel_vacated', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('webhooks from channel_occupied and channel_vacated', done => {
         let webhooks = [{
             event_types: ['channel_occupied', 'channel_vacated'],
             url: 'http://127.0.0.1:3001/webhook',
@@ -125,7 +125,7 @@ describe('webhooks test', () => {
         });
     }, 60 * 1000);
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from member_added and member_removed', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('webhooks from member_added and member_removed', done => {
         let webhooks = [{
             event_types: ['member_added', 'member_removed'],
             url: 'http://127.0.0.1:3001/webhook',
@@ -223,7 +223,7 @@ describe('webhooks test', () => {
         });
     }, 60 * 1000);
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from member_added and member_removed alongside filtering', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('webhooks from member_added and member_removed alongside filtering', done => {
         let channelName = `presence-${Utils.randomChannelName()}`;
 
         let webhooks = [
@@ -334,7 +334,7 @@ describe('webhooks test', () => {
         });
     }, 60 * 1000);
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('lambda webhooks', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('lambda webhooks', done => {
         let webhooks = [{
             event_types: ['client_event'],
             lambda_function: 'some-lambda-function',
@@ -346,8 +346,8 @@ describe('webhooks test', () => {
         }];
 
         let channelName = `private-${Utils.randomChannelName()}`;
-        let client1 = Utils.newClientForPrivateChannel();
-        let client2 = Utils.newClientForPrivateChannel();
+        let client1;
+        let client2;
 
         Utils.newServer({
             'appManager.array.apps.0.enableClientMessages': true,
@@ -364,10 +364,14 @@ describe('webhooks test', () => {
                 client2.disconnect();
                 done();
             }, (activeHttpServer) => {
+                client1 = Utils.newClientForPrivateChannel();
+
                 client1.connection.bind('connected', () => {
                     let channel = client1.subscribe(channelName);
 
                     channel.bind('pusher:subscription_succeeded', () => {
+                        client2 = Utils.newClientForPrivateChannel();
+
                         client2.connection.bind('connected', () => {
                             let channel = client2.subscribe(channelName);
 
@@ -383,7 +387,7 @@ describe('webhooks test', () => {
         });
     }, 60 * 1000);
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks filtered by channel name', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('webhooks filtered by channel name', done => {
         const sharedWebhookConfig = {
             event_types: ['channel_occupied'],
             url: 'http://127.0.0.1:3001/webhook',
@@ -463,7 +467,7 @@ describe('webhooks test', () => {
         });
     }, 60 * 1000);
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks can have custom headers', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('webhooks can have custom headers', done => {
         const webhooks = [{
             event_types: ['channel_occupied'],
             url: 'http://127.0.0.1:3001/webhook',
@@ -504,7 +508,7 @@ describe('webhooks test', () => {
         });
     }, 60 * 1000);
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local') && Utils.queueDriverIs('sqs'))('sqs batching', done => {
+    Utils.shouldRun(Utils.appManagerIs('array') && Utils.queueDriverIs('sqs'))('sqs batching', done => {
         let webhooks = [{
             event_types: ['client_event'],
             url: 'http://127.0.0.1:3001/webhook',
@@ -568,7 +572,7 @@ describe('webhooks test', () => {
         });
     }, 60 * 1000);
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('webhooks from cache_miss', done => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('webhooks from cache_miss', done => {
         let webhooks = [{
             event_types: ['cache_miss'],
             url: 'http://127.0.0.1:3001/webhook',
