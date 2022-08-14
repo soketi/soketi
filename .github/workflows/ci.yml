@@ -111,6 +111,7 @@ jobs:
         if: "matrix.queue_driver == 'sqs'"
         run: |
           docker-compose up -d --wait localstack
+          pip install localstack awscli-local[ver1]
           awslocal s3 mb s3://test
           awslocal s3 ls
           awslocal sqs create-queue --queue-name test.fifo \
