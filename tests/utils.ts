@@ -110,15 +110,15 @@ export class Utils {
 
         let server = webhooksApp.listen(3001, () => {
             Log.successTitle('🎉 Webhook Server is up and running!');
+
+            server.on('error', err => {
+                console.log('Websocket server error', err);
+            });
+
+            this.httpServers.push(server);
+
+            onReadyCallback(server);
         });
-
-        server.on('error', err => {
-            console.log('Websocket server error', err);
-        });
-
-        this.httpServers.push(server);
-
-        onReadyCallback(server);
     }
 
     static flushWsServers(): Promise<void> {
