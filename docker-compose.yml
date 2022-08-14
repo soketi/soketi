@@ -8,7 +8,6 @@ services:
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
     image: localstack/localstack
-    network_mode: bridge
     ports:
       - "4510-4530:4510-4530"
       - "4566:4566"
@@ -32,7 +31,6 @@ services:
   redis:
     container_name: redis
     image: redis:7.0.0
-    network_mode: bridge
     ports:
       - 6379:6379
     environment:
