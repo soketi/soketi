@@ -808,7 +808,11 @@ export class WsHandler {
         this.clearTimeout(ws);
 
         ws.timeout = setTimeout(() => {
-            ws.end(4201);
+            try {
+                ws.end(4201);
+            } catch (e) {
+                //
+            }
         }, 120_000);
     }
 
