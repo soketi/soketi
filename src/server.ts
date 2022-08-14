@@ -419,15 +419,15 @@ export class Server {
                         this.rateLimiter.disconnect(),
                         this.cacheManager.disconnect(),
                     ]).then(() => {
-                        this.adapter.disconnect().then(() => resolve());
-                    }).then(() => {
-                        if (this.serverProcess) {
-                            uWS.us_listen_socket_close(this.serverProcess);
-                        }
+                        this.adapter.disconnect().then(() => {
+                            if (this.serverProcess) {
+                                uWS.us_listen_socket_close(this.serverProcess);
+                            }
 
-                        if (this.metricsServerProcess) {
-                            uWS.us_listen_socket_close(this.metricsServerProcess);
-                        }
+                            if (this.metricsServerProcess) {
+                                uWS.us_listen_socket_close(this.metricsServerProcess);
+                            }
+                        }).then(() => resolve());
                     });
                 }, this.options.shutdownGracePeriod);
             });
