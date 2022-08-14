@@ -81,6 +81,7 @@
     "lint": "eslint --ext .js,.ts ./src",
     "prepublish": "npm run build",
     "test": "jest --detectOpenHandles --forceExit --silent",
+    "test:local": "jest --detectOpenHandles --forceExit --verbose",
     "test:watch": "npm test -- --watch"
   },
   "bin": {
