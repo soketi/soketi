@@ -179,15 +179,6 @@ describe('ws test for redis adapter', () => {
 
                 client1.connection.bind('connected', () => {
                     let client2 = Utils.newClient({}, 6002, 'app-key', false);
-                    done();
-
-                    // TODO: Fix this failing test
-                    /* client2.connection.bind('state_change', ({ current }) => {
-                        if (['disconnected', 'failed', 'unavailable', 'failed'].includes(current)) {
-                            client1.disconnect();
-                            done();
-                        }
-                    });
 
                     client2.connection.bind('error', ({ error }) => {
                         if (error && error.data.code === 4004) {
@@ -195,7 +186,7 @@ describe('ws test for redis adapter', () => {
                             client2.disconnect();
                             done();
                         }
-                    }); */
+                    });
                 });
             });
         });
