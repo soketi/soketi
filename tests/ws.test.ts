@@ -94,7 +94,7 @@ describe('ws test', () => {
                 });
             });
         });
-    });
+    }, 60_000);
 
     Utils.shouldRun(Utils.appManagerIs('array'))('client events dont get emitted when client messaging is disabled', done => {
         Utils.newServer({ 'appManager.array.apps.0.enableClientMessages': false }, (server: Server) => {
