@@ -76,7 +76,7 @@ jobs:
 
       - name: Setup Redis
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
-        run: docker-compose up -d --wait redis
+        run: docker-compose up --wait -d redis
 
       # Setup MySQL with user `root`, password `root` and database `testing`
       - name: Setup MySQL
@@ -110,7 +110,7 @@ jobs:
       - name: Setup Localstack
         if: "matrix.queue_driver == 'sqs'"
         run: |
-          docker-compose up -d --wait localstack
+          docker-compose up --wait -d
           pip install localstack awscli-local[ver1]
           awslocal s3 mb s3://test
           awslocal s3 ls

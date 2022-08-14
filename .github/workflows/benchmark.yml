@@ -97,7 +97,7 @@ jobs:
 
       - name: Setup Redis
         if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
-        run: docker-compose up -d --wait redis
+        run: docker-compose up --wait -d redis
 
       # Setup MySQL with user `root`, password `root` and database `testing`
       - name: Setup MySQL
