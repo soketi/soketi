@@ -10,6 +10,7 @@ on:
       - "**.md"
       - "benchmark/**"
       - ".github/workflows/benchmark.yml"
+      - ".github/workflows/release-npm.yml"
       - ".github/workflows/docker-*.yml"
       - ".github/*.yml"
   pull_request:

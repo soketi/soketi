@@ -1,16 +1,13 @@
 name: Benchmark
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
     branches:
-      - '*'
-    paths-ignore:
-      - "**.md"
-      - ".github/workflows/docker-*.yml"
-      - ".github/*.yml"
-  pull_request:
-    branches:
-      - '*'
+      - "*"
 
 jobs:
   build:

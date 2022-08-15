@@ -1,16 +1,13 @@
 name: Docker Latest - Standard
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
     branches:
       - master
-    tags-ignore:
-      - "*"
-  pull_request:
-    tags-ignore:
-      - "*"
-    branches-ignore:
-      - "*"
 
 jobs:
   # Alpine build.
