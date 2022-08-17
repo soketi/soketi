@@ -189,9 +189,11 @@ export class Server {
             prometheus: {
                 prefix: 'soketi_',
             },
+            host: '0.0.0.0',
             port: 9601,
         },
         mode: 'full',
+        host: '0.0.0.0',
         port: 6001,
         pathPrefix: '',
         presence: {
@@ -375,10 +377,10 @@ export class Server {
 
                     this.configureHttp(server).then(server => {
                         this.configureMetricsServer(metricsServer).then(metricsServer => {
-                            metricsServer.listen('0.0.0.0', this.options.metrics.port, metricsServerProcess => {
+                            metricsServer.listen(this.options.metrics.host, this.options.metrics.port, metricsServerProcess => {
                                 this.metricsServerProcess = metricsServerProcess;
 
-                                server.listen('0.0.0.0', this.options.port, serverProcess => {
+                                server.listen(this.options.host, this.options.port, serverProcess => {
                                     this.serverProcess = serverProcess;
 
                                     Log.successTitle('🎉 Server is up and running!');
