@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "arraybuffer-to-string": "^1.0.2",
-    "async": "^3.2.3",
+    "async": "^3.2.4",
     "aws-sdk": "^2.1194.0",
     "axios": "^0.24.0",
     "boolean": "^3.1.4",
