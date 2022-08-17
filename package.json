@@ -40,7 +40,7 @@
     "pg": "^8.7.1",
     "pm2": "^5.2.0",
     "prom-client": "^14.0.1",
-    "prometheus-query": "^3.0.3",
+    "prometheus-query": "^3.2.5",
     "pusher": "^5.1.0-beta",
     "query-string": "^7.1.0",
     "rate-limiter-flexible": "^2.3.6",
