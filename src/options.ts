@@ -129,6 +129,7 @@ export interface Options {
         maxPayloadInKb: string|number;
         maxBatchSize: string|number;
     };
+    host: string;
     httpApi: {
         requestLimitInMb: string|number;
         acceptTraffic: {
@@ -141,6 +142,7 @@ export interface Options {
     metrics: {
         enabled: boolean;
         driver: string;
+        host: string;
         prometheus: {
             prefix: string;
         };

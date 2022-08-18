@@ -174,6 +174,7 @@ export class Server {
             maxPayloadInKb: 100,
             maxBatchSize: 10,
         },
+        host: '0.0.0.0',
         httpApi: {
             requestLimitInMb: 100,
             acceptTraffic: {
@@ -186,6 +187,7 @@ export class Server {
         metrics: {
             enabled: false,
             driver: 'prometheus',
+            host: '0.0.0.0',
             prometheus: {
                 prefix: 'soketi_',
             },
@@ -375,10 +377,10 @@ export class Server {
 
                     this.configureHttp(server).then(server => {
                         this.configureMetricsServer(metricsServer).then(metricsServer => {
-                            metricsServer.listen('0.0.0.0', this.options.metrics.port, metricsServerProcess => {
+                            metricsServer.listen(this.options.metrics.host, this.options.metrics.port, metricsServerProcess => {
                                 this.metricsServerProcess = metricsServerProcess;
 
-                                server.listen('0.0.0.0', this.options.port, serverProcess => {
+                                server.listen(this.options.host, this.options.port, serverProcess => {
                                     this.serverProcess = serverProcess;
 
                                     Log.successTitle('🎉 Server is up and running!');
