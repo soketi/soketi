@@ -153,6 +153,11 @@ export class HttpHandler {
                         return channels;
                     }
 
+                    // In case ?filter_by_prefix= is specified, the channel must start with that prefix.
+                    if (res.query.filter_by_prefix && !channel.startsWith(res.query.filter_by_prefix)) {
+                        return channels;
+                    }
+
                     channels[channel] = {
                         subscription_count: connections,
                         occupied: true,
@@ -244,9 +249,11 @@ export class HttpHandler {
 
             this.server.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
                 let broadcastMessage = {
-                    users: [...members].map(([user_id, user_info]) => (res.query.with_user_info === '1'
-                       ? { id: user_id, user_info }
-                       : { id: user_id })),
+                    users: [...members].map(([user_id, user_info]) => {
+                        return res.query.with_user_info === '1'
+                            ? { id: user_id, user_info }
+                            : { id: user_id };
+                    }),
                 };
 
                 this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
@@ -407,7 +414,7 @@ export class HttpHandler {
     }
 
     protected unauthorizedResponse(res: HttpResponse, error: string) {
-        return this.sendJson(res, { error, code: 401 }, '401 Unauthorized');
+        return this.sendJson(res, { error, code: 401 }, '401 Authorization Required');
     }
 
     protected entityTooLargeResponse(res: HttpResponse, error: string) {
