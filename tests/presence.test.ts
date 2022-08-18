@@ -361,7 +361,7 @@ describe('presence channel test', () => {
         });
     });
 
-    Utils.shouldRun(Utils.appManagerIs('array') && Utils.adapterIs('local'))('user authentication works if conn immediately joins a presence channel', (done) => {
+    Utils.shouldRun(Utils.appManagerIs('array'))('user authentication works if conn immediately joins a presence channel', (done) => {
         Utils.newServer({ 'appManager.array.apps.0.enableUserAuthentication': true, 'userAuthenticationTimeout': 5_000 }, (server: Server) => {
             let user = {
                 user_id: 1,
