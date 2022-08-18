@@ -395,14 +395,19 @@ export class HttpHandler {
     }
 
     notFound(res: HttpResponse) {
-        res.writeStatus('404 Not Found');
+        try {
+            res.writeStatus('404 Not Found');
 
-        this.attachMiddleware(res, [
-            this.corkMiddleware,
-            this.corsMiddleware,
-        ]).then(res => {
-            this.send(res, '', '404 Not Found');
-        });
+            this.attachMiddleware(res, [
+                this.corkMiddleware,
+                this.corsMiddleware,
+            ]).then(res => {
+                this.send(res, '', '404 Not Found');
+            });
+        } catch (e) {
+            Log.warningTitle('Response could not be sent');
+            Log.warning(e);
+        }
     }
 
     protected badResponse(res: HttpResponse, error: string) {
@@ -630,13 +635,23 @@ export class HttpHandler {
     }
 
     protected sendJson(res: HttpResponse, data: any, status: RecognizedString = '200 OK') {
-        return res.writeStatus(status)
-            .writeHeader('Content-Type', 'application/json')
-            .end(JSON.stringify(data), true);
+        try {
+            return res.writeStatus(status)
+                .writeHeader('Content-Type', 'application/json')
+                .end(JSON.stringify(data), true);
+        } catch (e) {
+            Log.warningTitle('Response could not be sent');
+            Log.warning(e);
+        }
     }
 
     protected send(res: HttpResponse, data: RecognizedString, status: RecognizedString = '200 OK') {
-        return res.writeStatus(status).end(data, true);
+        try {
+            return res.writeStatus(status).end(data, true);
+        } catch (e) {
+            Log.warningTitle('Response could not be sent');
+            Log.warning(e);
+        }
     }
 
     /**
