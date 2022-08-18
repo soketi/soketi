@@ -174,6 +174,7 @@ export class Server {
             maxPayloadInKb: 100,
             maxBatchSize: 10,
         },
+        host: '0.0.0.0',
         httpApi: {
             requestLimitInMb: 100,
             acceptTraffic: {
@@ -186,14 +187,13 @@ export class Server {
         metrics: {
             enabled: false,
             driver: 'prometheus',
+            host: '0.0.0.0',
             prometheus: {
                 prefix: 'soketi_',
             },
-            host: '0.0.0.0',
             port: 9601,
         },
         mode: 'full',
-        host: '0.0.0.0',
         port: 6001,
         pathPrefix: '',
         presence: {
