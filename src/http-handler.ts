@@ -537,7 +537,7 @@ export class HttpHandler {
             let abortHandlerMiddleware = (res, callback) => {
                 res.onAborted(() => {
                     Log.warning({ message: 'Aborted request.', res });
-                    this.serverErrorResponse(res, 'Aborted request.');
+                    // this.serverErrorResponse(res, 'Aborted request.');
                 });
 
                 callback(null, res);
