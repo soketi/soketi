@@ -127,9 +127,8 @@ export class Cli {
     /**
      * Create new CLI instance.
      */
-    constructor(protected pm2 = false) {
+    constructor() {
         this.server = new Server;
-        this.server.pm2 = pm2;
     }
 
     /**
@@ -194,13 +193,6 @@ export class Cli {
      */
     static async start(cliArgs: any): Promise<any> {
         return (new Cli).start(cliArgs);
-    }
-
-    /**
-     * Start the server with PM2 support.
-     */
-    static async startWithPm2(cliArgs: any): Promise<any> {
-        return (new Cli(true)).start(cliArgs);
     }
 
     /**

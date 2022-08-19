@@ -1,11 +1,10 @@
 import { App } from './../app';
 import { ConsumptionResponse } from './rate-limiter-interface';
 import { LocalRateLimiter } from './local-rate-limiter';
-import { RateLimiterAbstract, RateLimiterClusterMasterPM2 } from 'rate-limiter-flexible';
+import { RateLimiterAbstract } from 'rate-limiter-flexible';
 import { Server } from '../server';
 
 const cluster = require('cluster');
-const pm2 = require('pm2');
 
 export interface ConsumptionMessage {
     app: App;
@@ -22,36 +21,31 @@ export class ClusterRateLimiter extends LocalRateLimiter {
         super(server);
 
         if (cluster.isPrimary || typeof cluster.isPrimary === 'undefined') {
-            if (server.pm2) {
-                // With PM2, discovery is not needed.
-                new RateLimiterClusterMasterPM2(pm2);
-            } else {
-                // When a new master is demoted, the rate limiters it has become the pivot points of the real, synced
-                // rate limiter instances. Just trust this value.
-                server.discover.join('rate_limiter:limiters', (rateLimiters: { [key: string]: RateLimiterAbstract }) => {
-                    this.rateLimiters = Object.fromEntries(
-                        Object.entries(rateLimiters).map(([key, rateLimiterObject]: [string, any]) => {
-                            return [
-                                key,
-                                this.createNewRateLimiter(key.split(':')[0], rateLimiterObject._points),
-                            ];
-                        })
-                    );
-                });
+            // When a new master is demoted, the rate limiters it has become the pivot points of the real, synced
+            // rate limiter instances. Just trust this value.
+            server.discover.join('rate_limiter:limiters', (rateLimiters: { [key: string]: RateLimiterAbstract }) => {
+                this.rateLimiters = Object.fromEntries(
+                    Object.entries(rateLimiters).map(([key, rateLimiterObject]: [string, any]) => {
+                        return [
+                            key,
+                            this.createNewRateLimiter(key.split(':')[0], rateLimiterObject._points),
+                        ];
+                    })
+                );
+            });
 
-                // All nodes need to know when other nodes consumed from the rate limiter.
-                server.discover.join('rate_limiter:consume', ({ app, eventKey, points, maxPoints }: ConsumptionMessage) => {
-                    super.consume(app, eventKey, points, maxPoints);
-                });
+            // All nodes need to know when other nodes consumed from the rate limiter.
+            server.discover.join('rate_limiter:consume', ({ app, eventKey, points, maxPoints }: ConsumptionMessage) => {
+                super.consume(app, eventKey, points, maxPoints);
+            });
 
-                server.discover.on('added', () => {
-                    if (server.nodes.get('self').isMaster) {
-                        // When a new node is added, just send the rate limiters this master instance has.
-                        // This value is the true value of the rate limiters.
-                        this.sendRateLimiters();
-                    }
-                });
-            }
+            server.discover.on('added', () => {
+                if (server.nodes.get('self').isMaster) {
+                    // When a new node is added, just send the rate limiters this master instance has.
+                    // This value is the true value of the rate limiters.
+                    this.sendRateLimiters();
+                }
+            });
         }
     }
 

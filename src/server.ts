@@ -297,11 +297,6 @@ export class Server {
     public webhookSender: WebhookSender;
 
     /**
-     * Wether the server is running under PM2.
-     */
-    public pm2 = false;
-
-    /**
      * The list of nodes in the current private network.
      */
     public nodes: Map<string, Node> = new Map<string, Node>();
