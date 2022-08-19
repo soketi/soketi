@@ -153,6 +153,11 @@ export class HttpHandler {
                         return channels;
                     }
 
+                    // In case ?filter_by_prefix= is specified, the channel must start with that prefix.
+                    if (res.query.filter_by_prefix && !channel.startsWith(res.query.filter_by_prefix)) {
+                        return channels;
+                    }
+
                     channels[channel] = {
                         subscription_count: connections,
                         occupied: true,
@@ -244,9 +249,11 @@ export class HttpHandler {
 
             this.server.adapter.getChannelMembers(res.params.appId, res.params.channel).then(members => {
                 let broadcastMessage = {
-                    users: [...members].map(([user_id, user_info]) => (res.query.with_user_info === '1'
-                       ? { id: user_id, user_info }
-                       : { id: user_id })),
+                    users: [...members].map(([user_id, user_info]) => {
+                        return res.query.with_user_info === '1'
+                            ? { id: user_id, user_info }
+                            : { id: user_id };
+                    }),
                 };
 
                 this.server.metricsManager.markApiMessage(res.params.appId, {}, broadcastMessage);
@@ -388,14 +395,19 @@ export class HttpHandler {
     }
 
     notFound(res: HttpResponse) {
-        res.writeStatus('404 Not Found');
+        try {
+            res.writeStatus('404 Not Found');
 
-        this.attachMiddleware(res, [
-            this.corkMiddleware,
-            this.corsMiddleware,
-        ]).then(res => {
-            this.send(res, '', '404 Not Found');
-        });
+            this.attachMiddleware(res, [
+                this.corkMiddleware,
+                this.corsMiddleware,
+            ]).then(res => {
+                this.send(res, '', '404 Not Found');
+            });
+        } catch (e) {
+            Log.warningTitle('Response could not be sent');
+            Log.warning(e);
+        }
     }
 
     protected badResponse(res: HttpResponse, error: string) {
@@ -407,7 +419,7 @@ export class HttpHandler {
     }
 
     protected unauthorizedResponse(res: HttpResponse, error: string) {
-        return this.sendJson(res, { error, code: 401 }, '401 Unauthorized');
+        return this.sendJson(res, { error, code: 401 }, '401 Authorization Required');
     }
 
     protected entityTooLargeResponse(res: HttpResponse, error: string) {
@@ -624,13 +636,23 @@ export class HttpHandler {
     }
 
     protected sendJson(res: HttpResponse, data: any, status: RecognizedString = '200 OK') {
-        return res.writeStatus(status)
-            .writeHeader('Content-Type', 'application/json')
-            .end(JSON.stringify(data), true);
+        try {
+            return res.writeStatus(status)
+                .writeHeader('Content-Type', 'application/json')
+                .end(JSON.stringify(data), true);
+        } catch (e) {
+            Log.warningTitle('Response could not be sent');
+            Log.warning(e);
+        }
     }
 
     protected send(res: HttpResponse, data: RecognizedString, status: RecognizedString = '200 OK') {
-        return res.writeStatus(status).end(data, true);
+        try {
+            return res.writeStatus(status).end(data, true);
+        } catch (e) {
+            Log.warningTitle('Response could not be sent');
+            Log.warning(e);
+        }
     }
 
     /**

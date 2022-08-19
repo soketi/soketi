@@ -572,4 +572,45 @@ describe('http api test', () => {
             });
         });
     });
+
+    test('get api presence channel with filter_by_prefix', done => {
+        let user1 = {
+            user_id: 1,
+            user_info: {
+                id: 1,
+                name: 'John',
+            },
+        };
+
+        Utils.newServer({}, (server: Server) => {
+            let presenceClient = Utils.newClientForPresenceUser(user1);
+            let backend = Utils.newBackend();
+            let presenceChannelName = `presence-${Utils.randomChannelName()}`;
+
+            presenceClient.connection.bind('connected', () => {
+                let presenceChannel = presenceClient.subscribe(presenceChannelName);
+
+                presenceChannel.bind('pusher:subscription_succeeded', () => {
+                    let privateClient = Utils.newClientForPrivateChannel();
+                    let privateChannelName = `private-${Utils.randomChannelName()}`;
+
+                    privateClient.connection.bind('connected', () => {
+                        let privateChannel = privateClient.subscribe(privateChannelName);
+
+                        privateChannel.bind('pusher:subscription_succeeded', () => {
+                            backend.get({ path: '/channels', params: { filter_by_prefix: `presence-` } }).then(res => res.json()).then(body => {
+                                expect(body.channels[presenceChannelName]).toBeDefined();
+                                expect(body.channels[privateChannelName]).toBeUndefined();
+                                expect(body.channels[presenceChannelName].subscription_count).toBe(1);
+
+                                presenceClient.disconnect();
+                                privateClient.disconnect();
+                                done();
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
 });

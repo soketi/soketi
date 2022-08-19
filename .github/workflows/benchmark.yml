@@ -57,7 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3.0.2
 
-      - uses: actions/setup-node@v3.2.0
+      - uses: actions/setup-node@v3.4.1
         name: Installing Node.js v${{ matrix.node }}
         with:
           node-version: ${{ matrix.node }}
@@ -71,13 +71,13 @@ jobs:
           npm run build
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@2.19.1
+        uses: shivammathur/setup-php@2.21.1
         with:
           php-version: "8.0"
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, yaml
           coverage: pcov
 
-      - uses: actions/cache@v3.0.3
+      - uses: actions/cache@v3.0.7
         name: Cache Composer dependencies
         with:
           path: ~/.composer/cache/files
