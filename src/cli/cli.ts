@@ -97,6 +97,7 @@ export class Cli {
         EVENT_MAX_SIZE_IN_KB: 'eventLimits.maxPayloadInKb',
         HOST: 'host',
         HTTP_ACCEPT_TRAFFIC_MEMORY_THRESHOLD: 'httpApi.acceptTraffic.memoryThreshold',
+        HTTP_MAX_REQUEST_REQUEST_SIZE_IN_MB: 'httpApi.requestLimitInMb',
         METRICS_ENABLED: 'metrics.enabled',
         METRICS_DRIVER: 'metrics.driver',
         METRICS_HOST: 'metrics.host',
