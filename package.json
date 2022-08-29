@@ -37,7 +37,7 @@
     "mysql2": "^2.3.3",
     "nats": "^2.7.1",
     "node-discover": "^1.2.1",
-    "pg": "^8.7.1",
+    "pg": "^8.8.0",
     "pm2": "^5.2.0",
     "prom-client": "^14.0.1",
     "prometheus-query": "^3.2.5",
