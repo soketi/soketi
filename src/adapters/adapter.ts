@@ -1,5 +1,4 @@
 import { AdapterInterface } from './adapter-interface';
-import { ClusterAdapter } from './cluster-adapter';
 import { LocalAdapter } from './local-adapter';
 import { Log } from '../log';
 import { Namespace } from '../namespace';
@@ -22,8 +21,6 @@ export class Adapter implements AdapterInterface {
             this.driver = new LocalAdapter(server);
         } else if (server.options.adapter.driver === 'redis') {
             this.driver = new RedisAdapter(server);
-        } else if (server.options.adapter.driver === 'cluster') {
-            this.driver = new ClusterAdapter(server);
         } else {
             Log.error('Adapter driver not set.');
         }

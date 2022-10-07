@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "module": "commonjs",
+    "module": "ES2020",
     "moduleResolution": "node",
     "outDir": "./dist",
     "sourceMap": false,
-    "target": "es2019",
+    "target": "ES2015",
     "noImplicitAny": false,
     "preserveConstEnums": true,
     "removeComments": true,

@@ -27,7 +27,6 @@ jobs:
         adapter:
           - local
           - redis
-          - cluster
         app_manager:
           - array
           - mysql
@@ -43,10 +42,6 @@ jobs:
             rate_limiter: local
             queue_driver: sqs
             cache_driver: memory
-          - adapter: cluster
-            rate_limiter: cluster
-            queue_driver: sync
-            cache_driver: redis
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis
@@ -96,7 +91,7 @@ jobs:
           sudo apt-get install k6
 
       - name: Setup Redis
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        if: "matrix.adapter == 'redis'"
         run: |
           docker-compose up -d redis
           sleep 5
@@ -172,7 +167,7 @@ jobs:
           SOKETI_DB_MYSQL_PASSWORD: root
 
       - name: Run Soketi (port 6002)
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        if: "matrix.adapter == 'redis'"
         run: |
           node bin/server.js start &
           timeout 30 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://127.0.0.1:6002/ready)" != "200" ]]; do echo "Waiting for server to be ready..."; sleep 5; done' || false
@@ -196,7 +191,7 @@ jobs:
         run: ./benchmark/send --interval 1 --port 6001 &
 
       - name: Run message sender (port 6002)
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        if: "matrix.adapter == 'redis'"
         run: ./benchmark/send --interval 1 --port 6002 &
 
       - name: Execute benchmarks (single nodes)
@@ -210,7 +205,7 @@ jobs:
           RATE_LIMITER_DRIVER: ${{ matrix.rate_limiter }}
 
       - name: Execute benchmarks (multiple nodes)
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        if: "matrix.adapter == 'redis'"
         run: k6 run benchmark/ci-horizontal.js
         env:
           ADAPTER_DRIVER: ${{ matrix.adapter }}
