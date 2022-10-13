@@ -31,7 +31,6 @@ export class Utils {
             tcpPortUsed.waitUntilFree(6002, 500, 5 * 1000),
             tcpPortUsed.waitUntilFree(3001, 500, 5 * 1000),
             tcpPortUsed.waitUntilFree(9601, 500, 5 * 1000),
-            tcpPortUsed.waitUntilFree(11002, 500, 5 * 1000),
             tcpPortUsed.waitUntilFree(115353, 500, 5 * 1000),
         ]);
     }
