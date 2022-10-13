@@ -199,7 +199,7 @@ export class HttpHandler {
 
                 // For presence channels, attach an user_count.
                 // Avoid extra call to get channel members if there are no sockets.
-                if (res.params.channel.startsWith('presence-')) {
+                if (Utils.isPresenceChannel(res.params.channel)) {
                     response.user_count = 0;
 
                     if (response.subscription_count > 0) {
@@ -243,7 +243,7 @@ export class HttpHandler {
             this.authMiddleware,
             this.readRateLimitingMiddleware,
         ]).then(res => {
-            if (!res.params.channel.startsWith('presence-')) {
+            if (!Utils.isPresenceChannel(res.params.channel)) {
                 return this.badResponse(res, 'The channel must be a presence channel.');
             }
 
