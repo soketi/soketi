@@ -69,10 +69,6 @@ jobs:
           npm run lint
           npm run build
 
-      - name: Setup 127.0.0.2 as alias for loopback
-        run: |
-          ifconfig lo0 alias 127.0.0.2 up
-
       - name: Setup Redis
         if: "matrix.adapter == 'redis'"
         run: docker-compose up -d redis
