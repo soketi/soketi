@@ -1,5 +1,5 @@
 #! /usr/bin/env node
 
-import './../dist/cli/cli.js';
+require('./../dist/cli');
 
 process.title = 'soketi-server';

@@ -7,7 +7,6 @@
     "url": "https://github.com/soketi/soketi.git"
   },
   "main": "dist/index.js",
-  "type": "module",
   "keywords": [
     "laravel",
     "socket.io",
