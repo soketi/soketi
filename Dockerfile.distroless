@@ -1,6 +1,6 @@
-ARG VERSION=16
+ARG VERSION=18
 
-FROM node:$VERSION-alpine as base
+FROM node:$VERSION-bullseye-slim as build
 
 ENV PYTHONUNBUFFERED=1
 
@@ -8,25 +8,28 @@ COPY . /tmp/build
 
 WORKDIR /tmp/build
 
-RUN apk add --no-cache --update git python3 gcompat && \
-    apk add --virtual build-dependencies build-base gcc wget && \
-    ln -sf python3 /usr/bin/python && \
-    python3 -m ensurepip && \
-    pip3 install --no-cache --upgrade pip setuptools && \
-    ash ./build-minimal-production && \
+RUN apt-get update -y && \
+    apt-get upgrade -y && \
+    apt-get install -y git python3 gcc wget && \
+    npm install && \
+    npm run build && \
+    npm install --only=prod --ignore-scripts && \
+    npm prune --production && \
+    rm -rf node_modules/*/test/ node_modules/*/tests/ && \
+    npm install -g modclean && \
+    modclean -n default:safe --run && \
     mkdir -p /app && \
-    cd /tmp/build && \
-    mv production-app/* /app/ && \
+    cp -r bin/ dist/ node_modules/ LICENSE package.json package-lock.json README.md /app/ && \
     chgrp -R 0 /app/ && \
-    chmod -R g+rx /app/ && \
-    rm -rf /tmp/* /var/cache/* /usr/lib/python* && \
-    apk --purge del build-dependencies build-base gcc
+    chmod -R g+rx /app/
 
 FROM gcr.io/distroless/nodejs:$VERSION
 
 LABEL maintainer="Renoki Co. <alex@renoki.org>"
 
-COPY --from=base /app /app
+ENV NODE_OPTIONS="--es-module-specifier-resolution=node"
+
+COPY --from=build /app /app
 
 WORKDIR /app
 
@@ -34,4 +37,4 @@ USER 65534
 
 EXPOSE 6001
 
-CMD ["/app/bin/server.js", "start"]
+ENTRYPOINT ["/app/bin/server.js", "start"]
