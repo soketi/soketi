@@ -11,9 +11,9 @@ WORKDIR /tmp/build
 RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get install -y git python3 gcc wget && \
-    npm install && \
+    npm ci && \
     npm run build && \
-    npm install --only=prod --ignore-scripts && \
+    npm ci --omit=dev --ignore-scripts && \
     npm prune --production && \
     rm -rf node_modules/*/test/ node_modules/*/tests/ && \
     npm install -g modclean && \
