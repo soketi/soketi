@@ -154,21 +154,25 @@ describe('private channel test', () => {
                 let channel = client1.subscribe(channelName);
 
                 channel.bind('pusher:subscription_succeeded', () => {
-                    channel.bind('greeting', e => {
-                        expect(e.message).toBe('hello');
+                    channel.bind('pusher:cache_miss', (data) => {
+                        expect(data).toBe(undefined);
 
-                        let client2 = Utils.newClientForPrivateChannel();
+                        channel.bind('greeting', e => {
+                            expect(e.message).toBe('hello');
+    
+                            let client2 = Utils.newClientForPrivateChannel();
+    
+                            client2.connection.bind('connected', () => {
+                                let channel = client2.subscribe(channelName);
 
-                        client2.connection.bind('connected', () => {
-                            let channel = client2.subscribe(channelName);
+                                channel.bind('pusher:cache_miss', () => {
+                                    throw new Error('Did not expect cache_miss to be invoked.');
+                                });
 
-                            channel.bind('pusher:cache_miss', ({ event, data }) => {
-                                expect(event).toBe('greeting');
-                                expect(data).toBe(JSON.stringify({ message: 'hello'}));
-
-                                client1.disconnect();
-                                client2.disconnect();
-                                done();
+                                channel.bind('greeting', e => {
+                                    expect(e.message).toBe('hello');
+                                    done()
+                                })
                             });
                         });
                     });
