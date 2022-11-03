@@ -409,7 +409,8 @@ export class WsHandler {
                 let { user_id, user_info } = response.member;
 
                 ws.presence.set(channel, response.member);
-
+                ws.user = {id: user_id as string};
+                
                 // Make sure to update the socket after new data was pushed in.
                 this.server.adapter.addSocket(ws.app.id, ws);
 
