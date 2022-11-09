@@ -1,6 +1,6 @@
 ARG VERSION=16
 
-FROM node:$VERSION-alpine as base
+FROM --platform=$BUILDPLATFORM node:$VERSION-alpine as base
 
 ENV PYTHONUNBUFFERED=1
 
@@ -22,7 +22,7 @@ RUN apk add --no-cache --update git python3 gcompat && \
     rm -rf /tmp/* /var/cache/* /usr/lib/python* && \
     apk --purge del build-dependencies build-base gcc
 
-FROM gcr.io/distroless/nodejs:$VERSION
+FROM --platform=$BUILDPLATFORM gcr.io/distroless/nodejs:$VERSION
 
 LABEL maintainer="Renoki Co. <alex@renoki.org>"
 

@@ -60,6 +60,10 @@ jobs:
           tags: quay.io/soketi/soketi:${{ github.sha }}-${{ matrix.node }}-alpine
           build-args: |
             VERSION=${{ matrix.node }}
+          platforms: |
+            linux/amd64
+            linux/arm64
+            linux/arm/v7
 
   # Distroless build.
   distroless:
@@ -109,6 +113,9 @@ jobs:
           file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}
+          platforms: |
+            linux/amd64
+            linux/arm64
 
   # Stable Debian build.
   debian:
@@ -158,3 +165,7 @@ jobs:
           file: Dockerfile.debian
           build-args: |
             VERSION=${{ matrix.node }}
+          platforms: |
+            linux/amd64
+            linux/arm64
+            linux/arm/v7

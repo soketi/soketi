@@ -1,6 +1,6 @@
 ARG VERSION=lts
 
-FROM node:$VERSION-alpine
+FROM --platform=$BUILDPLATFORM node:$VERSION-alpine
 
 LABEL maintainer="Renoki Co. <alex@renoki.org>"
 

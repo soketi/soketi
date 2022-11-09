@@ -1,6 +1,6 @@
 ARG VERSION=lts
 
-FROM node:$VERSION-bullseye
+FROM --platform=$BUILDPLATFORM node:$VERSION-bullseye
 
 LABEL maintainer="Renoki Co. <alex@renoki.org>"
 
