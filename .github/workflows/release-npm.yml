@@ -21,6 +21,12 @@ jobs:
         with:
           node-version: 16.x
 
+      - uses: actions/cache@v3.0.4
+        name: Cache npm dependencies
+        with:
+          path: node_modules
+          key: conpmmposer-${{ hashFiles('package-lock.json') }}
+
       - name: Installing dependencies
         run: |
           npm ci
