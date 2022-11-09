@@ -1,21 +1,70 @@
-version: "3.8"
+version: "3"
+
+networks:
+  soketi:
+    driver: bridge
 
 services:
   localstack:
-    container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
+    container_name: localstack
     image: localstack/localstack
-    network_mode: bridge
     ports:
-      - "127.0.0.1:4510-4530:4510-4530"
-      - "127.0.0.1:4566:4566"
-      - "127.0.0.1:4571:4571"
+      - "4510-4530:4510-4530"
+      - "4566:4566"
+      - "4571:4571"
     environment:
-      - SERVICES=${SERVICES:-sqs,s3}
-      - DEBUG=${DEBUG-}
-      - DATA_DIR=${DATA_DIR-}
-      - LAMBDA_EXECUTOR=${LAMBDA_EXECUTOR-}
-      - HOST_TMP_FOLDER=${TMPDIR:-/tmp/}localstack
+      - SERVICES=sqs,s3
+      - DEBUG=1
+      - HOST_TMP_FOLDER=/tmp/localstack
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - soketi
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
+      retries: 3
+      timeout: 5s
+  initialize_sqs:
+    container_name: initialize_sqs
+    build:
+      context: .
+      dockerfile: Dockerfile.awslocal
+    volumes:
+      - ./tests/fixtures/sqs.json:/tmp/sqs.json
+    networks:
+      - soketi
+    command:
+      - sqs
+      - create-queue
+      - --endpoint-url=http://localstack:4566
+      - --queue-name=test.fifo
+      - --region=us-east-1
+      - --attributes=file:///tmp/sqs.json
+    depends_on:
+      localstack:
+        condition: service_healthy
+  dynamodb:
+    container_name: dynamodb
+    image: amazon/dynamodb-local
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb"
+    networks:
+      - soketi
+    environment:
+      AWS_ACCESS_KEY_ID: fake-id
+      AWS_SECRET_ACCESS_KEY: fake-secret
+  initialize_dynamodb:
+    container_name: initialize_dynamodb
+    image: node:18-alpine
+    volumes:
+      - .:/app/
+    networks:
+      - soketi
+    environment:
+      - DYNAMODB_URL="dynamodb:8000"
+    entrypoint:
+      - node
+      - /app/tests/fixtures/dynamodb_schema.js
