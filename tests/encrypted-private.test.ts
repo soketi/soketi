@@ -160,9 +160,9 @@ describe('private-encrypted channel test', () => {
 
                         channel.bind('greeting', e => {
                             expect(e.message).toBe('hello');
-    
+
                             let client2 = Utils.newClientForEncryptedPrivateChannel();
-    
+
                             client2.connection.bind('connected', () => {
                                 let channel = client2.subscribe(channelName);
 

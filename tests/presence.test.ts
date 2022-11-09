@@ -339,16 +339,17 @@ describe('presence channel test', () => {
 
                         channel.bind('greeting', e => {
                             expect(e.message).toBe('hello');
-    
+
                             let client2 = Utils.newClientForPresenceUser(alice);
-    
+
                             client2.connection.bind('connected', () => {
                                 let channel = client2.subscribe(channelName);
-    
+
                                 channel.bind('greeting', e => {
                                     expect(e.message).toBe('hello');
-                                    done()
-                                })
+                                    done();
+                                });
+
                                 channel.bind('pusher:cache_miss', () => {
                                     throw new Error('Did not expect cache_miss to be invoked.');
                                 });
