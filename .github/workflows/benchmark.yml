@@ -137,7 +137,8 @@ jobs:
       - name: Setup Localstack
         if: "matrix.queue_driver == 'sqs'"
         run: |
-          docker-compose up --wait -d localstack sqs initialize_sqs
+          docker-compose up -d localstack
+          docker-compose run initialize_sqs
 
       - name: Setup NATS
         if: "matrix.adapter == 'nats'"
