@@ -63,6 +63,8 @@ services:
       - .:/app/
     networks:
       - soketi
+    environment:
+      - DYNAMODB_URL="dynamodb:8000"
     entrypoint:
       - node
       - /app/tests/fixtures/dynamodb_schema.js
