@@ -60,6 +60,8 @@ jobs:
           tags: quay.io/soketi/soketi:${{ github.sha }}-${{ matrix.node }}-alpine
           build-args: |
             VERSION=${{ matrix.node }}
+          labels: |
+            quay.expires-after=7d
           cache-from: |
             type=gha
           cache-to: |
@@ -114,6 +116,8 @@ jobs:
           push: true
           context: .
           tags: quay.io/soketi/soketi:${{ github.sha }}-${{ matrix.node }}-distroless
+          labels: |
+            quay.expires-after=7d
           file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}
@@ -170,6 +174,8 @@ jobs:
           push: true
           context: .
           tags: quay.io/soketi/soketi:${{ github.sha }}-${{ matrix.node }}-debian
+          labels: |
+            quay.expires-after=7d
           file: Dockerfile.debian
           build-args: |
             VERSION=${{ matrix.node }}
