@@ -26,16 +26,20 @@ jobs:
         node:
           - '16'
 
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
-
-    name: Tag & Test Alpine Commit (node:${{ matrix.node }})
+    name: Tag Alpine Commit (node:${{ matrix.node }})
 
     steps:
       - uses: actions/checkout@v3.0.2
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4.0.1
+        with:
+          images: quay.io/soketi/soketi
+          tags: |
+            type=sha,suffix:-${{ matrix.node }}-alpine
+          labels: |
+            quay.expires-after=7d
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -57,11 +61,10 @@ jobs:
         with:
           push: true
           context: .
-          tags: quay.io/soketi/soketi:${{ github.sha }}-${{ matrix.node }}-alpine
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
           build-args: |
             VERSION=${{ matrix.node }}
-          labels: |
-            quay.expires-after=7d
           cache-from: |
             type=gha
           cache-to: |
@@ -84,16 +87,20 @@ jobs:
         node:
           - '16'
 
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
-
-    name: Tag & Test Distroless Commit (node:${{ matrix.node }})
+    name: Tag Distroless Commit (node:${{ matrix.node }})
 
     steps:
       - uses: actions/checkout@v3.0.2
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4.0.1
+        with:
+          images: quay.io/soketi/soketi
+          tags: |
+            type=sha,suffix:-${{ matrix.node }}-distroless
+          labels: |
+            quay.expires-after=7d
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -115,9 +122,8 @@ jobs:
         with:
           push: true
           context: .
-          tags: quay.io/soketi/soketi:${{ github.sha }}-${{ matrix.node }}-distroless
-          labels: |
-            quay.expires-after=7d
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
           file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}
@@ -142,16 +148,20 @@ jobs:
         node:
           - '16'
 
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
-
-    name: Tag & Test Debian Commit (node:${{ matrix.node }})
+    name: Tag Debian Commit (node:${{ matrix.node }})
 
     steps:
       - uses: actions/checkout@v3.0.2
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4.0.1
+        with:
+          images: quay.io/soketi/soketi
+          tags: |
+            type=sha,suffix:-${{ matrix.node }}-debian
+          labels: |
+            quay.expires-after=7d
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -173,9 +183,8 @@ jobs:
         with:
           push: true
           context: .
-          tags: quay.io/soketi/soketi:${{ github.sha }}-${{ matrix.node }}-debian
-          labels: |
-            quay.expires-after=7d
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
           file: Dockerfile.debian
           build-args: |
             VERSION=${{ matrix.node }}
