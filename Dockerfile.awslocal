@@ -1,0 +1,10 @@
+FROM python:3-alpine
+
+RUN pip install awscli-local awscli && \
+    mkdir -p ~/.aws && \
+    touch ~/.aws/credentials && \
+    echo "[default]" >> ~/.aws/credentials && \
+    echo "aws_access_key_id = fake-id" >> ~/.aws/credentials && \
+    echo "aws_secret_access_key = fake-secret" >> ~/.aws/credentials
+
+ENTRYPOINT ["awslocal"]

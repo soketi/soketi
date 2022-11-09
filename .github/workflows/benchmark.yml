@@ -1,16 +1,11 @@
 name: Benchmark
 
 on:
-  push:
-    branches:
-      - '*'
-    paths-ignore:
-      - "**.md"
-      - ".github/workflows/docker-*.yml"
-      - ".github/*.yml"
-  pull_request:
-    branches:
-      - '*'
+  workflow_run:
+    workflows:
+      - "CI"
+    types:
+      - completed
 
 jobs:
   build:
@@ -67,8 +62,14 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - uses: actions/cache@v3.0.4
+        name: Cache npm dependencies
+        with:
+          path: node_modules
+          key: npm-${{ hashFiles('package-lock.json') }}
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Execute lint & build
         run: |
@@ -136,25 +137,8 @@ jobs:
       - name: Setup Localstack
         if: "matrix.queue_driver == 'sqs'"
         run: |
-          pip install localstack awscli-local[ver1]
-          docker pull localstack/localstack
-          localstack start -d
-          localstack wait -t 30
-          echo "Startup complete"
-          awslocal s3 mb s3://test
-          awslocal s3 ls
-          awslocal sqs create-queue --queue-name test.fifo \
-            --attributes='{
-              "FifoQueue": "true",
-              "ContentBasedDeduplication": "true",
-              "DeduplicationScope": "messageGroup",
-              "FifoThroughputLimit": "perMessageGroupId",
-              "MessageRetentionPeriod": "3600",
-              "ReceiveMessageWaitTimeSeconds": "1",
-              "VisibilityTimeout": "5"
-            }' \
-            --region us-east-1
-          awslocal sqs list-queues
+          docker-compose up -d localstack
+          docker-compose run initialize_sqs
 
       - name: Setup NATS
         if: "matrix.adapter == 'nats'"

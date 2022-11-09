@@ -1,0 +1,9 @@
+{
+  "FifoQueue": "true",
+  "ContentBasedDeduplication": "true",
+  "DeduplicationScope": "messageGroup",
+  "FifoThroughputLimit": "perMessageGroupId",
+  "MessageRetentionPeriod": "3600",
+  "ReceiveMessageWaitTimeSeconds": "1",
+  "VisibilityTimeout": "5"
+}
