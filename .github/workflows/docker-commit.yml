@@ -29,7 +29,7 @@ jobs:
     name: Tag Alpine Commit (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.1.0
 
       - name: Docker meta
         id: docker_meta
@@ -90,7 +90,7 @@ jobs:
     name: Tag Distroless Commit (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.1.0
 
       - name: Docker meta
         id: docker_meta
@@ -151,7 +151,7 @@ jobs:
     name: Tag Debian Commit (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.1.0
 
       - name: Docker meta
         id: docker_meta
