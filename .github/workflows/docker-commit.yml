@@ -60,6 +60,10 @@ jobs:
           tags: quay.io/soketi/soketi:${{ github.sha }}-${{ matrix.node }}-alpine
           build-args: |
             VERSION=${{ matrix.node }}
+          cache-from: |
+            type=gha
+          cache-to: |
+            type=gha
           platforms: |
             linux/amd64
             linux/arm64
@@ -113,6 +117,10 @@ jobs:
           file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}
+          cache-from: |
+            type=gha
+          cache-to: |
+            type=gha
           platforms: |
             linux/amd64
             linux/arm64
@@ -165,6 +173,10 @@ jobs:
           file: Dockerfile.debian
           build-args: |
             VERSION=${{ matrix.node }}
+          cache-from: |
+            type=gha
+          cache-to: |
+            type=gha
           platforms: |
             linux/amd64
             linux/arm64

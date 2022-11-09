@@ -52,6 +52,10 @@ jobs:
           tags: localhost:5000/soketi/soketi:latest-${{ matrix.node }}-alpine
           build-args: |
             VERSION=${{ matrix.node }}
+          cache-from: |
+            type=gha
+          cache-to: |
+            type=gha
 
       - name: Test
         run: |
@@ -74,6 +78,10 @@ jobs:
           tags: quay.io/soketi/soketi:latest-${{ matrix.node }}-alpine
           build-args: |
             VERSION=${{ matrix.node }}
+          cache-from: |
+            type=gha
+          cache-to: |
+            type=gha
           platforms: |
             linux/amd64
             linux/arm64
@@ -117,6 +125,10 @@ jobs:
           file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}
+          cache-from: |
+            type=gha
+          cache-to: |
+            type=gha
 
       - name: Test
         run: |
@@ -140,6 +152,10 @@ jobs:
           file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}
+          cache-from: |
+            type=gha
+          cache-to: |
+            type=gha
           platforms: |
             linux/amd64
             linux/arm64
@@ -182,6 +198,10 @@ jobs:
           file: Dockerfile.debian
           build-args: |
             VERSION=${{ matrix.node }}
+          cache-from: |
+            type=gha
+          cache-to: |
+            type=gha
 
       - name: Test
         run: |
@@ -205,6 +225,10 @@ jobs:
           file: Dockerfile.debian
           build-args: |
             VERSION=${{ matrix.node }}
+          cache-from: |
+            type=gha
+          cache-to: |
+            type=gha
           platforms: |
             linux/amd64
             linux/arm64
