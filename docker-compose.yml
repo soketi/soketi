@@ -1,21 +1,28 @@
-version: "3.8"
+version: "3"
+
+networks:
+  soketi:
+    driver: bridge
 
 services:
   localstack:
-    container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
+    container_name: localstack
     image: localstack/localstack
-    network_mode: bridge
     ports:
-      - "127.0.0.1:4510-4530:4510-4530"
-      - "127.0.0.1:4566:4566"
-      - "127.0.0.1:4571:4571"
+      - "4510-4530:4510-4530"
+      - "4566:4566"
+      - "4571:4571"
     environment:
-      - SERVICES=${SERVICES:-sqs,s3}
-      - DEBUG=${DEBUG-}
-      - DATA_DIR=${DATA_DIR-}
-      - LAMBDA_EXECUTOR=${LAMBDA_EXECUTOR-}
-      - HOST_TMP_FOLDER=${TMPDIR:-/tmp/}localstack
+      - SERVICES=sqs,s3
+      - DEBUG=1
+      - HOST_TMP_FOLDER=/tmp/localstack
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - soketi
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
+      retries: 3
+      timeout: 5s
