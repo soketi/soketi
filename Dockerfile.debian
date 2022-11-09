@@ -1,8 +1,6 @@
 ARG VERSION=lts
 
-FROM --platform=$BUILDPLATFORM node:$VERSION-bullseye
-
-LABEL maintainer="Renoki Co. <alex@renoki.org>"
+FROM --platform=$BUILDPLATFORM node:$VERSION-bullseye as build
 
 ENV PYTHONUNBUFFERED=1
 
@@ -10,15 +8,24 @@ COPY . /tmp/build
 
 WORKDIR /tmp/build
 
-RUN apt-get update -y && \
-    apt-get install -y git python3 gcc wget && \
-    bash ./build-minimal-production && \
-    mkdir -p /app && \
-    cd /tmp/build && \
-    mv production-app/* /app/ && \
-    apt-get -y autoremove && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get update -y ; \
+    apt-get upgrade -y ; \
+    apt-get install -y git python3 gcc wget ; \
+    npm ci ; \
+    npm run build ; \
+    npm ci --omit=dev --ignore-scripts ; \
+    npm prune --production ; \
+    rm -rf node_modules/*/test/ node_modules/*/tests/ ; \
+    npm install -g modclean ; \
+    modclean -n default:safe --run ; \
+    mkdir -p /app ; \
+    cp -r bin/ dist/ node_modules/ LICENSE package.json package-lock.json README.md /app/
+
+FROM --platform=$BUILDPLATFORM node:$VERSION-bullseye-slim
+
+LABEL maintainer="Renoki Co. <alex@renoki.org>"
+
+COPY --from=build /app /app
 
 WORKDIR /app
 

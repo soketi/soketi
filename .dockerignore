@@ -5,10 +5,8 @@ build/**/*
 coverage/**/*
 dist/**/*
 node_modules/**/*
-production-app/**/*
 tests/**/*
 .env
 npm-debug.log
-package-lock.json
 yarn.lock
 *.db
