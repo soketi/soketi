@@ -26,3 +26,43 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
       retries: 3
       timeout: 5s
+  initialize_sqs:
+    container_name: initialize_sqs
+    build:
+      context: .
+      dockerfile: Dockerfile.awslocal
+    volumes:
+      - ./tests/fixtures/sqs.json:/tmp/sqs.json
+    networks:
+      - soketi
+    command:
+      - sqs
+      - create-queue
+      - --endpoint-url=http://localstack:4566
+      - --queue-name=test.fifo
+      - --region=us-east-1
+      - --attributes=file:///tmp/sqs.json
+    depends_on:
+      localstack:
+        condition: service_healthy
+  dynamodb:
+    container_name: dynamodb
+    image: amazon/dynamodb-local
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb"
+    networks:
+      - soketi
+    environment:
+      AWS_ACCESS_KEY_ID: fake-id
+      AWS_SECRET_ACCESS_KEY: fake-secret
+  initialize_dynamodb:
+    container_name: initialize_dynamodb
+    image: node:18-alpine
+    volumes:
+      - .:/app/
+    networks:
+      - soketi
+    entrypoint:
+      - node
+      - /app/tests/fixtures/dynamodb_schema.js

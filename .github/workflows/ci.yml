@@ -111,21 +111,7 @@ jobs:
       - name: Setup Localstack
         if: "matrix.queue_driver == 'sqs'"
         run: |
-          docker-compose up -d localstack
-          awslocal s3 mb s3://test
-          awslocal s3 ls
-          awslocal sqs create-queue --queue-name test.fifo \
-            --attributes='{
-              "FifoQueue": "true",
-              "ContentBasedDeduplication": "true",
-              "DeduplicationScope": "messageGroup",
-              "FifoThroughputLimit": "perMessageGroupId",
-              "MessageRetentionPeriod": "3600",
-              "ReceiveMessageWaitTimeSeconds": "1",
-              "VisibilityTimeout": "5"
-            }' \
-            --region us-east-1
-          awslocal sqs list-queues
+          docker-compose up --wait -d localstack sqs initialize_sqs
 
       - name: Setup NATS
         if: "matrix.adapter == 'nats'"
