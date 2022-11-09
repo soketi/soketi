@@ -37,7 +37,7 @@ jobs:
         with:
           images: quay.io/soketi/soketi
           tags: |
-            type=ref,event=pull_request,suffix=-${{ matrix.node }}-alpine
+            type=ref,event=pr,suffix=-${{ matrix.node }}-alpine
           labels: |
             quay.expires-after=7d
 
@@ -98,7 +98,7 @@ jobs:
         with:
           images: quay.io/soketi/soketi
           tags: |
-            type=ref,event=pull_request,suffix=-${{ matrix.node }}-distroless
+            type=ref,event=pr,suffix=-${{ matrix.node }}-distroless
           labels: |
             quay.expires-after=7d
 
@@ -159,7 +159,7 @@ jobs:
         with:
           images: quay.io/soketi/soketi
           tags: |
-            type=ref,event=pull_request,suffix=-${{ matrix.node }}-debian
+            type=ref,event=pr,suffix=-${{ matrix.node }}-debian
           labels: |
             quay.expires-after=7d
 
