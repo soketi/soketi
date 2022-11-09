@@ -60,9 +60,9 @@ jobs:
           build-args: |
             VERSION=${{ matrix.node }}
           cache-from: |
-            type=gha
+            type=gha,scope=alpine
           cache-to: |
-            type=gha
+            type=gha,scope=alpine
           platforms: |
             linux/amd64
             linux/arm64
@@ -121,9 +121,9 @@ jobs:
           build-args: |
             VERSION=${{ matrix.node }}
           cache-from: |
-            type=gha
+            type=gha,scope=distroless
           cache-to: |
-            type=gha
+            type=gha,scope=distroless
           platforms: |
             linux/amd64
             linux/arm64
@@ -181,9 +181,9 @@ jobs:
           build-args: |
             VERSION=${{ matrix.node }}
           cache-from: |
-            type=gha
+            type=gha,scope=debian
           cache-to: |
-            type=gha
+            type=gha,scope=debian
           platforms: |
             linux/amd64
             linux/arm64
