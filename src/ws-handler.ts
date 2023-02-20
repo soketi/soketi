@@ -12,7 +12,6 @@ import { PusherMessage, uWebSocketMessage } from './message';
 import { Server } from './server';
 import { Utils } from './utils';
 import { WebSocket } from 'uWebSockets.js';
-import {clearTimeout} from 'timers';
 
 const ab2str = require('arraybuffer-to-string');
 const Pusher = require('pusher');
