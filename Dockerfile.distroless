@@ -25,7 +25,7 @@ RUN apk add --no-cache --update git python3 gcompat ; \
     chgrp -R 0 /app/ ; \
     chmod -R g+rx /app/
 
-FROM --platform=$BUILDPLATFORM gcr.io/distroless/nodejs:$VERSION
+FROM --platform=$TARGETPLATFORM gcr.io/distroless/nodejs:$VERSION
 
 LABEL maintainer="Renoki Co. <alex@renoki.org>"
 
