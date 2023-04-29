@@ -226,6 +226,12 @@ export class Cli {
         process.on('SIGINT', handleFailure);
         process.on('SIGHUP', handleFailure);
         process.on('SIGTERM', handleFailure);
+        process.on('uncaughtException', (err, origin)=> {
+            Log.error('process uncaughtException');
+            Log.error({ err, origin });
+
+            handleFailure();
+        });
 
         return this.server.start();
     }
