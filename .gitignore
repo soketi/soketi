@@ -9,3 +9,5 @@ config.json
 npm-debug.log
 yarn.lock
 *.db
+/127.0.0.1.pem
+/127.0.0.1-key.pem
