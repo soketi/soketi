@@ -167,7 +167,7 @@ export class Server {
             min: 0,
             max: 7,
         },
-        debug: false,
+        debug: true,
         eventLimits: {
             maxChannelsAtOnce: 100,
             maxNameLength: 200,

@@ -54,7 +54,7 @@ export class WebhookSender {
      * Initialize the Webhook sender.
      */
     constructor(protected server: Server) {
-        let queueProcessor = queueProcessors(job, done);
+        let queueProcessor = queueProcessors(server);
 
         // TODO: Maybe have one queue per app to reserve queue thresholds?
         if (server.canProcessQueues()) {
