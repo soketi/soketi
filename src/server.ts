@@ -242,6 +242,7 @@ export class Server {
                 enabled: false,
                 duration: 50,
             },
+            maxRetries: 5,
         },
     };
 
