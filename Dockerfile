@@ -23,9 +23,12 @@ RUN apk add --no-cache --update git python3 gcompat ; \
     mkdir -p /app ; \
     cp -r bin/ dist/ node_modules/ LICENSE package.json package-lock.json README.md /app/
 
-FROM --platform=$BUILDPLATFORM node:$VERSION-alpine
+FROM --platform=$TARGETPLATFORM node:$VERSION-alpine
 
 LABEL maintainer="Renoki Co. <alex@renoki.org>"
+
+RUN apk add --no-cache libc6-compat ; \
+    ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2
 
 COPY --from=build /app /app
 
