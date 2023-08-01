@@ -26,7 +26,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v4.0.1
+        uses: docker/metadata-action@v4.3.0
         with:
           images: quay.io/soketi/soketi
           tags: |
@@ -86,7 +86,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v4.0.1
+        uses: docker/metadata-action@v4.3.0
         with:
           images: quay.io/soketi/soketi
           tags: |
@@ -146,7 +146,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v4.0.1
+        uses: docker/metadata-action@v4.3.0
         with:
           images: quay.io/soketi/soketi
           tags: |
