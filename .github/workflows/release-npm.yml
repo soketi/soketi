@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 16.x
 
-      - uses: actions/cache@v3.0.4
+      - uses: actions/cache@v3.2.6
         name: Cache npm dependencies
         with:
           path: node_modules
