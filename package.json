@@ -24,7 +24,7 @@
   "dependencies": {
     "arraybuffer-to-string": "^1.0.2",
     "async": "^3.2.4",
-    "aws-sdk": "^2.1194.0",
+    "aws-sdk": "^2.1427.0",
     "axios": "^0.27.2",
     "boolean": "^3.1.4",
     "bullmq": "^1.80.3",
