@@ -22,7 +22,7 @@ jobs:
     name: Tag Alpine Release (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.3
 
       - name: Docker meta
         id: docker_meta
@@ -82,7 +82,7 @@ jobs:
     name: Tag Distroless Release (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.3
 
       - name: Docker meta
         id: docker_meta
@@ -142,7 +142,7 @@ jobs:
     name: Tag Debian Release (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.3
 
       - name: Docker meta
         id: docker_meta

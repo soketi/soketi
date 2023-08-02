@@ -60,7 +60,7 @@ jobs:
     name: Node.js ${{ matrix.node }} (adapter:${{ matrix.adapter }} manager:${{ matrix.app_manager }} ratelimiter:${{ matrix.rate_limiter }} queue:${{ matrix.queue_driver }})
 
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.3
 
       - uses: actions/setup-node@v3.6.0
         name: Setup Node.js v${{ matrix.node }}
