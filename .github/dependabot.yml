@@ -10,12 +10,12 @@ updates:
   directory: "/"
   schedule:
     interval: weekly
-  open-pull-requests-limit: 10
+  open-pull-requests-limit: 100
 - package-ecosystem: npm
   directory: "/"
   schedule:
     interval: weekly
-  open-pull-requests-limit: 10
+  open-pull-requests-limit: 100
   versioning-strategy: increase
 - package-ecosystem: docker
   directory: "/"
@@ -23,4 +23,4 @@ updates:
     - quay
   schedule:
     interval: weekly
-  open-pull-requests-limit: 10
+  open-pull-requests-limit: 100
