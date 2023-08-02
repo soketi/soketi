@@ -29,11 +29,11 @@ jobs:
     name: Tag Alpine Commit (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.3.0
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v4.0.1
+        uses: docker/metadata-action@v4.3.0
         with:
           images: quay.io/soketi/soketi
           tags: |
@@ -58,7 +58,7 @@ jobs:
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
       - name: Build and Push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           push: true
           context: .
@@ -91,11 +91,11 @@ jobs:
     name: Tag Distroless Commit (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.3.0
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v4.0.1
+        uses: docker/metadata-action@v4.3.0
         with:
           images: quay.io/soketi/soketi
           tags: |
@@ -120,7 +120,7 @@ jobs:
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
       - name: Build and Push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           push: true
           context: .
@@ -153,11 +153,11 @@ jobs:
     name: Tag Debian Commit (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.3.0
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v4.0.1
+        uses: docker/metadata-action@v4.3.0
         with:
           images: quay.io/soketi/soketi
           tags: |
@@ -182,7 +182,7 @@ jobs:
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
       - name: Build and Push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           push: true
           context: .
