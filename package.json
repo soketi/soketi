@@ -87,5 +87,8 @@
   "bin": {
     "soketi": "bin/server.js",
     "soketi-pm2": "bin/pm2.js"
+  },
+  "peerDependencies": {
+    "@pm2/agent": "^2.0.3"
   }
 }
