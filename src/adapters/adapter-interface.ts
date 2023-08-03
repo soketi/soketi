@@ -2,8 +2,6 @@ import { Namespace } from '../namespace';
 import { PresenceMemberInfo } from '../channels/presence-channel-manager';
 import { WebSocket } from 'uWebSockets.js';
 
-const Discover = require('node-discover');
-
 export interface AdapterInterface {
     /**
      * The app connections storage class to manage connections.

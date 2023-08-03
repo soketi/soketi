@@ -31,7 +31,6 @@ jobs:
         adapter:
           - local
           - redis
-          - cluster
         app_manager:
           - array
           - mysql
@@ -47,10 +46,6 @@ jobs:
             rate_limiter: local
             queue_driver: sqs
             cache_driver: memory
-          - adapter: cluster
-            rate_limiter: cluster
-            queue_driver: sync
-            cache_driver: redis
           - adapter: redis
             rate_limiter: redis
             queue_driver: redis
@@ -75,7 +70,7 @@ jobs:
           npm run build
 
       - name: Setup Redis
-        if: "matrix.adapter == 'redis' || matrix.adapter == 'cluster'"
+        if: "matrix.adapter == 'redis'"
         run: docker-compose up -d redis
 
       # Setup MySQL with user `root`, password `root` and database `testing`

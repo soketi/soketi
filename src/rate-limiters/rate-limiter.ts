@@ -1,5 +1,4 @@
 import { App } from './../app';
-import { ClusterRateLimiter } from './cluster-rate-limiter';
 import { ConsumptionResponse, RateLimiterInterface } from './rate-limiter-interface';
 import { LocalRateLimiter } from './local-rate-limiter';
 import { Log } from './../log';
@@ -22,8 +21,6 @@ export class RateLimiter implements RateLimiterInterface {
             this.driver = new LocalRateLimiter(server);
         } else if (server.options.rateLimiter.driver === 'redis') {
             this.driver = new RedisRateLimiter(server);
-        } else if (server.options.rateLimiter.driver === 'cluster') {
-            this.driver = new ClusterRateLimiter(server);
         } else {
             Log.error('No stats driver specified.');
         }

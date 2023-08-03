@@ -45,9 +45,6 @@ export interface Options {
             clusterMode: boolean;
             shardMode: boolean;
         };
-        cluster: {
-            requestsTimeout: number;
-        },
     };
     appManager: {
         driver: string;
@@ -83,19 +80,6 @@ export interface Options {
     channelLimits: {
         maxNameLength: number;
         cacheTtl: number;
-    };
-    cluster: {
-        hostname: string;
-        helloInterval: number;
-        checkInterval: number;
-        nodeTimeout: number,
-        masterTimeout: number;
-        port: number;
-        prefix: string;
-        ignoreProcess: boolean;
-        broadcast: string;
-        unicast: string|null;
-        multicast: string|null;
     };
     cors: {
         credentials: boolean;
