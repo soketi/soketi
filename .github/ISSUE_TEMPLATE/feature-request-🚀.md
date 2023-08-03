@@ -1,8 +1,8 @@
 ---
-name: Feature request
+name: "Feature request \U0001F680"
 about: Suggest an idea for this project
-title: "[request]"
-labels: enhancement
+title: "[REQUEST]"
+labels: ''
 assignees: rennokki
 
 ---
