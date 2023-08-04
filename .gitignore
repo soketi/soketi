@@ -3,7 +3,6 @@ build/
 coverage/
 dist/
 node_modules/
-production-app/
 .env
 benchmark/composer.lock
 config.json

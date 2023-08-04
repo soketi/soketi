@@ -5,7 +5,6 @@ build/**/*
 coverage/**/*
 dist/**/*
 node_modules/**/*
-production-app/**/*
 tests/**/*
 .env
 npm-debug.log

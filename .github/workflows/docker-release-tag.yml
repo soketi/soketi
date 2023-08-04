@@ -20,11 +20,11 @@ jobs:
     name: Tag Distroless Release (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.5.3
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v4.0.1
+        uses: docker/metadata-action@v4.6.0
         with:
           images: quay.io/soketi/soketi
           tags: |
@@ -49,7 +49,7 @@ jobs:
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
       - name: Build and push (node:${{ matrix.node }})
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           push: true
           context: .
@@ -58,6 +58,10 @@ jobs:
           file: Dockerfile.distroless
           build-args: |
             VERSION=${{ matrix.node }}
+          cache-from: |
+            type=gha,scope=distroless
+          cache-to: |
+            type=gha,scope=distroless
           platforms: |
             linux/amd64
             linux/arm64
@@ -76,11 +80,11 @@ jobs:
     name: Tag Debian Release (node:${{ matrix.node }})
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.5.3
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v4.0.1
+        uses: docker/metadata-action@v4.6.0
         with:
           images: quay.io/soketi/soketi
           tags: |
@@ -105,7 +109,7 @@ jobs:
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
       - name: Build and push (node:${{ matrix.node }})
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           push: true
           context: .
@@ -114,6 +118,10 @@ jobs:
           file: Dockerfile.debian
           build-args: |
             VERSION=${{ matrix.node }}
+          cache-from: |
+            type=gha,scope=debian
+          cache-to: |
+            type=gha,scope=debian
           platforms: |
             linux/amd64
             linux/arm64

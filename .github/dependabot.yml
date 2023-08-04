@@ -6,21 +6,86 @@ registries:
     username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
     password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 updates:
-- package-ecosystem: github-actions
-  directory: "/"
-  schedule:
-    interval: weekly
-  open-pull-requests-limit: 10
-- package-ecosystem: npm
-  directory: "/"
-  schedule:
-    interval: weekly
-  open-pull-requests-limit: 10
-  versioning-strategy: increase
-- package-ecosystem: docker
-  directory: "/"
-  registries:
-    - quay
-  schedule:
-    interval: weekly
-  open-pull-requests-limit: 10
+  - package-ecosystem: github-actions
+    directory: "/"
+    groups:
+      all:
+        patterns: ["*"]
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 100
+    rebase-strategy: auto
+    reviewers:
+      - rennokki
+    labels:
+      - dependabot:actions
+      - auto:dependabot
+      - dependencies
+
+  - package-ecosystem: npm
+    directory: "/"
+    groups:
+      typescript:
+        patterns:
+          - "@babel/*"
+          - "@types/*"
+          - "eslint"
+          - typescript
+          - "@typescript*"
+          - "ts*"
+          - "*ts"
+          - "jest"
+          - "jest*"
+          - "*jest"
+        exclude-patterns:
+          - "@types/pusher*"
+      dev-utils:
+        patterns:
+          - "body-parser"
+          - "express"
+          - "tcp-port-used"
+      databases:
+        patterns:
+          - "knex"
+          - "ioredis"
+          - "mysql*"
+          - "pg"
+      utils:
+        patterns:
+          - "arraybuffer-to-string"
+          - "async"
+          - "boolean"
+          - "colors"
+          - "dot*"
+          - "query-string"
+          - "uuid"
+      ws:
+        patterns:
+          - "uWebSockets.js"
+          - "pusher*"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 100
+    rebase-strategy: auto
+    reviewers:
+      - rennokki
+    labels:
+      - dependabot:npm
+      - auto:dependabot
+      - dependencies
+    versioning-strategy: auto
+
+  - package-ecosystem: docker
+    directory: "/"
+    registries:
+      - quay
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 100
+    rebase-strategy: auto
+    reviewers:
+      - rennokki
+    labels:
+      - dependabot:docker
+      - auto:dependabot
+      - dependencies

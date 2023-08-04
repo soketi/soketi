@@ -1,6 +1,6 @@
 ARG VERSION=lts
 
-FROM node:$VERSION-bullseye as build
+FROM --platform=$BUILDPLATFORM node:$VERSION-bullseye as build
 
 ENV PYTHONUNBUFFERED=1
 
@@ -23,7 +23,12 @@ RUN apt-get update -y && \
 
 FROM node:$VERSION-bullseye-slim
 
-LABEL maintainer="Renoki Co. <alex@renoki.org>"
+LABEL org.opencontainers.image.authors="Soketi <open-source@soketi.app>"
+LABEL org.opencontainers.image.source="https://github.com/soketi/soketi"
+LABEL org.opencontainers.image.url="https://soketi.app"
+LABEL org.opencontainers.image.documentation="https://docs.soketi.app"
+LABEL org.opencontainers.image.vendor="Soketi"
+LABEL org.opencontainers.image.licenses="AGPL-3.0"
 
 ENV NODE_OPTIONS="--es-module-specifier-resolution=node"
 

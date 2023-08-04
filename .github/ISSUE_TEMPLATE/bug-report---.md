@@ -2,10 +2,16 @@
 name: "Bug Report \U0001F41E"
 about: Report a bug
 title: "[BUG] "
-labels: bug
+labels: ''
 assignees: ''
 
 ---
+
+<!---
+NOTICE: Keep in mind that bugs that state simple usage disfunctionalities (i.e. message did not get sent) are more likely to be your fault for not using the Pusher properly.
+
+After enabling debugging with SOKETI_DEBUG=1, make sure to read the console to see if the message is actually being sent to the server.
+-->
 
 **Description**
 A clear and concise description of what the bug is.

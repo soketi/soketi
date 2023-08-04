@@ -14,12 +14,18 @@ jobs:
     name: Publish to NPM
 
     steps:
-      - uses: actions/checkout@v3.0.2
+      - uses: actions/checkout@v3.5.3
 
-      - uses: actions/setup-node@v3.4.1
+      - uses: actions/setup-node@v3.7.0
         name: Installing Node.js v16.x
         with:
           node-version: 16.x
+
+      - uses: actions/cache@v3.3.1
+        name: Cache npm dependencies
+        with:
+          path: node_modules
+          key: npm-${{ hashFiles('package-lock.json') }}
 
       - name: Installing dependencies
         run: |

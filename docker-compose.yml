@@ -5,29 +5,6 @@ networks:
     driver: bridge
 
 services:
-  localstack:
-    container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
-    image: localstack/localstack
-    ports:
-      - "4510-4530:4510-4530"
-      - "4566:4566"
-      - "4571:4571"
-    environment:
-      - SERVICES=${SERVICES:-sqs,s3}
-      - DEBUG=${DEBUG-}
-      - DATA_DIR=${DATA_DIR-}
-      - LAMBDA_EXECUTOR=${LAMBDA_EXECUTOR-}
-      - HOST_TMP_FOLDER=${TMPDIR:-/tmp/}localstack
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    volumes:
-      - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    networks:
-      - soketi
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
-      retries: 3
-      timeout: 5s
   redis:
     container_name: redis
     image: redis:7.0.0
@@ -41,3 +18,35 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       retries: 3
       timeout: 5s
+  localstack:
+    container_name: localstack
+    image: localstack/localstack
+    ports:
+      - "4510-4530:4510-4530"
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      - SERVICES=sqs,s3
+      - DEBUG=1
+      - HOST_TMP_FOLDER=/tmp/localstack
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - soketi
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
+      retries: 3
+      timeout: 5s
+  dynamodb:
+    container_name: dynamodb
+    image: amazon/dynamodb-local:1.22.0
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb"
+    networks:
+      - soketi
+    environment:
+      AWS_ACCESS_KEY_ID: fake-id
+      AWS_SECRET_ACCESS_KEY: fake-secret

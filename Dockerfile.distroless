@@ -1,6 +1,10 @@
 ARG VERSION=18
 
+<<<<<<< HEAD
 FROM node:$VERSION-bullseye-slim as build
+=======
+FROM --platform=$BUILDPLATFORM node:$VERSION-alpine as base
+>>>>>>> bb739ca26cd9463c67b4d5c1863badd1e78acb76
 
 ENV PYTHONUNBUFFERED=1
 
@@ -8,6 +12,7 @@ COPY . /tmp/build
 
 WORKDIR /tmp/build
 
+<<<<<<< HEAD
 RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get install -y git python3 gcc wget && \
@@ -21,11 +26,33 @@ RUN apt-get update -y && \
     mkdir -p /app && \
     cp -r bin/ dist/ node_modules/ LICENSE package.json package-lock.json README.md /app/ && \
     chgrp -R 0 /app/ && \
+=======
+RUN apk add --no-cache --update git python3 gcompat ; \
+    apk add --virtual build-dependencies build-base gcc wget ; \
+    ln -sf python3 /usr/bin/python ; \
+    python3 -m ensurepip ; \
+    pip3 install --no-cache --upgrade pip setuptools ; \
+    npm ci ; \
+    npm run build ; \
+    npm ci --omit=dev --ignore-scripts ; \
+    npm prune --production ; \
+    rm -rf node_modules/*/test/ node_modules/*/tests/ ; \
+    npm install -g modclean ; \
+    modclean -n default:safe --run ; \
+    mkdir -p /app ; \
+    cp -r bin/ dist/ node_modules/ LICENSE package.json package-lock.json README.md /app/ ; \
+    chgrp -R 0 /app/ ; \
+>>>>>>> bb739ca26cd9463c67b4d5c1863badd1e78acb76
     chmod -R g+rx /app/
 
-FROM gcr.io/distroless/nodejs:$VERSION
+FROM --platform=$TARGETPLATFORM gcr.io/distroless/nodejs:$VERSION
 
-LABEL maintainer="Renoki Co. <alex@renoki.org>"
+LABEL org.opencontainers.image.authors="Soketi <open-source@soketi.app>"
+LABEL org.opencontainers.image.source="https://github.com/soketi/soketi"
+LABEL org.opencontainers.image.url="https://soketi.app"
+LABEL org.opencontainers.image.documentation="https://docs.soketi.app"
+LABEL org.opencontainers.image.vendor="Soketi"
+LABEL org.opencontainers.image.licenses="AGPL-3.0"
 
 ENV NODE_OPTIONS="--es-module-specifier-resolution=node"
 
