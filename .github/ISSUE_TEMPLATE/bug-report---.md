@@ -1,9 +1,11 @@
 ---
 name: "Bug Report \U0001F41E"
-about: Report a bug
+about: Report a bug. **This is NOT for other versions of Soketi. Use the [Discussions](https://github.com/soketi/soketi/discussions/categories/cloudflare-workers-support) board for Cloudflare Serverless.
 title: "[BUG] "
-labels: ''
-assignees: ''
+labels:
+  - status:triage
+assignees:
+  - rennokki
 
 ---
 
