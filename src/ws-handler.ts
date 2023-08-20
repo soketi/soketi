@@ -701,8 +701,10 @@ export class WsHandler {
     sendMissedCacheIfExists(ws: WebSocket, channel: string) {
         this.server.cacheManager.get(`app:${ws.app.id}:channel:${channel}:cache_miss`).then(cachedEvent => {
             if (cachedEvent) {
-                ws.sendJson({ event: 'pusher:cache_miss', channel, data: cachedEvent });
+                let { event, data } = JSON.parse(cachedEvent);
+                ws.sendJson({ event: event, channel, data: data });
             } else {
+                ws.sendJson({ event: 'pusher:cache_miss', channel });
                 this.server.webhookSender.sendCacheMissed(ws.app, channel);
             }
         });
