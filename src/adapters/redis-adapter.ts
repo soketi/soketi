@@ -196,7 +196,7 @@ export class RedisAdapter extends HorizontalAdapter {
      * Clear the connections.
      */
     disconnect(): Promise<void> {
-        return Promise.all([
+        return Promise.allSettled([
             this.subClient.quit(),
             this.pubClient.quit(),
             ...(Object.keys(this.syncIntervals).map(key => new Promise<void>(resolve => {
