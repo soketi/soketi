@@ -137,7 +137,7 @@ export class RedisAdapter extends HorizontalAdapter {
             && !this.syncIntervals[appId]
         ) {
             this.syncIntervals[appId] = setInterval(() => {
-                this.getSocketsCount(appId).then((socketsCount) => {
+                super.getSocketsCount(appId).then((socketsCount) => {
                     this.pubClient.set(`app:${appId}:connections_count`, socketsCount);
                 });
             }, Math.floor(Math.random() * (60 - 10 + 1) + 10) * 1e3);
