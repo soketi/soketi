@@ -12,7 +12,7 @@
 
 [![Discord](https://img.shields.io/discord/957380329985958038?color=%235865F2&label=Discord&logo=discord&logoColor=%23fff)](https://discord.gg/VgfKCQydjb)
 
-Next-gen, Pusher-compatible, open-source WebSockets server. Simple, fast, and resilient. 📣 
+Next-gen, Pusher-compatible, open-source WebSockets server. Simple, fast, and resilient. 📣
 
 ## 🤝 Supporting
 
@@ -22,10 +22,17 @@ The frequency of releases and maintenance is based on the available time, which 
 
 To cover some of the expenses of handling new features or having to maintain the project, we would be more than happy if you can donate towards the goal. This will ensure that Soketi will be taken care of at its full extent.
 
-- [💰 Sponsor the development via Github Sponsors](https://github.com/sponsors/rennokki)
+**[💰 Sponsor the development via Github Sponsors](https://github.com/sponsors/rennokki)**
+
+## Paid Support
+
+Additionally, we offer priority support and direct help:
+
 - [🚀 Need help deploying Soketi on-prem at big scale?](https://github.com/sponsors/rennokki/sponsorships?tier_id=321381)
 - [🐞 Prioritize a bug in this project](https://github.com/sponsors/rennokki/sponsorships?tier_id=321379)
 - [💬 Support: direct, instant-messaging help for you and your team](https://github.com/sponsors/rennokki/sponsorships?tier_id=321375)
+
+## Soketi
 
 ### Blazing fast speed ⚡
 
@@ -58,6 +65,23 @@ In addition to being a good companion during local development, soketi comes wit
 ### Built-in monitoring 📈
 
 You just have to scrape the Prometheus metrics. Soketi offers a lot of metrics to monitor the deployment and 
+
+## See it in action
+
+- [Laravel chat app](https://github.com/soketi/laravel-chat-app)
+- [ETH History chart](https://github.com/soketi/laravel-eth-history)
+
+### Deployments
+
+- [Deploy with Railway](https://github.com/soketi/soketi-railway-deploy-example)
+- [Deploy with Cleavr](https://cleavr.io/cleavr-slice/how-to-install-soketi)
+
+## Community projects
+
+- [Soketi UI](https://github.com/Daynnnnn/soketi-ui) - manage Soketi apps via UI
+- [Soketi App Manager for Filament](https://github.com/rahulhaque/soketi-app-manager-filament) - manage Soketi apps via Filament
+- [Basement Chat](https://github.com/basement-chat/basement-chat) - add chat to your Laravel application
+- [Simple Chat](https://github.com/kitar/simplechat) - showcased chat app built with Soketi and DynamoDB
 
 ## 📃 Documentation
 
