@@ -1,18 +1,4 @@
-> The 🇷🇺 Russian invasion of 🇺🇦 Ukraine breaches any law, including the UN Charter. [#StandWithUkraine](https://github.com/vshymanskyy/StandWithUkraine)
-
-> Open-source is not about political views, but rather humanitar views. It's code by the people for the people. Unprovoked, unjustifiable and despicable action that is killing civilians is not tolerated. The [Renoki Co.](https://github.com/renoki-co) subsidiaries (including Soketi) has taken action to move away from Russian software and dependencies and block any access from Russia within their projects.
-
-## Soketi can be now deployed on Cloudflare's infrastructure. 📣 
-
-Ever dreamed about Serverless WebSockets? Soketi can be deployed to Cloudflare Workers. All around the world, closer to your users. Same Pusher protocol. 
-Powered by Cloudflare's [Durable Objects](https://developers.cloudflare.com/workers/runtime-apis/durable-objects/) and [KV](https://developers.cloudflare.com/workers/runtime-apis/kv/), you can achieve great speeds at edge for your users.
-
-Deploy fast Workers, use one of the fastest database available from Cloudflare and scale to infinity and beyond. 🚀
-
-**[Start deploying Workers ➡️](https://dash.soketi.app/register)**
-
-soketi
-======
+# soketi
 
 <img src="assets/logo.png" width="120" />
 
@@ -23,19 +9,29 @@ soketi
 [![License](https://img.shields.io/npm/l/@soketi/soketi)](https://www.npmjs.com/package/@soketi/soketi)
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/soketi)](https://artifacthub.io/packages/search?repo=soketi)
-[![StandWithUkraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://github.com/vshymanskyy/StandWithUkraine/blob/main/docs/README.md)
 
 [![Discord](https://img.shields.io/discord/957380329985958038?color=%235865F2&label=Discord&logo=discord&logoColor=%23fff)](https://discord.gg/VgfKCQydjb)
 
-soketi is your simple, fast, and resilient open-source WebSockets server. 📣
+Next-gen, Pusher-compatible, open-source WebSockets server. Simple, fast, and resilient. 📣 
+
+## 🤝 Supporting
+
+Soketi is meant to be open source, forever and ever. It solves issues that many developers face - the one of wanting to be limitless while testing locally or performing benchmarks. More than that, itt is also suited for production usage, either it is public for your frontend applications or internal to your team.
+
+The frequency of releases and maintenance is based on the available time, which is tight as hell. Recently, there were issues with the maintenance and this caused infrequent updates, as well as infrequent support.
+
+To cover some of the expenses of handling new features or having to maintain the project, we would be more than happy if you can donate towards the goal. This will ensure that Soketi will be taken care of at its full extent.
+
+- [💰 Sponsor the development via Github Sponsors](https://github.com/sponsors/rennokki)
+- [🚀 Need help deploying Soketi on-prem at big scale?](https://github.com/sponsors/rennokki/sponsorships?tier_id=321381)
+- [🐞 Prioritize a bug in this project](https://github.com/sponsors/rennokki/sponsorships?tier_id=321379)
+- [💬 Support: direct, instant-messaging help for you and your team](https://github.com/sponsors/rennokki/sponsorships?tier_id=321375)
 
 ### Blazing fast speed ⚡
 
 The server is built on top of [uWebSockets.js](https://github.com/uNetworking/uWebSockets.js) - a C application ported to Node.js. uWebSockets.js is demonstrated to perform at levels [_8.5x that of Fastify_](https://alexhultman.medium.com/serving-100k-requests-second-from-a-fanless-raspberry-pi-4-over-ethernet-fdd2c2e05a1e) and at least [_10x that of Socket.IO_](https://medium.com/swlh/100k-secure-websockets-with-raspberry-pi-4-1ba5d2127a23). ([_source_](https://github.com/uNetworking/uWebSockets.js))
 
 ### Cheaper than most competitors 🤑
-
-Compared with Pusher, you can achieve much more for less than one-third of the price.
 
 For a $49 plan on Pusher, you get a limited amount of connections (500) and messages (30M).
 
@@ -45,29 +41,23 @@ Soketi is capable to hold thousands of active connections with high traffic on l
 
 ### Easy to use 👶
 
-Whether you run your infrastructure in containers or monoliths, soketi got your back. There are multiple ways to [install](https://docs.soketi.app/getting-started/installation) and [configure](https://docs.soketi.app/getting-started/environment-variables) soketi, from single instances for development, to tens of active instances at scale with hundreds or thousands of active users.
+Whether you run your infrastructure in containers or monoliths, soketi is portable. There are multiple ways to [install](https://docs.soketi.app/getting-started/installation) and [configure](https://docs.soketi.app/getting-started/environment-variables) soketi, from single instances for development, to tens of active instances at scale with hundreds or thousands of active users.
 
-### Pusher Protocol v7 📡
+### Pusher Protocol 📡
 
-soketi implements the [Pusher Protocol v7](https://pusher.com/docs/channels/library\_auth\_reference/pusher-websockets-protocol#version-7-2017-11). Therefore, any Pusher-maintained or compatible client can connect to it, bringing a plug-and-play experience for existing applications that are already compatible with this protocol.
+soketi implements the [Pusher Protocol v7](https://pusher.com/docs/channels/library\_auth\_reference/pusher-websockets-protocol#version-7-2017-11). Your existing projects that connect to Pusher requires minimal code change to make it work with Soketi - you just add the host and port and swap the credentials.
 
 ### App-based access 🔐
 
-You and your users can access the API and WebSockets through [Pusher-like apps](https://docs.soketi.app/app-management/introduction) which serve keys and secrets to connect or authenticate requests for broadcasting events or checking channels statuses. soketi also comes built-in with support for DynamoDB and SQL-based servers like Postgres.
+Just like Pusher, you can access the API and WebSockets through the [apps you define](https://docs.soketi.app/app-management/introduction). Store the data with the built-in support for static arrays, DynamoDB and SQL-based servers like Postgres.
 
 ### Production-ready! 🤖
 
-In addition to being a good companion during local development, soketi comes with the resiliency and speed required for demanding production applications.
+In addition to being a good companion during local development, soketi comes with the resiliency and speed required for demanding production applications. At scale with Redis, you get the breeze of scaling as you grow.
 
 ### Built-in monitoring 📈
 
-soketi just exposes the metrics to you, you just have to scrape them, whether it's a simple HTTP Client to pull the current usage, or you're using Prometheus to monitor all the connections.
-
-## 🤝 Supporting
-
-**soketi is meant to be free, forever. Having a good companion for developing real-time applications locally and in production should not involve any third-party and having a reliable websocket server to deploy behind a firewall makes soketi a compelling option for many applications.**
-
-**Of course, like many open source software solutions, development is done by investing volunteer time into the project. Therefore, all donations are greatly appreciated. You can sponsor the development via **[**Github Sponsors**](https://github.com/sponsors/rennokki)**.**
+You just have to scrape the Prometheus metrics. Soketi offers a lot of metrics to monitor the deployment and 
 
 ## 📃 Documentation
 
