@@ -29,6 +29,9 @@ export interface AppInterface {
     hasChannelVacatedWebhooks?: boolean;
     hasMemberAddedWebhooks?: boolean;
     hasMemberRemovedWebhooks?: boolean;
+    enableSubscriptionCount?: boolean;
+    startBatchingCount?: number;
+    batchTimeout?: number;
 }
 
 export interface WebhookInterface {
@@ -168,6 +171,21 @@ export class App implements AppInterface {
     /**
      * @type {boolean}
      */
+    public enableSubscriptionCount = false;
+
+    /**
+     * @type {number}
+     */
+    public startBatchingCount = 100;
+
+    /**
+     * @type {number}
+     */
+    public batchTimeout = 30000;
+
+    /**
+     * @type {boolean}
+     */
     public hasCacheMissedWebhooks = false;
 
     static readonly CLIENT_EVENT_WEBHOOK = 'client_event';
@@ -199,6 +217,9 @@ export class App implements AppInterface {
         this.maxEventPayloadInKb = parseFloat(this.extractFromPassedKeys(initialApp, ['maxEventPayloadInKb', 'MaxEventPayloadInKb', 'max_event_payload_in_kb'], server.options.eventLimits.maxPayloadInKb));
         this.maxEventBatchSize = parseInt(this.extractFromPassedKeys(initialApp, ['maxEventBatchSize', 'MaxEventBatchSize', 'max_event_batch_size'], server.options.eventLimits.maxBatchSize));
         this.enableUserAuthentication = this.extractFromPassedKeys(initialApp, ['enableUserAuthentication', 'EnableUserAuthentication', 'enable_user_authentication'], false);
+        this.enableSubscriptionCount = this.extractFromPassedKeys(initialApp, ['enableSubscriptionCount', 'enable_subscription_count'], false);
+        this.startBatchingCount = this.extractFromPassedKeys(initialApp, ['startBatchingCount', 'start_batching_count'], 100);
+        this.batchTimeout = this.extractFromPassedKeys(initialApp, ['batchTimeout', 'batch_timeout'], 30000);
 
         this.hasClientEventWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.CLIENT_EVENT_WEBHOOK)).length > 0;
         this.hasChannelOccupiedWebhooks = this.webhooks.filter(webhook => webhook.event_types.includes(App.CHANNEL_OCCUPIED_WEBHOOK)).length > 0;
@@ -231,6 +252,9 @@ export class App implements AppInterface {
             maxEventPayloadInKb: this.maxEventPayloadInKb,
             maxEventBatchSize: this.maxEventBatchSize,
             enableUserAuthentication: this.enableUserAuthentication,
+            enableSubscriptionCount: this.enableSubscriptionCount,
+            startBatchingCount: this.startBatchingCount,
+            batchTimeout: this.batchTimeout,
         }
     }
 

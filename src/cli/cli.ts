@@ -129,6 +129,9 @@ export class Cli {
         USER_AUTHENTICATION_TIMEOUT: 'userAuthenticationTimeout',
         WEBHOOKS_BATCHING: 'webhooks.batching.enabled',
         WEBHOOKS_BATCHING_DURATION: 'webhooks.batching.duration',
+        ENABLE_SUBSCRIPTION_COUNT: 'appManager.array.apps.0.enableSubscriptionCount',
+        START_BATCHING_COUNT: 'appManager.array.apps.0.startBatchingCount',
+        BATCH_TIMEOUT: 'appManager.array.apps.0.batchTimeout',
     };
 
     /**
