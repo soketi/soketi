@@ -3,7 +3,7 @@ import async from 'async';
 import axios from 'axios';
 import { createHmac } from 'crypto';
 import { Utils } from './utils';
-import { Lambda } from 'aws-sdk';
+import { Lambda } from '@aws-sdk/client-lambda';
 import { Log } from './log';
 import { Server } from './server';
 
@@ -136,7 +136,10 @@ export class WebhookSender {
                         };
 
                         let lambda = new Lambda({
+                            // The key apiVersion is no longer supported in v3, and can be removed.
+                            // @deprecated The client uses the "latest" apiVersion.
                             apiVersion: '2015-03-31',
+
                             region: webhook.lambda.region || 'us-east-1',
                             ...(webhook.lambda.client_options || {}),
                         });
