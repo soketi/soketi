@@ -18,15 +18,7 @@ export class DynamoDbAppManager extends BaseAppManager {
         super();
 
         this.dynamodb = new DynamoDB({
-            // The key apiVersion is no longer supported in v3, and can be removed.
-            // @deprecated The client uses the "latest" apiVersion.
-            apiVersion: '2012-08-10',
-
             region: server.options.appManager.dynamodb.region,
-
-            // The transformation for endpoint is not implemented.
-            // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
-            // Please create/upvote feature request on aws-sdk-js-codemod for endpoint.
             endpoint: server.options.appManager.dynamodb.endpoint,
         });
     }
