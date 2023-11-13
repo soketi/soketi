@@ -6,7 +6,7 @@ import { JobData } from '../webhook-sender';
 import { Log } from '../log';
 import { QueueInterface } from './queue-interface';
 import { Server } from '../server';
-import { SQS } from 'aws-sdk';
+import { SQS } from '@aws-sdk/client-sqs';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SqsQueueDriver implements QueueInterface {
@@ -120,9 +120,17 @@ export class SqsQueueDriver implements QueueInterface {
         let sqsOptions = this.server.options.queue.sqs;
 
         return new SQS({
+            // The key apiVersion is no longer supported in v3, and can be removed.
+            // @deprecated The client uses the "latest" apiVersion.
             apiVersion: '2012-11-05',
+
             region: sqsOptions.region || 'us-east-1',
+
+            // The transformation for endpoint is not implemented.
+            // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
+            // Please create/upvote feature request on aws-sdk-js-codemod for endpoint.
             endpoint: sqsOptions.endpoint,
+
             ...sqsOptions.clientOptions,
         });
     }

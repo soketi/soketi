@@ -107,7 +107,7 @@ export class WebhookSender {
                         'Content-Type': 'application/json',
                         'User-Agent': `SoketiWebhooksAxiosClient/1.0 (Process: ${this.server.options.instance.process_id})`,
                         // We specifically merge in the custom headers here so the headers below cannot be overwritten
-                        ...webhook.headers ?? {},
+                        ...(webhook.headers ?? {}),
                         'X-Pusher-Key': appKey,
                         'X-Pusher-Signature': pusherSignature,
                     };
