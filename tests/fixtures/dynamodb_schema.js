@@ -1,15 +1,7 @@
 const { DynamoDB } = require('@aws-sdk/client-dynamodb');
 
 let ddb = new DynamoDB({
-    // The key apiVersion is no longer supported in v3, and can be removed.
-    // @deprecated The client uses the "latest" apiVersion.
-    apiVersion: '2012-08-10',
-
     region: 'us-east-1',
-
-    // The transformation for endpoint is not implemented.
-    // Refer to UPGRADING.md on aws-sdk-js-v3 for changes needed.
-    // Please create/upvote feature request on aws-sdk-js-codemod for endpoint.
     endpoint: `http://${process.env.DYNAMODB_URL || '127.0.0.1:8000'}`,
 });
 
