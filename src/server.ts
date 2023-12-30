@@ -195,6 +195,7 @@ export class Server {
         },
         mode: 'full',
         port: 6001,
+        idleTimeout : 120,  // According to protocol
         pathPrefix: '',
         presence: {
             maxMembersPerChannel: 100,
@@ -632,7 +633,7 @@ export class Server {
         return new Promise(resolve => {
             if (this.canProcessRequests()) {
                 server = server.ws(this.url('/app/:id'), {
-                    idleTimeout: 120, // According to protocol
+                    idleTimeout: this.options.idleTimeout,
                     maxBackpressure: 1024 * 1024,
                     maxPayloadLength: 100 * 1024 * 1024, // 100 MB
                     message: (ws: WebSocket, message: uWebSocketMessage, isBinary: boolean) => this.wsHandler.onMessage(ws, message, isBinary),

@@ -150,6 +150,7 @@ export interface Options {
     };
     mode: string;
     port: number;
+    idleTimeout: number;
     pathPrefix: string;
     presence: {
         maxMembersPerChannel: string|number;

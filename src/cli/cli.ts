@@ -104,6 +104,7 @@ export class Cli {
         METRICS_SERVER_PORT: 'metrics.port',
         MODE: 'mode',
         PORT: 'port',
+        IDLE_TIMEOUT: 'idleTimeout',
         PATH_PREFIX: 'pathPrefix',
         PRESENCE_MAX_MEMBER_SIZE: 'presence.maxMemberSizeInKb',
         PRESENCE_MAX_MEMBERS: 'presence.maxMembersPerChannel',
