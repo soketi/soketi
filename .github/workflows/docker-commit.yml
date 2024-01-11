@@ -24,7 +24,7 @@ jobs:
 
       matrix:
         node:
-          - '16'
+          - '18'
 
     name: Tag Alpine Commit (node:${{ matrix.node }})
 
@@ -86,7 +86,7 @@ jobs:
 
       matrix:
         node:
-          - '16'
+          - '18'
 
     name: Tag Distroless Commit (node:${{ matrix.node }})
 
@@ -148,7 +148,7 @@ jobs:
 
       matrix:
         node:
-          - '16'
+          - '18'
 
     name: Tag Debian Commit (node:${{ matrix.node }})
 
