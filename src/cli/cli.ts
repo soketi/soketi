@@ -1,5 +1,6 @@
-import { readFileSync } from 'fs';
+import { extname, resolve } from 'path';
 import { Log } from '..';
+import { readFileSync } from 'fs';
 import { Server } from './../server';
 
 export class Cli {
@@ -181,7 +182,9 @@ export class Cli {
         }
 
         try {
-            let config = JSON.parse(readFileSync(path, { encoding: 'utf-8' }));
+            let config = extname(path) === '.js'
+                ? require(resolve(path))
+                : JSON.parse(readFileSync(path, { encoding: 'utf-8' }));
 
             for (let optionKey in config) {
                 let value = config[optionKey];
