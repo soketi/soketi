@@ -110,3 +110,4 @@ If you discover any security related issues, please email alex@renoki.org instea
 - [Alex Renoki](https://github.com/rennokki)
 - [Pusher Protocol](https://pusher.com/docs/channels/library_auth_reference/pusher-websockets-protocol)
 - [All Contributors](../../contributors)
+- Thank you to Bunny! 🌸
