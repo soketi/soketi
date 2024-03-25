@@ -24,13 +24,11 @@ To cover some of the expenses of handling new features or having to maintain the
 
 **[💰 Sponsor the development via Github Sponsors](https://github.com/sponsors/rennokki)**
 
-## Paid Support
-
-Additionally, we offer priority support and direct help:
-
-- [🚀 Need help deploying Soketi on-prem at big scale?](https://github.com/sponsors/rennokki/sponsorships?tier_id=321381)
-- [🐞 Prioritize a bug in this project](https://github.com/sponsors/rennokki/sponsorships?tier_id=321379)
-- [💬 Support: direct, instant-messaging help for you and your team](https://github.com/sponsors/rennokki/sponsorships?tier_id=321375)
+<p align="center">
+  <a href="https://github.com/sponsors/rennokki">
+    <img src='https://cdn.jsdelivr.net/gh/rennokki/sponsorkit-assets@main/assets/sponsors.svg' alt="Logos from Sponsors" />
+  </a>
+</p>
 
 ## Soketi
 
