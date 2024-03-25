@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         node:
-          - '16'
+          - '18'
 
     name: Tag Alpine Release (node:${{ matrix.node }})
 
@@ -77,7 +77,7 @@ jobs:
     strategy:
       matrix:
         node:
-          - '16'
+          - '18'
 
     name: Tag Distroless Release (node:${{ matrix.node }})
 
@@ -137,7 +137,7 @@ jobs:
     strategy:
       matrix:
         node:
-          - '16'
+          - '18'
 
     name: Tag Debian Release (node:${{ matrix.node }})
 

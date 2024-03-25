@@ -24,7 +24,7 @@ jobs:
     strategy:
       matrix:
         node:
-          - '16'
+          - '18'
 
     name: Tag Latest Alpine (node:${{ matrix.node }})
 
@@ -81,7 +81,7 @@ jobs:
     strategy:
       matrix:
         node:
-          - '16'
+          - '18'
 
     name: Tag Latest Distroless (node:${{ matrix.node }})
 
@@ -138,7 +138,7 @@ jobs:
     strategy:
       matrix:
         node:
-          - '16'
+          - '18'
 
     name: Tag Latest Debian (node:${{ matrix.node }})
 
