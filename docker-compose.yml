@@ -7,7 +7,7 @@ networks:
 services:
   localstack:
     container_name: localstack
-    image: localstack/localstack
+    image: localstack/localstack:1.3
     ports:
       - "4510-4530:4510-4530"
       - "4566:4566"
@@ -23,7 +23,7 @@ services:
     networks:
       - soketi
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       retries: 3
       timeout: 5s
   initialize_sqs:
