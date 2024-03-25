@@ -812,7 +812,7 @@ export class WsHandler {
             } catch (e) {
                 //
             }
-        }, 120_000);
+        }, this.server.options.idleTimeout * 1000);
     }
 
     /**
