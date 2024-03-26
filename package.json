@@ -46,7 +46,7 @@
     "rate-limiter-flexible": "^2.3.8",
     "sqs-consumer": "^5.7.0",
     "uuid": "^8.3.2",
-    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.10.0",
+    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.34.0",
     "yargs": "^17.5.1"
   },
   "devDependencies": {
