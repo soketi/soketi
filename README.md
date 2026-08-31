@@ -1,18 +1,47 @@
-# soketi
+# Soketi RH (Fork) 📡
 
 <img src="assets/logo.png" width="120" />
 
-![CI](https://github.com/soketi/soketi/workflows/CI/badge.svg?branch=master)
-[![codecov](https://codecov.io/gh/soketi/soketi/branch/master/graph/badge.svg)](https://codecov.io/gh/soketi/soketi/branch/master)
-[![Latest Stable Version](https://img.shields.io/github/v/release/soketi/soketi)](https://www.npmjs.com/package/@soketi/soketi)
-[![Total Downloads](https://img.shields.io/npm/dt/@soketi/soketi)](https://www.npmjs.com/package/@soketi/soketi)
-[![License](https://img.shields.io/npm/l/@soketi/soketi)](https://www.npmjs.com/package/@soketi/soketi)
-
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/soketi)](https://artifacthub.io/packages/search?repo=soketi)
-
-[![Discord](https://img.shields.io/discord/957380329985958038?color=%235865F2&label=Discord&logo=discord&logoColor=%23fff)](https://discord.gg/VgfKCQydjb)
-
 Next-gen, Pusher-compatible, open-source WebSockets server. Simple, fast, and resilient. 📣
+
+This is a fork of [soketi](https://github.com/soketi/soketi) where I merge pull requests I find fit from the original repo as well as my own. The name is changed just to keep it separated from the original one when building docker images of my own. This in no way replacing the original repo or taking away the credits of the original creators. If you are looking for a frontend to manage soketi, look [here](https://github.com/rahulhaque/soketi-app-manager-filament).
+
+## 💽 Installation
+
+To run from the source code (tested on Node.js 22) -
+
+```bash
+# Clone the repo
+git clone https://github.com/rahulhaque/soketi.git
+
+# Drop to project root
+cd soketi
+
+# Install dependencies
+npm install
+
+# Build the server
+npm run build
+
+# Run the server
+node bin/server.js start
+```
+
+To run with docker -
+
+```bash
+# Download the `docker-compose.fork.yml` file
+wget https://raw.githubusercontent.com/rahulhaque/soketi/refs/heads/fork/docker-compose.fork.yml -O docker-compose-soketi.yml
+
+# Download the `.env.example` file or copy paste/update the content
+wget https://github.com/rahulhaque/soketi/blob/fork/.env.example -O .env
+
+# Run the server
+docker compose -f ./docker-compose-soketi.yml up -d # -d to run in background
+
+# Stop the server
+docker compose -f ./docker-compose-soketi.yml down
+```
 
 ## 🤝 Supporting
 

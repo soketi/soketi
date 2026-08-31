@@ -1,0 +1,39 @@
+ARG VERSION=22
+
+FROM node:$VERSION-bookworm AS build
+
+ENV PYTHONUNBUFFERED=1
+
+COPY . /tmp/build
+
+WORKDIR /tmp/build
+
+RUN apt-get update -y ; \
+    apt-get upgrade -y ; \
+    apt-get install -y git python3 gcc wget ; \
+    npm ci ; \
+    npm run build ; \
+    npm ci --omit=dev --ignore-scripts ; \
+    npm prune --production ; \
+    rm -rf node_modules/*/test/ node_modules/*/tests/ ; \
+    npm install -g modclean ; \
+    modclean -n default:safe --run ; \
+    mkdir -p /app ; \
+    cp -r bin/ dist/ node_modules/ LICENSE package.json package-lock.json README.md /app/
+
+FROM node:$VERSION-bookworm-slim
+
+LABEL org.opencontainers.image.authors="Soketi RH <rahulhaque07@gmail.com>"
+LABEL org.opencontainers.image.source="https://github.com/rahulhaque/soketi"
+LABEL org.opencontainers.image.url="https://soketi.app"
+LABEL org.opencontainers.image.documentation="https://docs.soketi.app"
+LABEL org.opencontainers.image.vendor="Soketi RH"
+LABEL org.opencontainers.image.licenses="AGPL-3.0"
+
+COPY --from=build /app /app
+
+WORKDIR /app
+
+EXPOSE 6001
+
+ENTRYPOINT ["node", "/app/bin/server.js", "start"]
