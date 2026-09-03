@@ -345,7 +345,7 @@ export class HttpHandler {
             message.channels = channels;
 
             // Make sure the channels length is not too big.
-            if (channels.length > app.maxEventChannelsAtOnce) {
+            if (channels.length > Number(app.maxEventChannelsAtOnce)) {
                 return reject({
                     message: `Cannot broadcast to more than ${app.maxEventChannelsAtOnce} channels at once`,
                     code: 400,
@@ -353,7 +353,7 @@ export class HttpHandler {
             }
 
             // Make sure the event name length is not too big.
-            if (message.name.length > app.maxEventNameLength) {
+            if (message.name.length > Number(app.maxEventNameLength)) {
                 return reject({
                     message: `Event name is too long. Maximum allowed size is ${app.maxEventNameLength}.`,
                     code: 400,
@@ -441,7 +441,7 @@ export class HttpHandler {
 
             let requestSizeInMb = Utils.dataToMegabytes(rawBody);
 
-            if (requestSizeInMb > this.server.options.httpApi.requestLimitInMb) {
+            if (requestSizeInMb > Number(this.server.options.httpApi.requestLimitInMb)) {
                 return this.entityTooLargeResponse(res, 'The payload size is too big.');
             }
 

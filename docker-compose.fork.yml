@@ -1,0 +1,20 @@
+networks:
+  soketi-rh:
+    driver: bridge
+
+services:
+  soketi-rh:
+    image: rahulhaque/soketi-rh:2.0.0
+    container_name: soketi-rh
+    build:
+      context: .
+      dockerfile: Dockerfile.fork.debian
+    ports:
+      - "6001:6001"
+      - "9601:9601"
+    volumes:
+      - "./.env:/app/.env"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - soketi-rh
